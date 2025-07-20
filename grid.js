@@ -8,7 +8,8 @@ window.StoryMapRenderer = {
             title: p.get('name_text') || `Persona ${index + 1}`
         }));
 
-        const features = (data.rawFeatures || []).map((f, index) => {
+        // First, create all features with their data
+        const allFeatures = (data.rawFeatures || []).map((f, index) => {
             // Get journey reference - use correct Bubble field name
             const journeyRef = f.get('journey_custom_journey');
             const journeyId = journeyRef ? journeyRef.get('_id') : null;
@@ -18,20 +19,33 @@ window.StoryMapRenderer = {
                 journeyId: journeyId,
                 order: f.get('order_index_number') || index
             };
-        }).sort((a, b) => a.order - b.order);
+        });
 
-        const featureOrderMap = new Map(features.map((f, i) => [f.id, i]));
-
+        // Create and sort journeys
         const journeys = (data.rawJourneys || []).map((j, index) => {
-            const journeyId = j.get('_id');
-            const journeyFeatures = features.filter(f => f.journeyId === journeyId);
             return {
-                id: journeyId,
+                id: j.get('_id'),
                 title: j.get('name_text') || `Journey ${index + 1}`,
-                order: j.get('order_index_number') || index,
-                featureIds: journeyFeatures.map(f => f.id)
+                order: j.get('order_index_number') || index
             };
         }).sort((a, b) => a.order - b.order);
+
+        // Now organize features by journey order, then by feature order within journey
+        const features = [];
+        journeys.forEach(journey => {
+            const journeyFeatures = allFeatures
+                .filter(f => f.journeyId === journey.id)
+                .sort((a, b) => a.order - b.order);
+            features.push(...journeyFeatures);
+            // Add feature IDs to journey
+            journey.featureIds = journeyFeatures.map(f => f.id);
+        });
+
+        // Add any features without journeys at the end
+        const featuresWithoutJourney = allFeatures.filter(f => !f.journeyId);
+        features.push(...featuresWithoutJourney);
+
+        const featureOrderMap = new Map(features.map((f, i) => [f.id, i]));
 
         const stories = (data.rawStories || []).map((s, index) => {
             // Get feature and release references - use correct Bubble field names
@@ -45,9 +59,10 @@ window.StoryMapRenderer = {
                 title: s.get('title_text') || `Story ${index + 1}`,
                 featureId: featureId,
                 releaseId: releaseId,
+                order: s.get('order_index_number') || index,
                 type: s.get('type_option_storytype') || 'Story'
             };
-        });
+        }).sort((a, b) => a.order - b.order);
 
         const releases = (data.rawReleases || []).map((r, index) => ({
             id: r.get('_id'),
