@@ -91,6 +91,43 @@
     font-size: 14px;
     border: 1px solid #ffc107;
     border-left: 5px solid #ffc107;
+    cursor: move;
+}
+
+.journey-card[draggable="true"]:active {
+    cursor: grabbing;
+}
+
+/* Drop zones for journeys */
+.journey-drop-zone {
+    grid-column: 1 / -1;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px dashed transparent;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.journey-drop-zone .drop-indicator {
+    display: none;
+    background: #ffc107;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.journey-drop-zone.drag-over {
+    height: 30px;
+    border-color: #ffc107;
+    background-color: rgba(255, 193, 7, 0.1);
+}
+
+.journey-drop-zone.drag-over .drop-indicator {
+    display: block;
 }
 
 .feature-card {
@@ -143,57 +180,4 @@
     color: #999;
     font-style: italic;
     font-size: 14px;
-}
-
-/* Drag and Drop Styles */
-.journey-card[draggable="true"] {
-    cursor: move;
-}
-
-.journey-card.dragging {
-    opacity: 0.5;
-    transform: scale(0.95);
-}
-
-.journey-card.drop-indicator-before::before {
-    content: '';
-    position: absolute;
-    left: -8px;
-    top: 0;
-    bottom: 0;
-    width: 3px;
-    background-color: #1976d2;
-    border-radius: 2px;
-    animation: pulse 0.8s ease-in-out infinite;
-}
-
-.journey-card.drop-indicator-after::after {
-    content: '';
-    position: absolute;
-    right: -8px;
-    top: 0;
-    bottom: 0;
-    width: 3px;
-    background-color: #1976d2;
-    border-radius: 2px;
-    animation: pulse 0.8s ease-in-out infinite;
-}
-
-.journey-card {
-    position: relative;
-}
-
-@keyframes pulse {
-    0% {
-        opacity: 0.6;
-        transform: scaleX(1);
-    }
-    50% {
-        opacity: 1;
-        transform: scaleX(1.5);
-    }
-    100% {
-        opacity: 0.6;
-        transform: scaleX(1);
-    }
 }

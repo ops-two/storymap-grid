@@ -135,7 +135,7 @@ window.StoryMapRenderer = {
                 const startCol = Math.min(...group) + 1;
                 const span = group.length;
                 const title = groups.length > 1 ? `${journey.title} (${groupIndex + 1}/${groups.length})` : journey.title;
-                html += `<div class="card journey-card" data-id="${journey.id}" data-type="journey" style="grid-column: ${startCol} / span ${span};"><span class="card-title">${title}</span></div>`;
+                html += `<div class="card journey-card" data-id="${journey.id}" data-type="journey" data-order="${journey.order}" style="grid-column: ${startCol} / span ${span};"><span class="card-title">${title}</span></div>`;
             });
         });
 
@@ -193,9 +193,9 @@ window.StoryMapRenderer = {
             window.StoryMapInlineEdit.init(containerElement[0]);
         }
         
-        // Initialize drag and drop
-        if (window.StoryMapDragDrop) {
-            window.StoryMapDragDrop.init(data.instance, window.StoryMapEventBridge);
+        // Initialize journey drag and drop
+        if (window.StoryMapJourneyDragDrop) {
+            window.StoryMapJourneyDragDrop.init(containerElement[0]);
         }
     }
 };
