@@ -114,7 +114,7 @@ window.StoryMapInlineEdit = {
     saveEdit() {
         if (!this.activeEdit) return;
         
-        const { input, entityType, entityId, originalText, fieldName } = this.activeEdit;
+        const { input, entityType, entityId, originalText, fieldName, card } = this.activeEdit;
         const newValue = input.value.trim();
         
         // Only save if value changed
@@ -123,22 +123,27 @@ window.StoryMapInlineEdit = {
             input.disabled = true;
             input.style.opacity = '0.6';
             
+            // Gather all entity data from the card
+            const allData = this.gatherEntityData(card, entityType, newValue);
+            
             console.log('Updating entity:', {
                 entityType,
                 entityId,
                 fieldName,
                 newValue,
-                oldValue: originalText
+                oldValue: originalText,
+                allData
             });
             
-            // Emit update event for Bubble
+            // Emit update event for Bubble with all data
             document.dispatchEvent(new CustomEvent('storymap:update', {
                 detail: {
                     entityType,
                     entityId,
                     fieldName,
                     newValue,
-                    oldValue: originalText
+                    oldValue: originalText,
+                    allData
                 }
             }));
             
@@ -165,10 +170,61 @@ window.StoryMapInlineEdit = {
         
         const { textElement, input } = this.activeEdit;
         
-        // Restore original text element
+        // Restore original text
         textElement.style.display = '';
         input.remove();
         
         this.activeEdit = null;
+    },
+    
+    gatherEntityData(card, entityType, newValue) {
+        const data = {};
+        
+        // Get basic fields from data attributes
+        const orderIndex = card.getAttribute('data-order-index');
+        const parentId = card.getAttribute('data-parent-id');
+        const projectId = card.getAttribute('data-project-id');
+        
+        // Build data object based on entity type
+        switch(entityType) {
+            case 'journey':
+                data.name_text = newValue;
+                data.order_index = parseInt(orderIndex) || 0;
+                data.project = projectId;
+                break;
+                
+            case 'feature':
+                data.name_text = newValue;
+                data.order_index = parseInt(orderIndex) || 0;
+                data.journey = parentId;
+                data.project = projectId;
+                break;
+                
+            case 'story':
+                data.title_text = newValue;
+                data.order_index = parseInt(orderIndex) || 0;
+                data.feature = parentId;
+                // Get additional story data if available
+                data.type = card.getAttribute('data-story-type') || 'Story';
+                data.release = card.getAttribute('data-release-id') || null;
+                // Personas would need to be parsed from data attribute
+                const personasAttr = card.getAttribute('data-personas');
+                data.personas = personasAttr ? JSON.parse(personasAttr) : [];
+                break;
+                
+            case 'release':
+                data.name_text = newValue;
+                data.target_date = card.getAttribute('data-target-date') || null;
+                data.workspace = card.getAttribute('data-workspace-id');
+                break;
+                
+            case 'persona':
+                data.name_text = newValue;
+                data.workspace = card.getAttribute('data-workspace-id');
+                data.icon = card.getAttribute('data-icon') || null;
+                break;
+        }
+        
+        return data;
     }
 };
