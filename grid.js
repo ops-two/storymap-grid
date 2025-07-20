@@ -91,14 +91,37 @@ window.StoryMapRenderer = {
                 <div class="story-map-grid-container">
         `;
 
-        // Render Journeys
+        // Render Journeys - handle non-contiguous features
         journeys.forEach(journey => {
             const featureIndices = journey.featureIds.map(id => featureOrderMap.get(id)).filter(i => i !== undefined);
             if (featureIndices.length === 0) return;
-            const startCol = Math.min(...featureIndices) + 1;
-            const endCol = Math.max(...featureIndices) + 1;
-            const span = endCol - startCol + 1;
-            html += `<div class="card journey-card" data-id="${journey.id}" style="grid-column: ${startCol} / span ${span};">${journey.title}</div>`;
+            
+            // Sort indices to find contiguous groups
+            featureIndices.sort((a, b) => a - b);
+            
+            // Find contiguous groups of features
+            const groups = [];
+            let currentGroup = [featureIndices[0]];
+            
+            for (let i = 1; i < featureIndices.length; i++) {
+                if (featureIndices[i] === featureIndices[i-1] + 1) {
+                    // Contiguous, add to current group
+                    currentGroup.push(featureIndices[i]);
+                } else {
+                    // Not contiguous, start new group
+                    groups.push(currentGroup);
+                    currentGroup = [featureIndices[i]];
+                }
+            }
+            groups.push(currentGroup);
+            
+            // Render a journey card for each contiguous group
+            groups.forEach((group, groupIndex) => {
+                const startCol = Math.min(...group) + 1;
+                const span = group.length;
+                const title = groups.length > 1 ? `${journey.title} (${groupIndex + 1}/${groups.length})` : journey.title;
+                html += `<div class="card journey-card" data-id="${journey.id}" style="grid-column: ${startCol} / span ${span};">${title}</div>`;
+            });
         });
 
         // Render Features
