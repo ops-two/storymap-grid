@@ -8,12 +8,16 @@ window.StoryMapRenderer = {
             title: p.get('name_text') || `Persona ${index + 1}`
         }));
 
-        const features = (data.rawFeatures || []).map((f, index) => ({
-            id: f.get('_id'),
-            title: f.get('name_text') || `Feature ${index + 1}`,
-            journeyId: f.get('journey'),
-            order: f.get('order_index_number') || index
-        })).sort((a, b) => a.order - b.order);
+        const features = (data.rawFeatures || []).map((f, index) => {
+            // Get journey reference - in Bubble, this returns the ID directly
+            const journeyRef = f.get('journey');
+            return {
+                id: f.get('_id'),
+                title: f.get('name_text') || `Feature ${index + 1}`,
+                journeyId: journeyRef, // This should be the journey ID
+                order: f.get('order_index_number') || index
+            };
+        }).sort((a, b) => a.order - b.order);
 
         const featureOrderMap = new Map(features.map((f, i) => [f.id, i]));
 
@@ -28,13 +32,18 @@ window.StoryMapRenderer = {
             };
         }).sort((a, b) => a.order - b.order);
 
-        const stories = (data.rawStories || []).map((s, index) => ({
-            id: s.get('_id'),
-            title: s.get('title_text') || `Story ${index + 1}`,
-            featureId: s.get('feature'),
-            releaseId: s.get('release'),
-            type: s.get('type_option_storytype') || 'Story'
-        }));
+        const stories = (data.rawStories || []).map((s, index) => {
+            // Get feature and release references
+            const featureRef = s.get('feature');
+            const releaseRef = s.get('release');
+            return {
+                id: s.get('_id'),
+                title: s.get('title_text') || `Story ${index + 1}`,
+                featureId: featureRef, // This should be the feature ID
+                releaseId: releaseRef, // This should be the release ID
+                type: s.get('type_option_storytype') || 'Story'
+            };
+        });
 
         const releases = (data.rawReleases || []).map((r, index) => ({
             id: r.get('_id'),
@@ -94,6 +103,25 @@ window.StoryMapRenderer = {
         });
 
         // Render Releases and Stories
+        // First, handle stories without releases (unassigned)
+        const unreleasedStories = stories.filter(s => !s.releaseId);
+        if (unreleasedStories.length > 0) {
+            html += `<div class="release-header">Unassigned</div>`;
+            
+            features.forEach((feature, index) => {
+                const storiesInColumn = unreleasedStories.filter(s => s.featureId === feature.id);
+                if (storiesInColumn.length > 0) {
+                    html += `<div class="feature-column" style="grid-column: ${index + 1};">`;
+                    storiesInColumn.forEach(story => {
+                        const cardType = story.type === 'Tech-Req' ? 'tech' : 'story';
+                        html += `<div class="card story-card ${cardType}" data-id="${story.id}">${story.title}</div>`;
+                    });
+                    html += '</div>';
+                }
+            });
+        }
+        
+        // Then handle releases with their stories
         releases.forEach(release => {
             const releaseStories = stories.filter(s => s.releaseId === release.id);
             if (releaseStories.length === 0) return;
@@ -103,7 +131,7 @@ window.StoryMapRenderer = {
             features.forEach((feature, index) => {
                 const storiesInColumn = releaseStories.filter(s => s.featureId === feature.id);
                 if (storiesInColumn.length > 0) {
-                    html += `<div class="feature-column" style="grid-column: ${index + 1}; grid-row: ${releases.indexOf(release) + 3};">`;
+                    html += `<div class="feature-column" style="grid-column: ${index + 1};">`;
                     storiesInColumn.forEach(story => {
                         const cardType = story.type === 'Tech-Req' ? 'tech' : 'story';
                         html += `<div class="card story-card ${cardType}" data-id="${story.id}">${story.title}</div>`;
