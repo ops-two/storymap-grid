@@ -9,12 +9,13 @@ window.StoryMapRenderer = {
         }));
 
         const features = (data.rawFeatures || []).map((f, index) => {
-            // Get journey reference - in Bubble, this returns the ID directly
-            const journeyRef = f.get('journey');
+            // Get journey reference - use correct Bubble field name
+            const journeyRef = f.get('journey_custom_journey');
+            const journeyId = journeyRef ? journeyRef.get('_id') : null;
             return {
                 id: f.get('_id'),
                 title: f.get('name_text') || `Feature ${index + 1}`,
-                journeyId: journeyRef, // This should be the journey ID
+                journeyId: journeyId,
                 order: f.get('order_index_number') || index
             };
         }).sort((a, b) => a.order - b.order);
@@ -33,14 +34,17 @@ window.StoryMapRenderer = {
         }).sort((a, b) => a.order - b.order);
 
         const stories = (data.rawStories || []).map((s, index) => {
-            // Get feature and release references
-            const featureRef = s.get('feature');
-            const releaseRef = s.get('release');
+            // Get feature and release references - use correct Bubble field names
+            const featureRef = s.get('feature_custom_feature3');
+            const featureId = featureRef ? featureRef.get('_id') : null;
+            const releaseRef = s.get('release_custom_release');
+            const releaseId = releaseRef ? releaseRef.get('_id') : null;
+            
             return {
                 id: s.get('_id'),
                 title: s.get('title_text') || `Story ${index + 1}`,
-                featureId: featureRef, // This should be the feature ID
-                releaseId: releaseRef, // This should be the release ID
+                featureId: featureId,
+                releaseId: releaseId,
                 type: s.get('type_option_storytype') || 'Story'
             };
         });
