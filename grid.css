@@ -1,0 +1,146 @@
+:root {
+    --card-width: 160px;
+    --journey-height: 45px;
+    --feature-height: 45px;
+    --story-height: 50px;
+    --column-gap: 12px;
+    --vertical-gap: 8px;
+    /* --total-columns will be injected by JS */
+}
+
+.story-map-container {
+    padding: 20px;
+    font-family: Arial, sans-serif;
+    height: 100%;
+    overflow: auto;
+}
+
+.story-map-container h2 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.story-map-info {
+    margin-bottom: 15px;
+    color: #666;
+}
+
+.personas-row {
+    display: flex;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    overflow: hidden;
+}
+
+.row-header {
+    width: 120px;
+    padding: 15px;
+    background-color: #e3f2fd;
+    color: #1565c0;
+    font-weight: bold;
+    border-right: 1px solid #ddd;
+    display: flex;
+    align-items: center;
+}
+
+.row-content {
+    flex: 1;
+    padding: 15px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+
+.story-map-grid-container {
+    display: grid;
+    grid-template-columns: repeat(var(--total-columns, 1), var(--card-width));
+    gap: var(--vertical-gap) var(--column-gap);
+    padding: 20px;
+    min-width: fit-content;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+}
+
+.card {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    font-size: 13px;
+    padding: 0 8px;
+    box-sizing: border-box;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    background-color: #fff;
+    color: #212529;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.journey-card {
+    height: var(--journey-height);
+    font-weight: 600;
+    font-size: 14px;
+    border: 1px solid #ffc107;
+    border-left: 5px solid #ffc107;
+}
+
+.feature-card {
+    height: var(--feature-height);
+    font-weight: 500;
+    border: 1px solid #6f42c1;
+    border-left: 5px solid #6f42c1;
+}
+
+.release-section {
+    grid-column: 1 / -1; /* Span all columns */
+    display: contents; /* Allows children to participate in the main grid */
+}
+
+.release-header {
+    grid-column: 1 / -1;
+    border-bottom: 1px solid #dee2e6;
+    margin: 20px 0 10px 0;
+    color: #6c757d;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.feature-column {
+    display: flex;
+    flex-direction: column;
+    gap: var(--vertical-gap);
+}
+
+.story-card {
+    height: var(--story-height);
+    font-weight: 500;
+    border: 1px solid #28a745;
+    border-left: 5px solid #28a745;
+}
+
+.story-card.tech {
+    border-color: #007bff;
+    border-left-color: #007bff;
+}
+
+.persona-card {
+    background-color: #e3f2fd;
+    border: 1px solid #bbdefb;
+    padding: 10px 14px;
+    font-size: 14px;
+}
+
+.no-data {
+    color: #999;
+    font-style: italic;
+    font-size: 14px;
+}
