@@ -192,5 +192,10 @@ window.StoryMapRenderer = {
         if (window.StoryMapInlineEdit) {
             window.StoryMapInlineEdit.init(containerElement[0]);
         }
+        
+        // Initialize drag and drop
+        if (window.StoryMapDragDrop) {
+            window.StoryMapDragDrop.init(data.instance, window.StoryMapEventBridge);
+        }
     }
 };

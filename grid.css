@@ -144,3 +144,56 @@
     font-style: italic;
     font-size: 14px;
 }
+
+/* Drag and Drop Styles */
+.journey-card[draggable="true"] {
+    cursor: move;
+}
+
+.journey-card.dragging {
+    opacity: 0.5;
+    transform: scale(0.95);
+}
+
+.journey-card.drop-indicator-before::before {
+    content: '';
+    position: absolute;
+    left: -8px;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background-color: #1976d2;
+    border-radius: 2px;
+    animation: pulse 0.8s ease-in-out infinite;
+}
+
+.journey-card.drop-indicator-after::after {
+    content: '';
+    position: absolute;
+    right: -8px;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background-color: #1976d2;
+    border-radius: 2px;
+    animation: pulse 0.8s ease-in-out infinite;
+}
+
+.journey-card {
+    position: relative;
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 0.6;
+        transform: scaleX(1);
+    }
+    50% {
+        opacity: 1;
+        transform: scaleX(1.5);
+    }
+    100% {
+        opacity: 0.6;
+        transform: scaleX(1);
+    }
+}
