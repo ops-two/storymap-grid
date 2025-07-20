@@ -1,80 +1,68 @@
-// Story Map Grid Renderer (for Bubble Plugin)
+// Story Map Grid Renderer (for Bubble Plugin) - DEBUG VERSION
 
 window.StoryMapRenderer = {
     render: function(data, containerElement) {
+        console.log('StoryMapRenderer: Starting render with data:', data);
+        
         // 1. DATA TRANSFORMATION
         const personas = (data.rawPersonas || []).map((p, index) => ({
             id: p.get('_id'),
             title: p.get('name_text') || `Persona ${index + 1}`
         }));
+        console.log('Personas:', personas);
 
-        // First, create all features with their data
-        const allFeatures = (data.rawFeatures || []).map((f, index) => {
-            // Get journey reference - use correct Bubble field name
-            const journeyRef = f.get('journey_custom_journey');
-            const journeyId = journeyRef ? journeyRef.get('_id') : null;
-            return {
+        const features = (data.rawFeatures || []).map((f, index) => {
+            const feature = {
                 id: f.get('_id'),
                 title: f.get('name_text') || `Feature ${index + 1}`,
-                journeyId: journeyId,
+                journeyId: f.get('journey'),
                 order: f.get('order_index_number') || index
             };
-        });
-
-        // Create and sort journeys
-        const journeys = (data.rawJourneys || []).map((j, index) => {
-            return {
-                id: j.get('_id'),
-                title: j.get('name_text') || `Journey ${index + 1}`,
-                order: j.get('order_index_number') || index
-            };
+            console.log(`Feature ${index}:`, feature, 'journey field:', f.get('journey'));
+            return feature;
         }).sort((a, b) => a.order - b.order);
-
-        // Now organize features by journey order, then by feature order within journey
-        const features = [];
-        journeys.forEach(journey => {
-            const journeyFeatures = allFeatures
-                .filter(f => f.journeyId === journey.id)
-                .sort((a, b) => a.order - b.order);
-            features.push(...journeyFeatures);
-            // Add feature IDs to journey
-            journey.featureIds = journeyFeatures.map(f => f.id);
-        });
-
-        // Add any features without journeys at the end
-        const featuresWithoutJourney = allFeatures.filter(f => !f.journeyId);
-        features.push(...featuresWithoutJourney);
+        console.log('All features:', features);
 
         const featureOrderMap = new Map(features.map((f, i) => [f.id, i]));
 
+        const journeys = (data.rawJourneys || []).map((j, index) => {
+            const journeyId = j.get('_id');
+            const journeyFeatures = features.filter(f => f.journeyId === journeyId);
+            const journey = {
+                id: journeyId,
+                title: j.get('name_text') || `Journey ${index + 1}`,
+                order: j.get('order_index_number') || index,
+                featureIds: journeyFeatures.map(f => f.id)
+            };
+            console.log(`Journey ${index}:`, journey, 'matching features:', journeyFeatures.length);
+            return journey;
+        }).sort((a, b) => a.order - b.order);
+        console.log('All journeys:', journeys);
+
         const stories = (data.rawStories || []).map((s, index) => {
-            // Get feature and release references - use correct Bubble field names
-            const featureRef = s.get('feature_custom_feature3');
-            const featureId = featureRef ? featureRef.get('_id') : null;
-            const releaseRef = s.get('release_custom_release');
-            const releaseId = releaseRef ? releaseRef.get('_id') : null;
-            
-            return {
+            const story = {
                 id: s.get('_id'),
                 title: s.get('title_text') || `Story ${index + 1}`,
-                featureId: featureId,
-                releaseId: releaseId,
-                order: s.get('order_index_number') || index,
+                featureId: s.get('feature'),
+                releaseId: s.get('release'),
                 type: s.get('type_option_storytype') || 'Story'
             };
-        }).sort((a, b) => a.order - b.order);
+            console.log(`Story ${index}:`, story, 'feature:', s.get('feature'), 'release:', s.get('release'));
+            return story;
+        });
+        console.log('All stories:', stories);
 
         const releases = (data.rawReleases || []).map((r, index) => ({
             id: r.get('_id'),
             title: r.get('name_text') || `Release ${index + 1}`,
             targetDate: r.get('target_date_date')
         })).sort((a, b) => (a.targetDate || 0) - (b.targetDate || 0));
+        console.log('All releases:', releases);
 
         // 2. GRID CALCULATION & DYNAMIC STYLE INJECTION
         const totalColumns = features.length > 0 ? features.length : 1;
         document.documentElement.style.setProperty('--total-columns', totalColumns);
 
-        // 3. HTML GENERATION
         // 3. HTML GENERATION
         const projectTitle = data.projectName || 'Unnamed Project';
         let html = `
@@ -92,7 +80,7 @@ window.StoryMapRenderer = {
         
         if (personas.length > 0) {
             personas.forEach(persona => {
-                html += `<div class="card persona-card" data-id="${persona.id}" data-type="persona"><span class="card-title">${persona.title}</span></div>`;
+                html += `<div class="card persona-card" data-id="${persona.id}">${persona.title}</div>`;
             });
         } else {
             html += `<span class="no-data">No personas defined</span>`;
@@ -106,48 +94,35 @@ window.StoryMapRenderer = {
                 <div class="story-map-grid-container">
         `;
 
-        // Render Journeys - handle non-contiguous features
+        // Render Journeys
+        console.log('Rendering journeys...');
         journeys.forEach(journey => {
             const featureIndices = journey.featureIds.map(id => featureOrderMap.get(id)).filter(i => i !== undefined);
-            if (featureIndices.length === 0) return;
-            
-            // Sort indices to find contiguous groups
-            featureIndices.sort((a, b) => a - b);
-            
-            // Find contiguous groups of features
-            const groups = [];
-            let currentGroup = [featureIndices[0]];
-            
-            for (let i = 1; i < featureIndices.length; i++) {
-                if (featureIndices[i] === featureIndices[i-1] + 1) {
-                    // Contiguous, add to current group
-                    currentGroup.push(featureIndices[i]);
-                } else {
-                    // Not contiguous, start new group
-                    groups.push(currentGroup);
-                    currentGroup = [featureIndices[i]];
-                }
+            console.log(`Journey "${journey.title}" feature indices:`, featureIndices);
+            if (featureIndices.length === 0) {
+                console.log(`Skipping journey "${journey.title}" - no features`);
+                return;
             }
-            groups.push(currentGroup);
-            
-            // Render a journey card for each contiguous group
-            groups.forEach((group, groupIndex) => {
-                const startCol = Math.min(...group) + 1;
-                const span = group.length;
-                const title = groups.length > 1 ? `${journey.title} (${groupIndex + 1}/${groups.length})` : journey.title;
-                html += `<div class="card journey-card" data-id="${journey.id}" data-type="journey" style="grid-column: ${startCol} / span ${span};"><span class="card-title">${title}</span></div>`;
-            });
+            const startCol = Math.min(...featureIndices) + 1;
+            const endCol = Math.max(...featureIndices) + 1;
+            const span = endCol - startCol + 1;
+            console.log(`Journey "${journey.title}" grid: start=${startCol}, end=${endCol}, span=${span}`);
+            html += `<div class="card journey-card" data-id="${journey.id}" style="grid-column: ${startCol} / span ${span};">${journey.title}</div>`;
         });
 
         // Render Features
+        console.log('Rendering features...');
         features.forEach((feature, index) => {
-            html += `<div class="card feature-card" data-id="${feature.id}" data-type="feature" style="grid-column: ${index + 1};"><span class="card-title">${feature.title}</span></div>`;
+            html += `<div class="card feature-card" data-id="${feature.id}" style="grid-column: ${index + 1};">${feature.title}</div>`;
         });
 
         // Render Releases and Stories
-        // First, handle stories without releases (unassigned)
+        console.log('Rendering releases and stories...');
+        
+        // First, let's handle stories without releases
         const unreleasedStories = stories.filter(s => !s.releaseId);
         if (unreleasedStories.length > 0) {
+            console.log(`Found ${unreleasedStories.length} unreleased stories`);
             html += `<div class="release-header">Unassigned</div>`;
             
             features.forEach((feature, index) => {
@@ -156,16 +131,17 @@ window.StoryMapRenderer = {
                     html += `<div class="feature-column" style="grid-column: ${index + 1};">`;
                     storiesInColumn.forEach(story => {
                         const cardType = story.type === 'Tech-Req' ? 'tech' : 'story';
-                        html += `<div class="card story-card ${cardType}" data-id="${story.id}" data-type="story"><span class="card-title">${story.title}</span></div>`;
+                        html += `<div class="card story-card ${cardType}" data-id="${story.id}">${story.title}</div>`;
                     });
                     html += '</div>';
                 }
             });
         }
         
-        // Then handle releases with their stories
-        releases.forEach(release => {
+        // Then handle releases
+        releases.forEach((release, releaseIndex) => {
             const releaseStories = stories.filter(s => s.releaseId === release.id);
+            console.log(`Release "${release.title}" has ${releaseStories.length} stories`);
             if (releaseStories.length === 0) return;
 
             html += `<div class="release-header" data-id="${release.id}">${release.title}</div>`;
@@ -173,10 +149,11 @@ window.StoryMapRenderer = {
             features.forEach((feature, index) => {
                 const storiesInColumn = releaseStories.filter(s => s.featureId === feature.id);
                 if (storiesInColumn.length > 0) {
+                    console.log(`Feature "${feature.title}" has ${storiesInColumn.length} stories in release "${release.title}"`);
                     html += `<div class="feature-column" style="grid-column: ${index + 1};">`;
                     storiesInColumn.forEach(story => {
                         const cardType = story.type === 'Tech-Req' ? 'tech' : 'story';
-                        html += `<div class="card story-card ${cardType}" data-id="${story.id}" data-type="story"><span class="card-title">${story.title}</span></div>`;
+                        html += `<div class="card story-card ${cardType}" data-id="${story.id}">${story.title}</div>`;
                     });
                     html += '</div>';
                 }
@@ -187,10 +164,6 @@ window.StoryMapRenderer = {
 
         // 4. RENDER TO CONTAINER
         containerElement.html(html);
-        
-        // 5. INITIALIZE MODULES
-        if (window.StoryMapInlineEdit) {
-            window.StoryMapInlineEdit.init(containerElement[0]);
-        }
+        console.log('StoryMapRenderer: Render complete');
     }
 };
