@@ -1,9 +1,12 @@
 // Journey Drag and Drop Module for Story Map
+console.log('Loading journey-drag-drop.js module...');
+
 window.StoryMapJourneyDragDrop = {
     draggedJourney: null,
     dropTargets: [],
     
     init: function(containerElement) {
+        console.log('Initializing journey drag and drop...', containerElement);
         this.container = containerElement;
         this.setupJourneyDragging();
     },
@@ -11,6 +14,7 @@ window.StoryMapJourneyDragDrop = {
     setupJourneyDragging: function() {
         // Find all journey cards
         const journeyCards = this.container.querySelectorAll('.journey-card');
+        console.log('Found journey cards:', journeyCards.length);
         
         journeyCards.forEach(card => {
             // Make journey cards draggable
