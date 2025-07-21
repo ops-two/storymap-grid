@@ -98,6 +98,15 @@
     cursor: grabbing;
 }
 
+.journey-card.dragging {
+    opacity: 0.5;
+}
+
+.journey-card.drag-over {
+    border: 2px dashed #ffc107;
+    background-color: rgba(255, 193, 7, 0.1);
+}
+
 /* Drop zones for journeys */
 .journey-drop-zone {
     grid-column: 1 / -1;
