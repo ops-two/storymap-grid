@@ -49,7 +49,7 @@ window.StoryMapJourneyDragDrop = {
                 // Store journey data at drag start
                 this.draggedData = {
                     id: card.dataset.id,
-                    name: card.querySelector('.journey-title')?.textContent || '',
+                    name: card.querySelector('.card-title')?.textContent || '',
                     order: parseFloat(card.dataset.order) || 0
                 };
                 card.classList.add('dragging');
