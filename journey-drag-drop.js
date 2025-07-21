@@ -8,9 +8,8 @@ window.StoryMapJourneyDragDrop = {
     hasInitialized: false,
     lastDropTime: 0,
     
-    init: function(containerElement) {
-        console.log('Initializing journey drag and drop...', containerElement);
-        this.container = containerElement;
+    init: function(container) {
+        this.container = container;
         
         // Clean up any existing listeners before setting up new ones
         this.cleanup();
@@ -33,13 +32,9 @@ window.StoryMapJourneyDragDrop = {
     setupJourneyDragging: function() {
         // Find all journey cards
         const journeyCards = this.container.querySelectorAll('.journey-card');
-        console.log('Setting up drag handlers for journey cards:', journeyCards.length);
         
         journeyCards.forEach(card => {
-            // Make journey cards draggable
-            card.draggable = true;
-            
-            // Add a marker to prevent duplicate setup
+            // Skip if already set up to prevent duplicate listeners
             if (card.dataset.dragSetup === 'true') {
                 return;
             }
@@ -97,19 +92,15 @@ window.StoryMapJourneyDragDrop = {
     },
     
     handleDrop: function(targetCard) {
-        console.log('=== JOURNEY DROP EVENT START ===');
-        
         // Debounce rapid drops (minimum 300ms between drops)
         const now = Date.now();
         if (now - this.lastDropTime < 300) {
-            console.log('Drop event debounced - too soon after last drop');
             return;
         }
         this.lastDropTime = now;
         
         // Prevent concurrent processing
         if (this.isProcessing) {
-            console.log('Already processing a drop event');
             return;
         }
         
@@ -122,10 +113,6 @@ window.StoryMapJourneyDragDrop = {
         
         const draggedId = this.draggedJourney.dataset.id;
         const targetId = targetCard.dataset.id;
-        
-        console.log('Dragged ID:', draggedId);
-        console.log('Target ID:', targetId);
-        console.log('Dropping journey', draggedId, 'onto', targetId);
         
         // Quick exit if same card
         if (draggedId === targetId) {
@@ -172,19 +159,11 @@ window.StoryMapJourneyDragDrop = {
             newOrderValue = (prevCardOrder + targetCardOrder) / 2;
         }
         
-        console.log('Target index:', targetIndex);
-        console.log('Calculated new order value:', newOrderValue);
-        
         // Get the journey name from the card
         const journeyName = this.draggedJourney.querySelector('.card-title').textContent || '';
         
-        console.log('New order for journey:', draggedId, 'is:', newOrderValue);
-        console.log('Journey name:', journeyName);
-        
         // Trigger event for Bubble to handle the reordering
         if (window.StoryMapEventBridge && window.StoryMapEventBridge.instance) {
-            console.log('Event bridge found, triggering journey_updated event');
-            
             // Update format: entityId, name_text, and order_index
             const updateData = {
                 entityId: draggedId,
@@ -192,7 +171,7 @@ window.StoryMapJourneyDragDrop = {
                 order_index: newOrderValue
             };
             
-            console.log('Publishing update data:', updateData);
+            console.log('Publishing journey update:', JSON.stringify(updateData));
             
             // Use journey_updated event
             window.StoryMapEventBridge.instance.triggerEvent('journey_updated');

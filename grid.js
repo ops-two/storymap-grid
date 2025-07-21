@@ -193,13 +193,9 @@ window.StoryMapRenderer = {
             window.StoryMapInlineEdit.init(containerElement[0]);
         }
         
-        // Initialize journey drag and drop
-        console.log('Checking for drag drop module:', !!window.StoryMapJourneyDragDrop);
+        // Initialize drag-drop if available
         if (window.StoryMapJourneyDragDrop) {
-            console.log('Initializing journey drag and drop');
             window.StoryMapJourneyDragDrop.init(containerElement[0]);
-        } else {
-            console.warn('Journey drag drop module not found!');
         }
     }
 };
