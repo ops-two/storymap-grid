@@ -1,8 +1,8 @@
 // Journey Drag and Drop Module for Story Map
-console.log('Loading journey-drag-drop.js module...');
 
 window.StoryMapJourneyDragDrop = {
-    draggedJourney: null,
+    draggedCard: null,
+    draggedData: null,
     currentDropTarget: null,
     isProcessing: false,
     hasInitialized: false,
