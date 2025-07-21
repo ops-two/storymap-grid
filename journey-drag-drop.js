@@ -4,21 +4,46 @@ console.log('Loading journey-drag-drop.js module...');
 window.StoryMapJourneyDragDrop = {
     draggedJourney: null,
     currentDropTarget: null,
+    isProcessing: false,
+    hasInitialized: false,
+    lastDropTime: 0,
     
     init: function(containerElement) {
         console.log('Initializing journey drag and drop...', containerElement);
         this.container = containerElement;
+        
+        // Clean up any existing listeners before setting up new ones
+        this.cleanup();
         this.setupJourneyDragging();
+        this.hasInitialized = true;
+    },
+    
+    cleanup: function() {
+        if (!this.container) return;
+        
+        // Remove all drag event listeners from journey cards
+        const journeyCards = this.container.querySelectorAll('.journey-card');
+        journeyCards.forEach(card => {
+            // Clone node to remove all event listeners
+            const newCard = card.cloneNode(true);
+            card.parentNode.replaceChild(newCard, card);
+        });
     },
     
     setupJourneyDragging: function() {
         // Find all journey cards
         const journeyCards = this.container.querySelectorAll('.journey-card');
-        console.log('Found journey cards:', journeyCards.length);
+        console.log('Setting up drag handlers for journey cards:', journeyCards.length);
         
         journeyCards.forEach(card => {
             // Make journey cards draggable
             card.draggable = true;
+            
+            // Add a marker to prevent duplicate setup
+            if (card.dataset.dragSetup === 'true') {
+                return;
+            }
+            card.dataset.dragSetup = 'true';
             
             // Drag start
             card.addEventListener('dragstart', (e) => {
@@ -74,10 +99,26 @@ window.StoryMapJourneyDragDrop = {
     handleDrop: function(targetCard) {
         console.log('=== JOURNEY DROP EVENT START ===');
         
+        // Debounce rapid drops (minimum 300ms between drops)
+        const now = Date.now();
+        if (now - this.lastDropTime < 300) {
+            console.log('Drop event debounced - too soon after last drop');
+            return;
+        }
+        this.lastDropTime = now;
+        
+        // Prevent concurrent processing
+        if (this.isProcessing) {
+            console.log('Already processing a drop event');
+            return;
+        }
+        
         if (!this.draggedJourney) {
             console.error('No dragged journey found');
             return;
         }
+        
+        this.isProcessing = true;
         
         const draggedId = this.draggedJourney.dataset.id;
         const targetId = targetCard.dataset.id;
@@ -86,29 +127,31 @@ window.StoryMapJourneyDragDrop = {
         console.log('Target ID:', targetId);
         console.log('Dropping journey', draggedId, 'onto', targetId);
         
-        // Get all journey cards and their current order
-        const journeyCards = Array.from(this.container.querySelectorAll('.journey-card'));
-        const journeyOrders = [];
+        // Quick exit if same card
+        if (draggedId === targetId) {
+            this.isProcessing = false;
+            return;
+        }
         
-        // Extract journey data with current order
-        journeyCards.forEach(card => {
-            const id = card.dataset.id;
-            const orderAttr = card.dataset.order || '0';
-            journeyOrders.push({
-                id: id,
-                order: parseFloat(orderAttr)  // Use parseFloat to handle decimals
-            });
-        });
+        // Get only the necessary journey orders (dragged and target)
+        const draggedOrder = parseFloat(this.draggedJourney.dataset.order || '0');
+        const targetOrder = parseFloat(targetCard.dataset.order || '0');
         
-        // Sort by current order
-        journeyOrders.sort((a, b) => a.order - b.order);
+        // Find position of target in sorted list for calculation
+        const allCards = Array.from(this.container.querySelectorAll('.journey-card'));
+        const sortedCards = allCards
+            .map(card => ({
+                id: card.dataset.id,
+                order: parseFloat(card.dataset.order || '0')
+            }))
+            .sort((a, b) => a.order - b.order);
         
-        // Find indices
-        const draggedIndex = journeyOrders.findIndex(j => j.id === draggedId);
-        const targetIndex = journeyOrders.findIndex(j => j.id === targetId);
+        // Find target position
+        const targetIndex = sortedCards.findIndex(j => j.id === targetId);
         
-        if (draggedIndex === -1 || targetIndex === -1) {
-            console.error('Journey not found in order list');
+        if (targetIndex === -1) {
+            console.error('Target journey not found');
+            this.isProcessing = false;
             return;
         }
         
@@ -117,16 +160,16 @@ window.StoryMapJourneyDragDrop = {
         
         // If dropping at the beginning (before first item)
         if (targetIndex === 0) {
-            newOrderValue = journeyOrders[0].order - 1;
+            newOrderValue = sortedCards[0].order - 1;
         }
         // If dropping between items
         else {
             // Get the order of the target and the item before it
-            const targetOrder = journeyOrders[targetIndex].order;
-            const prevOrder = journeyOrders[targetIndex - 1].order;
+            const targetCardOrder = sortedCards[targetIndex].order;
+            const prevCardOrder = sortedCards[targetIndex - 1].order;
             
             // Calculate midpoint between previous and target
-            newOrderValue = (prevOrder + targetOrder) / 2;
+            newOrderValue = (prevCardOrder + targetCardOrder) / 2;
         }
         
         console.log('Target index:', targetIndex);
@@ -155,8 +198,14 @@ window.StoryMapJourneyDragDrop = {
             window.StoryMapEventBridge.instance.triggerEvent('journey_updated');
             window.StoryMapEventBridge.instance.publishState('pending_update', JSON.stringify(updateData));
             console.log('Event triggered and state published');
+            
+            // Allow next drop after a small delay
+            setTimeout(() => {
+                this.isProcessing = false;
+            }, 100);
         } else {
             console.error('Event bridge not found! Cannot trigger update.');
+            this.isProcessing = false;
         }
     }
 };
