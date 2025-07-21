@@ -46,6 +46,12 @@ window.StoryMapJourneyDragDrop = {
             // Drag start
             card.addEventListener('dragstart', (e) => {
                 this.draggedCard = card;
+                // Store journey data at drag start
+                this.draggedData = {
+                    id: card.dataset.id,
+                    name: card.querySelector('.journey-title')?.textContent || '',
+                    order: parseFloat(card.dataset.order) || 0
+                };
                 card.classList.add('dragging');
                 e.dataTransfer.effectAllowed = 'move';
                 e.dataTransfer.setData('text/html', card.innerHTML);
@@ -54,12 +60,11 @@ window.StoryMapJourneyDragDrop = {
             // Drag end
             card.addEventListener('dragend', (e) => {
                 card.classList.remove('dragging');
-                // Remove any remaining highlights
-                this.container.querySelectorAll('.journey-card').forEach(c => {
-                    c.classList.remove('drag-over');
+                // Remove any remaining drag-over classes
+                document.querySelectorAll('.drag-over').forEach(el => {
+                    el.classList.remove('drag-over');
                 });
-                this.draggedCard = null;
-                this.currentDropTarget = null;
+                // Don't clear draggedCard here - let drop handler do it
             });
             
             // Drag over - prevent default to allow drop
@@ -114,8 +119,14 @@ window.StoryMapJourneyDragDrop = {
         
         this.isProcessing = true;
         
-        const draggedId = this.draggedCard.dataset.id;
+        const draggedId = this.draggedData?.id || this.draggedCard?.dataset.id;
         const targetId = targetCard.dataset.id;
+        
+        if (!draggedId) {
+            console.error('No dragged journey ID found');
+            this.isProcessing = false;
+            return;
+        }
         
         // Quick exit if same card
         if (draggedId === targetId) {
@@ -162,8 +173,8 @@ window.StoryMapJourneyDragDrop = {
             newOrderValue = (prevCardOrder + targetCardOrder) / 2;
         }
         
-        // Get the journey name from the card
-        const journeyName = this.draggedCard.querySelector('.journey-title').textContent || '';
+        // Get the journey name from stored data
+        const journeyName = this.draggedData?.name || '';
         
         // Trigger event for Bubble to handle the reordering
         if (window.StoryMapEventBridge && window.StoryMapEventBridge.instance) {
@@ -184,10 +195,18 @@ window.StoryMapJourneyDragDrop = {
             // Allow next drop after a small delay
             setTimeout(() => {
                 this.isProcessing = false;
+                // Clear drag state after processing
+                this.draggedCard = null;
+                this.draggedData = null;
+                this.currentDropTarget = null;
             }, 100);
         } else {
             console.error('Event bridge not found! Cannot trigger update.');
             this.isProcessing = false;
+            // Clear drag state after error
+            this.draggedCard = null;
+            this.draggedData = null;
+            this.currentDropTarget = null;
         }
     }
 };
