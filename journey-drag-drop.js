@@ -40,9 +40,12 @@ window.StoryMapJourneyDragDrop = {
             }
             card.dataset.dragSetup = 'true';
             
+            // Make card draggable
+            card.draggable = true;
+            
             // Drag start
             card.addEventListener('dragstart', (e) => {
-                this.draggedJourney = card;
+                this.draggedCard = card;
                 card.classList.add('dragging');
                 e.dataTransfer.effectAllowed = 'move';
                 e.dataTransfer.setData('text/html', card.innerHTML);
@@ -55,13 +58,13 @@ window.StoryMapJourneyDragDrop = {
                 this.container.querySelectorAll('.journey-card').forEach(c => {
                     c.classList.remove('drag-over');
                 });
-                this.draggedJourney = null;
+                this.draggedCard = null;
                 this.currentDropTarget = null;
             });
             
             // Drag over - prevent default to allow drop
             card.addEventListener('dragover', (e) => {
-                if (this.draggedJourney && card !== this.draggedJourney) {
+                if (this.draggedCard && card !== this.draggedCard) {
                     e.preventDefault();
                     card.classList.add('drag-over');
                 }
@@ -69,7 +72,7 @@ window.StoryMapJourneyDragDrop = {
             
             // Drag enter
             card.addEventListener('dragenter', (e) => {
-                if (this.draggedJourney && card !== this.draggedJourney) {
+                if (this.draggedCard && card !== this.draggedCard) {
                     this.currentDropTarget = card;
                 }
             });
@@ -84,7 +87,7 @@ window.StoryMapJourneyDragDrop = {
                 e.preventDefault();
                 card.classList.remove('drag-over');
                 
-                if (this.draggedJourney && card !== this.draggedJourney) {
+                if (this.draggedCard && card !== this.draggedCard) {
                     this.handleDrop(card);
                 }
             });
@@ -104,14 +107,14 @@ window.StoryMapJourneyDragDrop = {
             return;
         }
         
-        if (!this.draggedJourney) {
+        if (!this.draggedCard) {
             console.error('No dragged journey found');
             return;
         }
         
         this.isProcessing = true;
         
-        const draggedId = this.draggedJourney.dataset.id;
+        const draggedId = this.draggedCard.dataset.id;
         const targetId = targetCard.dataset.id;
         
         // Quick exit if same card
@@ -121,7 +124,7 @@ window.StoryMapJourneyDragDrop = {
         }
         
         // Get only the necessary journey orders (dragged and target)
-        const draggedOrder = parseFloat(this.draggedJourney.dataset.order || '0');
+        const draggedOrder = parseFloat(this.draggedCard.dataset.order || '0');
         const targetOrder = parseFloat(targetCard.dataset.order || '0');
         
         // Find position of target in sorted list for calculation
@@ -160,7 +163,7 @@ window.StoryMapJourneyDragDrop = {
         }
         
         // Get the journey name from the card
-        const journeyName = this.draggedJourney.querySelector('.card-title').textContent || '';
+        const journeyName = this.draggedCard.querySelector('.journey-title').textContent || '';
         
         // Trigger event for Bubble to handle the reordering
         if (window.StoryMapEventBridge && window.StoryMapEventBridge.instance) {
