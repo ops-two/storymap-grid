@@ -49,17 +49,6 @@ window.StoryMapInlineEdit = {
         input.type = 'text';
         input.value = currentText;
         input.className = 'inline-edit-input';
-        input.style.cssText = `
-            width: 100%;
-            padding: 4px 8px;
-            border: 2px solid #007bff;
-            border-radius: 4px;
-            font-size: inherit;
-            font-family: inherit;
-            background: white;
-            color: inherit;
-            outline: none;
-        `;
         
         // Store edit state
         this.activeEdit = {
