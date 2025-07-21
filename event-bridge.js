@@ -19,20 +19,13 @@ window.StoryMapEventBridge = {
         document.addEventListener('storymap:reorder', this.handleReorder.bind(this));
         document.addEventListener('storymap:add', this.handleAdd.bind(this));
         
-        console.log('StoryMapEventBridge initialized');
+
     },
     
     handleUpdate(event) {
         const { entityType, entityId, fieldName, newValue, oldValue, allData } = event.detail;
         
-        console.log('Event Bridge: Handling update', {
-            entityType,
-            entityId,
-            fieldName,
-            newValue,
-            oldValue,
-            allData
-        });
+
         
         // Publish state for Bubble to react (as JSON string)
         this.instance.publishState('pending_update', JSON.stringify({
@@ -53,12 +46,7 @@ window.StoryMapEventBridge = {
     handleAdd(event) {
         const { entityType, parentId, parentType, data } = event.detail;
         
-        console.log('Event Bridge: Handling add', {
-            entityType,
-            parentId,
-            parentType,
-            data
-        });
+
         
         // Publish state for new entity (as JSON string)
         this.instance.publishState('pending_add', JSON.stringify({
@@ -77,13 +65,7 @@ window.StoryMapEventBridge = {
     handleReorder(event) {
         const { entityType, entityId, oldIndex, newIndex, newOrderValue } = event.detail;
         
-        console.log('Event Bridge: Handling reorder', {
-            entityType,
-            entityId,
-            oldIndex,
-            newIndex,
-            newOrderValue
-        });
+
         
         // Publish state for Bubble to react (as JSON string)
         this.instance.publishState('pending_reorder', JSON.stringify({

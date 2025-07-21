@@ -9,7 +9,6 @@ window.StoryMapInlineEdit = {
     init(container) {
         this.container = container;
         this.setupEditHandlers();
-        console.log('StoryMapInlineEdit initialized');
     },
     
     setupEditHandlers() {
@@ -126,14 +125,8 @@ window.StoryMapInlineEdit = {
             // Gather all entity data from the card
             const allData = this.gatherEntityData(card, entityType, newValue);
             
-            console.log('Updating entity:', {
-                entityType,
-                entityId,
-                fieldName,
-                newValue,
-                oldValue: originalText,
-                allData
-            });
+            // Critical log for debugging updates
+            console.log(`Inline edit: ${entityType} ${entityId} - ${fieldName} changed`);
             
             // Emit update event for Bubble with all data
             document.dispatchEvent(new CustomEvent('storymap:update', {
@@ -156,7 +149,7 @@ window.StoryMapInlineEdit = {
                     textElement.style.display = '';
                     input.remove();
                     this.activeEdit = null;
-                    console.log('Entity update complete:', entityId);
+    
                 }
             }, 500);
         } else {
