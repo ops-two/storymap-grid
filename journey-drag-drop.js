@@ -72,9 +72,18 @@ window.StoryMapJourneyDragDrop = {
     },
     
     handleDrop: function(targetCard) {
+        console.log('=== JOURNEY DROP EVENT START ===');
+        
+        if (!this.draggedJourney) {
+            console.error('No dragged journey found');
+            return;
+        }
+        
         const draggedId = this.draggedJourney.dataset.id;
         const targetId = targetCard.dataset.id;
         
+        console.log('Dragged ID:', draggedId);
+        console.log('Target ID:', targetId);
         console.log('Dropping journey', draggedId, 'onto', targetId);
         
         // Get all journey cards and their current order
@@ -123,17 +132,27 @@ window.StoryMapJourneyDragDrop = {
         // Find the dragged journey's new order
         const newOrderValue = journeyOrders.find(j => j.id === draggedId).newOrder;
         
+        console.log('New order for journey:', draggedId, 'is:', newOrderValue);
+        console.log('All journey orders:', journeyOrders);
+        
         // Trigger event for Bubble to handle the reordering
         if (window.StoryMapEventBridge && window.StoryMapEventBridge.instance) {
-            // Use journey_updated event instead of journey_reordered
-            window.StoryMapEventBridge.instance.triggerEvent('journey_updated');
-            window.StoryMapEventBridge.instance.publishState('pending_update', JSON.stringify({
+            console.log('Event bridge found, triggering journey_updated event');
+            const updateData = {
                 entityType: 'journey',
                 entityId: draggedId,
                 order_index: newOrderValue,
                 allJourneyOrders: journeyOrders, // Send all journey orders for reference
                 timestamp: Date.now()
-            }));
+            };
+            console.log('Publishing update data:', updateData);
+            
+            // Use journey_updated event instead of journey_reordered
+            window.StoryMapEventBridge.instance.triggerEvent('journey_updated');
+            window.StoryMapEventBridge.instance.publishState('pending_update', JSON.stringify(updateData));
+            console.log('Event triggered and state published');
+        } else {
+            console.error('Event bridge not found! Cannot trigger update.');
         }
     }
 };
