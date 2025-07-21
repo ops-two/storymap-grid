@@ -178,17 +178,15 @@ window.StoryMapInlineEdit = {
     },
     
     gatherEntityData(card, entityType, newValue) {
-        // Simple format: id, name, and order_index only
+        // Format: entityId, name_text, and order_index
         const data = {
-            id: card.dataset.id
+            entityId: card.dataset.id,
+            name_text: newValue
         };
         
         // Get order from data-order attribute (or data-order-index for compatibility)
         const orderValue = card.getAttribute('data-order') || card.getAttribute('data-order-index') || '0';
         data.order_index = parseInt(orderValue);
-        
-        // Always use 'name' field for consistency
-        data.name = newValue;
         
         return data;
     }

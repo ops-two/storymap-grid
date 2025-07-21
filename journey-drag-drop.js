@@ -142,10 +142,10 @@ window.StoryMapJourneyDragDrop = {
         if (window.StoryMapEventBridge && window.StoryMapEventBridge.instance) {
             console.log('Event bridge found, triggering journey_updated event');
             
-            // Update format: only id, name, and order_index
+            // Update format: entityId, name_text, and order_index
             const updateData = {
-                id: draggedId,
-                name: journeyName,
+                entityId: draggedId,
+                name_text: journeyName,
                 order_index: newOrderValue
             };
             
