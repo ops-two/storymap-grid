@@ -178,52 +178,17 @@ window.StoryMapInlineEdit = {
     },
     
     gatherEntityData(card, entityType, newValue) {
-        const data = {};
+        // Simple format: id, name, and order_index only
+        const data = {
+            id: card.dataset.id
+        };
         
-        // Get basic fields from data attributes
-        const orderIndex = card.getAttribute('data-order-index');
-        const parentId = card.getAttribute('data-parent-id');
-        const projectId = card.getAttribute('data-project-id');
+        // Get order from data-order attribute (or data-order-index for compatibility)
+        const orderValue = card.getAttribute('data-order') || card.getAttribute('data-order-index') || '0';
+        data.order_index = parseInt(orderValue);
         
-        // Build data object based on entity type
-        switch(entityType) {
-            case 'journey':
-                data.name_text = newValue;
-                data.order_index = parseInt(orderIndex) || 0;
-                data.project = projectId;
-                break;
-                
-            case 'feature':
-                data.name_text = newValue;
-                data.order_index = parseInt(orderIndex) || 0;
-                data.journey = parentId;
-                data.project = projectId;
-                break;
-                
-            case 'story':
-                data.title_text = newValue;
-                data.order_index = parseInt(orderIndex) || 0;
-                data.feature = parentId;
-                // Get additional story data if available
-                data.type = card.getAttribute('data-story-type') || 'Story';
-                data.release = card.getAttribute('data-release-id') || null;
-                // Personas would need to be parsed from data attribute
-                const personasAttr = card.getAttribute('data-personas');
-                data.personas = personasAttr ? JSON.parse(personasAttr) : [];
-                break;
-                
-            case 'release':
-                data.name_text = newValue;
-                data.target_date = card.getAttribute('data-target-date') || null;
-                data.workspace = card.getAttribute('data-workspace-id');
-                break;
-                
-            case 'persona':
-                data.name_text = newValue;
-                data.workspace = card.getAttribute('data-workspace-id');
-                data.icon = card.getAttribute('data-icon') || null;
-                break;
-        }
+        // Always use 'name' field for consistency
+        data.name = newValue;
         
         return data;
     }
