@@ -96,7 +96,7 @@ window.StoryMapJourneyDragDrop = {
             const orderAttr = card.dataset.order || '0';
             journeyOrders.push({
                 id: id,
-                order: parseInt(orderAttr)
+                order: parseFloat(orderAttr)  // Use parseFloat to handle decimals
             });
         });
         
@@ -112,25 +112,25 @@ window.StoryMapJourneyDragDrop = {
             return;
         }
         
-        // Calculate new index - dropping on a card means inserting before it
-        let newIndex = targetIndex;
-        if (draggedIndex < newIndex) {
-            newIndex--; // Adjust for removal of dragged item
+        // Calculate new decimal order index
+        let newOrderValue;
+        
+        // If dropping at the beginning (before first item)
+        if (targetIndex === 0) {
+            newOrderValue = journeyOrders[0].order - 1;
+        }
+        // If dropping between items
+        else {
+            // Get the order of the target and the item before it
+            const targetOrder = journeyOrders[targetIndex].order;
+            const prevOrder = journeyOrders[targetIndex - 1].order;
+            
+            // Calculate midpoint between previous and target
+            newOrderValue = (prevOrder + targetOrder) / 2;
         }
         
-        // Remove dragged journey from array
-        const [draggedJourney] = journeyOrders.splice(draggedIndex, 1);
-        
-        // Insert at new position
-        journeyOrders.splice(newIndex, 0, draggedJourney);
-        
-        // Assign new order values (0, 1, 2, ...)
-        journeyOrders.forEach((journey, index) => {
-            journey.newOrder = index;
-        });
-        
-        // Find the dragged journey's new order
-        const newOrderValue = journeyOrders.find(j => j.id === draggedId).newOrder;
+        console.log('Target index:', targetIndex);
+        console.log('Calculated new order value:', newOrderValue);
         
         // Get the journey name from the card
         const journeyName = this.draggedJourney.querySelector('.card-title').textContent || '';
