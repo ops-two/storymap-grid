@@ -1,12 +1,25 @@
 // Story Map Grid Renderer (for Bubble Plugin)
 
 window.StoryMapRenderer = {
+    // Store raw Bubble data for access by other modules
+    dataStore: {
+        journeys: new Map(),
+        features: new Map(),
+        stories: new Map(),
+        personas: new Map(),
+        releases: new Map()
+    },
     render: function(data, containerElement) {
         // 1. DATA TRANSFORMATION
         const personas = (data.rawPersonas || []).map((p, index) => ({
             id: p.get('_id'),
             title: p.get('name_text') || `Persona ${index + 1}`
         }));
+
+        // Store raw journey data for later access
+        data.rawJourneys.forEach(j => {
+            this.dataStore.journeys.set(j.get('_id'), j);
+        });
 
         // First, create all features with their data
         const allFeatures = (data.rawFeatures || []).map((f, index) => {

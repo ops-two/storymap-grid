@@ -122,8 +122,22 @@ window.StoryMapInlineEdit = {
             input.disabled = true;
             input.style.opacity = '0.6';
             
-            // Gather all entity data from the card
-            const allData = this.gatherEntityData(card, entityType, newValue);
+            // Update entity in data store and get full data
+            let fullEntityData = null;
+            if (window.StoryMapDataStore) {
+                // Update the specific field in data store
+                const changes = {};
+                changes[fieldName] = newValue;
+                window.StoryMapDataStore.updateEntity(entityType, entityId, changes);
+                
+                // Get full entity data for update
+                fullEntityData = window.StoryMapDataStore.getEntityForUpdate(entityType, entityId);
+            }
+            
+            // If no data store, fall back to gathered data
+            if (!fullEntityData) {
+                fullEntityData = this.gatherEntityData(card, entityType, newValue);
+            }
             
             // Critical log for debugging updates
             console.log(`Inline edit: ${entityType} ${entityId} - ${fieldName} changed`);
@@ -136,7 +150,7 @@ window.StoryMapInlineEdit = {
                     fieldName,
                     newValue,
                     oldValue: originalText,
-                    allData
+                    allData: fullEntityData
                 }
             }));
             

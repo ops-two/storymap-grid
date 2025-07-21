@@ -173,23 +173,35 @@ window.StoryMapJourneyDragDrop = {
             newOrderValue = (prevCardOrder + targetCardOrder) / 2;
         }
         
-        // Get the journey name from stored data
-        const journeyName = this.draggedData?.name || '';
+        // Update the journey in data store with new order
+        let fullJourneyData = null;
+        if (window.StoryMapDataStore) {
+            // Update order in data store
+            window.StoryMapDataStore.updateEntity('journey', draggedId, {
+                order_index_number: newOrderValue
+            });
+            
+            // Get full journey data for update
+            fullJourneyData = window.StoryMapDataStore.getEntityForUpdate('journey', draggedId);
+        }
+        
+        // If no data store, fall back to minimal data
+        if (!fullJourneyData) {
+            fullJourneyData = {
+                entityId: draggedId,
+                name_text: this.draggedData?.name || '',
+                order_index: newOrderValue
+            };
+        }
         
         // Trigger event for Bubble to handle the reordering
         if (window.StoryMapEventBridge && window.StoryMapEventBridge.instance) {
-            // Update format: entityId, name_text, and order_index
-            const updateData = {
-                entityId: draggedId,
-                name_text: journeyName,
-                order_index: newOrderValue
-            };
             
-            console.log('Publishing journey update:', JSON.stringify(updateData));
+            console.log('Publishing journey update:', JSON.stringify(fullJourneyData));
             
             // Use journey_updated event
             window.StoryMapEventBridge.instance.triggerEvent('journey_updated');
-            window.StoryMapEventBridge.instance.publishState('pending_update', JSON.stringify(updateData));
+            window.StoryMapEventBridge.instance.publishState('pending_update', JSON.stringify(fullJourneyData));
             console.log('Event triggered and state published');
             
             // Allow next drop after a small delay
