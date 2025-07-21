@@ -132,22 +132,26 @@ window.StoryMapJourneyDragDrop = {
         // Find the dragged journey's new order
         const newOrderValue = journeyOrders.find(j => j.id === draggedId).newOrder;
         
+        // Get the journey name from the card
+        const journeyName = this.draggedJourney.querySelector('.card-title').textContent || '';
+        
         console.log('New order for journey:', draggedId, 'is:', newOrderValue);
-        console.log('All journey orders:', journeyOrders);
+        console.log('Journey name:', journeyName);
         
         // Trigger event for Bubble to handle the reordering
         if (window.StoryMapEventBridge && window.StoryMapEventBridge.instance) {
             console.log('Event bridge found, triggering journey_updated event');
+            
+            // Update format: only id, name, and order_index
             const updateData = {
-                entityType: 'journey',
-                entityId: draggedId,
-                order_index: newOrderValue,
-                allJourneyOrders: journeyOrders, // Send all journey orders for reference
-                timestamp: Date.now()
+                id: draggedId,
+                name: journeyName,
+                order_index: newOrderValue
             };
+            
             console.log('Publishing update data:', updateData);
             
-            // Use journey_updated event instead of journey_reordered
+            // Use journey_updated event
             window.StoryMapEventBridge.instance.triggerEvent('journey_updated');
             window.StoryMapEventBridge.instance.publishState('pending_update', JSON.stringify(updateData));
             console.log('Event triggered and state published');
