@@ -140,9 +140,22 @@ window.StoryMapDataStore = {
         const entity = entityMap.get(entityId);
         if (!entity) return null;
         
-        // Return clean copy without internal fields
-        const { _raw, ...cleanEntity } = entity;
-        return cleanEntity;
+        // Transform to expected update format
+        const updateData = {
+            entityId: entity._id
+        };
+        
+        // Add name field based on entity type
+        if (entityType === 'story') {
+            updateData.name_text = entity.title_text;
+        } else {
+            updateData.name_text = entity.name_text;
+        }
+        
+        // Add order_index (not order_index_number)
+        updateData.order_index = entity.order_index_number || 0;
+        
+        return updateData;
     },
     
     /**

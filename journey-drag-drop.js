@@ -194,31 +194,28 @@ window.StoryMapJourneyDragDrop = {
             };
         }
         
-        // Trigger event for Bubble to handle the reordering
-        if (window.StoryMapEventBridge && window.StoryMapEventBridge.instance) {
-            
-            console.log('Publishing journey update:', JSON.stringify(fullJourneyData));
-            
-            // Use journey_updated event
-            window.StoryMapEventBridge.instance.triggerEvent('journey_updated');
-            window.StoryMapEventBridge.instance.publishState('pending_update', JSON.stringify(fullJourneyData));
-            console.log('Event triggered and state published');
-            
-            // Allow next drop after a small delay
-            setTimeout(() => {
-                this.isProcessing = false;
-                // Clear drag state after processing
-                this.draggedCard = null;
-                this.draggedData = null;
-                this.currentDropTarget = null;
-            }, 100);
-        } else {
-            console.error('Event bridge not found! Cannot trigger update.');
+        // Trigger event through event bridge for consistency
+        console.log('Publishing journey update:', JSON.stringify(fullJourneyData));
+        
+        // Emit update event through the proper channel
+        document.dispatchEvent(new CustomEvent('storymap:update', {
+            detail: {
+                entityType: 'journey',
+                entityId: draggedId,
+                fieldName: 'order_index_number',
+                newValue: newOrderValue,
+                oldValue: draggedOrder,
+                allData: fullJourneyData
+            }
+        }));
+        
+        // Allow next drop after a small delay
+        setTimeout(() => {
             this.isProcessing = false;
-            // Clear drag state after error
+            // Clear drag state after processing
             this.draggedCard = null;
             this.draggedData = null;
             this.currentDropTarget = null;
-        }
+        }, 100);
     }
 };
