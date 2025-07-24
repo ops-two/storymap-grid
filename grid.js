@@ -147,5 +147,7 @@ window.StoryMapRenderer = {
       window.StoryMapInlineEdit.init(containerElement[0]);
     if (window.StoryMapJourneyDragDrop)
       window.StoryMapJourneyDragDrop.init(containerElement[0]);
+    if (window.StoryMapFeatureDragDrop)
+      window.StoryMapFeatureDragDrop.init(containerElement[0]);
   },
 };
