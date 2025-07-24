@@ -11,7 +11,7 @@ window.StoryMapRenderer = {
     const totalColumns = features.length > 0 ? features.length : 1;
     document.documentElement.style.setProperty("--total-columns", totalColumns);
 
-    // --- 3. HTML GENERATION (with corrected Story rendering) ---
+    // --- 3. HTML GENERATION ---
     const projectTitle = project ? project.name : "Unnamed Project";
     let html = `
             <div class="story-map-container">
@@ -22,44 +22,24 @@ window.StoryMapRenderer = {
                 <div class="story-map-grid-container">
         `;
 
-    // --- RENDER JOURNEYS & FEATURES ---
-    const featureOrderMap = new Map(features.map((f, i) => [f.id, i]));
+    // --- CORRECTED RENDER JOURNEYS & FEATURES (No Nested Loops) ---
 
+    // 1. Render the Journey row ONCE
+    html += `<div class="journeys-row-container">`;
     journeys.forEach((journey) => {
-      // Find all features belonging to this journey
-      const journeyFeatures = features.filter(
-        (f) => f.journeyId === journey.id
-      );
-      if (journeyFeatures.length === 0) return; // Skip journeys with no features
+      html += `<div class="card journey-card" data-id="${journey.id}" data-type="journey" data-order="${journey.order}">
+                    <span class="card-title">${journey.name}</span>
+                 </div>`;
+    });
+    html += `</div>`; // Close journeys-row-container
 
-      // Find the start and end column indices for this journey's features
-      const featureIndices = journeyFeatures.map((f) =>
-        featureOrderMap.get(f.id)
-      );
-      const startCol = Math.min(...featureIndices) + 1;
-      const endCol = Math.max(...featureIndices) + 1;
-      const span = endCol - startCol + 1;
-
-      // Render a single journey card that spans all its features
-      // --- NEW, SIMPLIFIED JOURNEY & FEATURE RENDERING ---
-
-      // Create a separate container for the journeys row
-      html += `<div class="journeys-row-container">`;
-      journeys.forEach((journey) => {
-        html += `<div class="card journey-card" data-id="${journey.id}" data-type="journey" data-order="${journey.order}">
-                        <span class="card-title">${journey.name}</span>
-                     </div>`;
-      });
-      html += `</div>`; // Close journeys-row-container
-
-      // The features row remains on the main grid
-      features.forEach((feature, index) => {
-        html += `<div class="card feature-card" data-id="${
-          feature.id
-        }" data-type="feature" style="grid-column: ${index + 1};">
-                        <span class="card-title">${feature.name}</span>
-                     </div>`;
-      });
+    // 2. Render the Feature row ONCE
+    features.forEach((feature, index) => {
+      html += `<div class="card feature-card" data-id="${
+        feature.id
+      }" data-type="feature" style="grid-column: ${index + 1};">
+                    <span class="card-title">${feature.name}</span>
+                 </div>`;
     });
 
     // --- CORRECTED STORY RENDERING LOGIC ---
