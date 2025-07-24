@@ -85,7 +85,18 @@ window.StoryMapDataStore = {
 
     return updateData;
   },
+  // Add this function to data-store.js
 
+  /**
+   * Updates the order of a single entity in the local store.
+   * This is for optimistic UI updates.
+   */
+  updateEntityOrder(entityType, entityId, newOrder) {
+    const entity = this.getEntity(entityType, entityId);
+    if (entity) {
+      entity.order = newOrder;
+    }
+  },
   getEntity(entityType, entityId) {
     const map = this.getEntityMap(entityType);
     return map ? map.get(entityId) : null;
