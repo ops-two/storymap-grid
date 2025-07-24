@@ -1,338 +1,127 @@
 :root {
-  --card-width: 160px;
+  --card-width: 180px;
   --journey-height: 45px;
   --feature-height: 45px;
-  --story-height: 50px;
+  --story-height: 60px;
   --column-gap: 12px;
   --vertical-gap: 8px;
-  /* --total-columns will be injected by JS */
-}
-.card--saving {
-  opacity: 0.6;
-  background-color: #f0f0f0;
-  cursor: progress;
-  animation: pulse 1.5s infinite;
 }
 
-@keyframes pulse {
-  0% {
-    box-shadow: 0 0 0 0 rgba(0, 123, 255, 0.4);
-  }
-  70% {
-    box-shadow: 0 0 0 10px rgba(0, 123, 255, 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(0, 123, 255, 0);
-  }
-}
-
+/* Base container styles */
 .story-map-container {
   padding: 20px;
   font-family: Arial, sans-serif;
   height: 100%;
-  overflow: auto;
+  overflow-x: auto; /* Allow horizontal scrolling */
 }
 
 .story-map-container h2 {
   margin-top: 0;
   margin-bottom: 8px;
-  color: #172b4d;
-  font-size: 28px;
   font-weight: 600;
 }
-
 .story-map-info {
-  margin-bottom: 16px;
-  color: #6b778c;
-  font-size: 16px;
-  line-height: 1.5;
-}
-
-.story-map-legend {
-  display: flex;
-  gap: 24px;
-  flex-wrap: wrap;
-}
-
-.legend-item {
-  font-size: 14px;
-  color: #6b778c;
-  font-weight: 500;
-}
-
-.personas-row {
-  display: flex;
-  background: white;
-  border: 1px solid #dfe1e6;
-  border-radius: 12px;
   margin-bottom: 24px;
-  overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  color: #6b778c;
 }
 
-.row-header {
-  width: 140px;
-  padding: 20px;
-  background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
-  color: #1565c0;
-  font-weight: 600;
-  border-right: 1px solid #dfe1e6;
+/* The main content area that holds all release groups */
+.story-map-content {
   display: flex;
-  align-items: center;
-  font-size: 15px;
+  flex-direction: column;
+  gap: 32px;
 }
 
-.row-content {
-  flex: 1;
-  padding: 20px;
+/* Styles for a whole Release (e.g., "Release 1") */
+.release-group {
   display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  align-items: center;
+  flex-direction: column;
+  gap: 16px;
 }
-
-.story-map-grid-container {
-  display: grid;
-  grid-template-columns: repeat(var(--total-columns, 1), var(--card-width));
-  gap: var(--vertical-gap) var(--column-gap);
-  padding: 24px;
-  min-width: fit-content;
-  background: white;
-  border: 1px solid #dfe1e6;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
-
-.card {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 8px;
-  font-size: 14px;
-  padding: 12px;
-  box-sizing: border-box;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  background-color: #fff;
-  color: #172b4d;
-  position: relative;
-  overflow: hidden;
-  text-align: center;
-  border: 1px solid #dfe1e6;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-}
-
-/* --- NEW STYLES FOR JOURNEY ROW --- */
-
-.journeys-row-container {
-  display: flex; /* Use flexbox for a horizontal row */
-  flex-wrap: wrap; /* Allow wrapping if needed, though unlikely */
-  gap: var(--column-gap); /* Use the same gap as our grid */
-  margin-bottom: var(--vertical-gap); /* Space between journeys and features */
-  grid-column: 1 / -1; /* Ensure this container spans the entire grid width */
-}
-
-/* Override for journey cards inside the new container */
-.journeys-row-container .journey-card {
-  flex-grow: 1; /* Allow cards to grow to fill space if needed */
-  flex-basis: 150px; /* Give them a base width */
-  min-width: var(
-    --card-width
-  ); /* Ensure they are at least the standard card width */
-}
-.card span {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  word-break: break-word;
-  line-height: 1.4;
-  max-width: 100%;
-  font-weight: 500;
-}
-
-.card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  border-color: #0052cc;
-}
-
-.journey-card {
-  height: var(--journey-height);
-  font-weight: 600;
-  font-size: 15px;
-  background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
-  border: 2px solid #f39c12;
-  color: #8b4513;
-  cursor: move;
-}
-
-.journey-card[draggable="true"]:active {
-  cursor: grabbing;
-}
-
-.journey-card.dragging {
-  opacity: 0.6;
-  transform: rotate(2deg);
-}
-
-.journey-card.drag-over {
-  border: 2px dashed #f39c12;
-  background-color: rgba(243, 156, 18, 0.1);
-}
-
-.journey-drop-zone {
-  grid-column: 1 / -1;
-  height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 2px dashed transparent;
-  transition: all 0.2s ease;
-  position: relative;
-  border-radius: 8px;
-}
-
-.journey-drop-zone .drop-indicator {
-  display: none;
-  background: #f39c12;
-  color: white;
-  padding: 6px 16px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.journey-drop-zone.drag-over {
-  height: 40px;
-  border-color: #f39c12;
-  background-color: rgba(243, 156, 18, 0.05);
-}
-
-.journey-drop-zone.drag-over .drop-indicator {
-  display: block;
-}
-
-.inline-edit-input {
-  width: 100%;
-  padding: 8px 12px;
-  border: 2px solid #0052cc;
-  border-radius: 6px;
-  font-size: inherit;
-  font-family: inherit;
-  background: white;
-  color: inherit;
-  outline: none;
-  box-sizing: border-box;
-  text-align: center;
-  font-weight: 500;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.feature-card {
-  height: var(--feature-height);
-  font-weight: 600;
-  background: linear-gradient(135deg, #e8d5ff 0%, #d1c4e9 100%);
-  border: 2px solid #8e24aa;
-  color: #4a148c;
-}
-
-.release-section {
-  grid-column: 1 / -1;
-  display: contents;
-}
-
 .release-header {
-  grid-column: 1 / -1;
-  border-bottom: 2px solid #dfe1e6;
-  margin: 32px 0 16px 0;
-  padding-bottom: 12px;
-  color: #172b4d;
   font-size: 18px;
   font-weight: 600;
+  border-bottom: 2px solid #dfe1e6;
+  padding-bottom: 8px;
+}
+
+/* Container for all journeys within a release */
+.journeys-container {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 16px;
+  padding-left: 20px;
 }
 
-.release-meta {
-  font-size: 14px;
-  color: #6b778c;
-  font-weight: 400;
+/* Container for a single Journey and its features */
+.journey-group {
+  display: flex;
+  flex-direction: row; /* Journey card on left, features on right */
+  align-items: flex-start;
+  gap: 16px;
 }
 
-.feature-column {
+/* Container for all features within a journey */
+.features-container {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap; /* Allow features to wrap if needed */
+  gap: var(--column-gap);
+}
+
+/* Container for a single Feature and its stories */
+.feature-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--vertical-gap);
+  width: var(--card-width); /* Give features a fixed width */
+}
+
+/* Container for all stories under a feature */
+.stories-container {
   display: flex;
   flex-direction: column;
   gap: var(--vertical-gap);
 }
 
-.story-card {
-  height: var(--story-height);
-  font-weight: 500;
-  background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c8 100%);
-  border: 2px solid #4caf50;
-  color: #2e7d32;
-  padding: 8px 12px;
-}
-
-.story-card.tech {
-  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
-  border-color: #2196f3;
-  color: #1565c0;
-}
-
-.story-content {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  width: 100%;
-  height: 100%;
-  justify-content: space-between;
-}
-
-.story-title {
-  font-size: 13px;
-  line-height: 1.3;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.story-meta {
+/* Generic Card Styles */
+.card {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  font-size: 11px;
-  opacity: 0.8;
-}
-
-.estimate {
-  background: rgba(0, 0, 0, 0.1);
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-weight: 600;
-}
-
-.persona-card {
-  background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
-  border: 1px solid #ba68c8;
-  padding: 12px 16px;
-  font-size: 14px;
-  font-weight: 500;
-  color: #6a1b9a;
+  justify-content: center;
   border-radius: 8px;
+  padding: 8px;
+  box-sizing: border-box;
+  text-align: center;
+  border: 1px solid #dfe1e6;
+  background-color: #fff;
+}
+.card span {
+  /* You can keep your text-truncation styles here if you wish */
 }
 
-.no-data {
-  color: #97a0af;
-  font-style: italic;
-  font-size: 14px;
-  text-align: center;
-  padding: 20px;
+/* Specific Card Styles */
+.journey-card {
+  height: var(--journey-height);
+  width: var(--card-width);
+  min-width: var(--card-width); /* Prevent shrinking */
+  font-weight: 600;
+  background-color: #fff3cd;
+  border-color: #f39c12;
+  cursor: move;
+}
+.feature-card {
+  height: var(--feature-height);
+  font-weight: 500;
+  background-color: #e8d5ff;
+  border-color: #8e24aa;
+}
+.story-card {
+  min-height: var(--story-height);
+  background-color: #e8f5e8;
+  border-color: #4caf50;
+}
+.story-card.tech {
+  background-color: #e3f2fd;
+  border-color: #2196f3;
 }
