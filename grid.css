@@ -253,6 +253,12 @@
   flex-direction: column;
   gap: var(--vertical-gap);
 }
+.story-row {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: subgrid; /* This makes the columns align perfectly! */
+  align-items: start;
+}
 
 .story-card {
   height: var(--story-height);
