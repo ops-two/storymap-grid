@@ -1,13 +1,13 @@
 window.StoryMapRenderer = {
   render: function (containerElement) {
-    // --- 1. PULL CLEAN DATA FROM THE DATA STORE ---
+    // --- 1. PULL CLEAN DATA ---
     const project = window.StoryMapDataStore.data.project;
     const journeys = window.StoryMapDataStore.getEntitiesArray("journey");
     const features = window.StoryMapDataStore.getEntitiesArray("feature");
     const stories = window.StoryMapDataStore.getEntitiesArray("story");
     const releases = window.StoryMapDataStore.getEntitiesArray("release");
 
-    // --- 2. GRID CALCULATION & DYNAMIC STYLE INJECTION ---
+    // --- 2. GRID CALCULATION ---
     const totalColumns = features.length > 0 ? features.length : 1;
     document.documentElement.style.setProperty("--total-columns", totalColumns);
 
@@ -22,9 +22,12 @@ window.StoryMapRenderer = {
             <div class="story-map-grid-container">
     `;
 
-    // A. Render the Journeys on the FIRST row of the grid.
+    // --- FINAL, CORRECTED RENDERING LOGIC ---
+
+    // A. Render each Journey on its OWN dedicated row.
     const featureOrderMap = new Map(features.map((f, i) => [f.id, i]));
-    journeys.forEach((journey) => {
+    journeys.forEach((journey, index) => {
+      // Added 'index' to the loop
       const journeyFeatures = features.filter(
         (f) => f.journeyId === journey.id
       );
@@ -37,30 +40,39 @@ window.StoryMapRenderer = {
       const endCol = Math.max(...featureIndices) + 1;
       const span = endCol - startCol + 1;
 
-      html += `<div class="card journey-card" data-id="${journey.id}" data-type="journey" data-order="${journey.order}" style="grid-column: ${startCol} / span ${span}; grid-row: 1;">
+      // The KEY FIX: Assign each journey to a new row: grid-row: ${index + 1}
+      html += `<div class="card journey-card" data-id="${
+        journey.id
+      }" data-type="journey" data-order="${
+        journey.order
+      }" style="grid-column: ${startCol} / span ${span}; grid-row: ${
+        index + 1
+      };">
                     <span class="card-title">${journey.name}</span>
                  </div>`;
     });
 
-    // B. Render the Features on the SECOND row of the grid.
+    // B. Render the single Feature row BELOW all the journey rows.
+    const featureRowIndex = journeys.length + 1;
     features.forEach((feature, index) => {
       html += `<div class="card feature-card" data-id="${
         feature.id
-      }" data-type="feature" style="grid-column: ${index + 1}; grid-row: 2;">
+      }" data-type="feature" style="grid-column: ${
+        index + 1
+      }; grid-row: ${featureRowIndex};">
                     <span class="card-title">${feature.name}</span>
                  </div>`;
     });
 
-    // C. Render the Stories, ensuring they start on row 3
-    let currentRow = 3; // The first row available for stories
+    // C. Render the Stories, starting below the feature row.
+    let currentRow = featureRowIndex + 1;
 
     const renderStoriesForRelease = (storiesToRender, header) => {
       if (storiesToRender.length === 0) return;
 
-      // Render the header on its own row
       if (header) {
         html += `<div class="release-header" style="grid-row: ${currentRow};">${header}</div>`;
-        currentRow++; // Move to the next row for the stories
+        currentRow++;
       }
 
       let maxStoriesInThisRelease = 0;
@@ -69,7 +81,6 @@ window.StoryMapRenderer = {
           (s) => s.featureId === feature.id
         );
         if (storiesInColumn.length > 0) {
-          // The grid-row property ensures this column starts at the correct vertical position
           html += `<div class="feature-column" style="grid-column: ${
             index + 1
           }; grid-row: ${currentRow};">`;
@@ -84,7 +95,6 @@ window.StoryMapRenderer = {
           }
         }
       });
-      // Increment the current row by the height of the largest column in this release
       currentRow += maxStoriesInThisRelease;
     };
 
