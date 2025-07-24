@@ -62,6 +62,30 @@ window.StoryMapDataStore = {
     });
   },
 
+  /**
+   * Gets a formatted object ready for Bubble workflows, based on the original pattern.
+   */
+  getEntityForUpdate(entityType, entityId) {
+    const entity = this.getEntity(entityType, entityId);
+    if (!entity) return null;
+
+    // This object structure matches what your original workflow expects.
+    const updateData = {
+      entityId: entity.id,
+      // Use the clean 'name' property
+      name_text: entity.name,
+      // Use the clean 'order' property
+      order_index: entity.order || 0,
+    };
+
+    // For stories, the name field is different in the original Bubble DB
+    if (entityType === "story") {
+      updateData.name_text = entity.name; // In our clean store, it's always 'name'
+    }
+
+    return updateData;
+  },
+
   getEntity(entityType, entityId) {
     const map = this.getEntityMap(entityType);
     return map ? map.get(entityId) : null;

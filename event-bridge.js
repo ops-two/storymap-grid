@@ -42,22 +42,18 @@ window.StoryMapEventBridge = {
    * @param {CustomEvent} event The event dispatched, containing update details.
    */
   handleUpdate(event) {
-    // The event.detail object is expected to be clean and simple, e.g.:
-    // { entityType: 'journey', entityId: '...', fieldName: 'order', newValue: -20.5 }
-    const { entityType, entityId, fieldName, newValue } = event.detail;
+    // This function now expects the rich detail object from the interaction modules
+    const { entityType, entityId, fieldName, newValue, oldValue, allData } =
+      event.detail;
 
-    // Create a simple, standardized JSON payload to send to Bubble.
-    // This makes the Bubble workflow much easier to build and maintain.
-    const updatePayload = {
-      id_text: entityId,
-      field_to_change_text: fieldName,
-      new_value_text: String(newValue), // Always convert the new value to a string for safety
-    };
+    console.log(
+      "Dispatching update to Bubble (original format):",
+      event.detail
+    );
 
-    console.log("Dispatching update to Bubble:", updatePayload);
-
-    // Publish this simple object to the 'pending_update' state as a JSON string.
-    this.instance.publishState("pending_update", JSON.stringify(updatePayload));
+    // Publish the entire rich object to the 'pending_update' state.
+    // This is what your Bubble workflow was originally built to read.
+    this.instance.publishState("pending_update", JSON.stringify(event.detail));
 
     // Trigger the specific event for the entity type (e.g., 'journey_updated').
     const eventName = `${entityType}_updated`;

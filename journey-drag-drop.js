@@ -78,8 +78,9 @@ window.StoryMapJourneyDragDrop = {
   },
 
   // --- THIS IS THE CORRECTED AND TAILORED handleDrop FUNCTION ---
+  // In journey-drag-drop.js, replace ONLY the handleDrop function
+
   handleDrop: function (targetCard) {
-    // Debounce and concurrency checks are preserved from your original code.
     const now = Date.now();
     if (now - this.lastDropTime < 300) return;
     this.lastDropTime = now;
@@ -100,18 +101,19 @@ window.StoryMapJourneyDragDrop = {
         return;
       }
 
-      // --- KEY CHANGE: Use the Data Store as the source of truth ---
+      // Use the Data Store as the source of truth for calculations
       const sortedJourneys =
         window.StoryMapDataStore.getEntitiesArray("journey");
+      const draggedJourney = sortedJourneys.find((j) => j.id === draggedId);
       const targetIndex = sortedJourneys.findIndex((j) => j.id === targetId);
 
-      if (targetIndex === -1) {
-        console.error("Target journey not found in Data Store");
+      if (targetIndex === -1 || !draggedJourney) {
+        console.error("Target or dragged journey not found in Data Store");
         this.isProcessing = false;
         return;
       }
 
-      // Your original, proven calculation logic is preserved.
+      // Your original, proven calculation logic
       let newOrderValue;
       if (targetIndex === 0) {
         newOrderValue = sortedJourneys[0].order - 1;
@@ -121,24 +123,35 @@ window.StoryMapJourneyDragDrop = {
         newOrderValue = (prevJourneyOrder + targetJourneyOrder) / 2;
       }
 
-      // --- KEY CHANGE: Dispatch the simple, clean update event ---
+      // --- THIS IS THE CRITICAL FIX ---
+      // 1. Get the pre-formatted data object that Bubble expects.
+      const fullJourneyData = window.StoryMapDataStore.getEntityForUpdate(
+        "journey",
+        draggedId
+      );
+      // 2. Manually update the order in this object before sending.
+      fullJourneyData.order_index = newOrderValue;
+
+      // 3. Dispatch the event with the rich payload, just like your original code.
       console.log(
-        `Dispatching update for journey ${draggedId} to new order ${newOrderValue}`
+        "Publishing journey update (original format):",
+        fullJourneyData
       );
       document.dispatchEvent(
         new CustomEvent("storymap:update", {
           detail: {
             entityType: "journey",
             entityId: draggedId,
-            fieldName: "order", // The clean field name
+            fieldName: "order_index_number", // Use original field name
             newValue: newOrderValue,
+            oldValue: draggedJourney.order,
+            allData: fullJourneyData, // Send the rich object
           },
         })
       );
     } catch (err) {
-      console.error("Error during drop handling:", err);
+      console.error("Error during drop:", err);
     } finally {
-      // Your original finally block is preserved.
       this.isProcessing = false;
       this.draggedCard = null;
       this.draggedData = null;
