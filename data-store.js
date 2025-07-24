@@ -25,42 +25,39 @@ window.StoryMapDataStore = {
       name: rawData.projectName,
     };
 
-    // --- Journeys Transformation ---
+    // --- Journeys Transformation (Already Fixed) ---
     this.data.journeys.clear();
     rawData.rawJourneys.forEach((j, index) => {
-      // Added index for fallback
       const journeyId = j.get("_id");
       this.data.journeys.set(journeyId, {
         id: journeyId,
-        // CORRECTED: Add a fallback for the name, similar to the old renderer
         name: j.get("name_text") || `Journey ${index + 1}`,
         order: j.get("order_index_number"),
       });
     });
 
-    // --- Features Transformation ---
+    // --- Features Transformation (NEW FIX) ---
     this.data.features.clear();
-    rawData.rawFeatures.forEach((f) => {
+    rawData.rawFeatures.forEach((f, index) => {
       const featureId = f.get("_id");
       const journeyRef = f.get("journey_custom_journey");
       this.data.features.set(featureId, {
         id: featureId,
-        name: f.get("name_text"),
+        name: f.get("name_text") || `Feature ${index + 1}`, // Added fallback
         order: f.get("order_index_number"),
-        // Store only the ID of the parent, checking if it exists
         journeyId: journeyRef ? journeyRef.get("_id") : null,
       });
     });
 
-    // --- Stories Transformation ---
+    // --- Stories Transformation (NEW FIX) ---
     this.data.stories.clear();
-    rawData.rawStories.forEach((s) => {
+    rawData.rawStories.forEach((s, index) => {
       const storyId = s.get("_id");
       const featureRef = s.get("feature_custom_feature3");
       const releaseRef = s.get("release_custom_release");
       this.data.stories.set(storyId, {
         id: storyId,
-        name: s.get("title_text"), // Note the source field is different
+        name: s.get("title_text") || `Story ${index + 1}`, // Added fallback
         order: s.get("order_index_number"),
         type: s.get("type_option_storytype"),
         featureId: featureRef ? featureRef.get("_id") : null,
@@ -68,13 +65,13 @@ window.StoryMapDataStore = {
       });
     });
 
-    // --- Releases Transformation ---
+    // --- Releases Transformation (NEW FIX) ---
     this.data.releases.clear();
-    rawData.rawReleases.forEach((r) => {
+    rawData.rawReleases.forEach((r, index) => {
       const releaseId = r.get("_id");
       this.data.releases.set(releaseId, {
         id: releaseId,
-        name: r.get("name_text"),
+        name: r.get("name_text") || `Release ${index + 1}`, // Added fallback
         targetDate: r.get("target_date_date"),
       });
     });
