@@ -149,6 +149,7 @@
   border: 2px solid #f39c12;
   color: #8b4513;
   cursor: move;
+  z-index: 10; /* NEW: Ensures journeys render on top */
 }
 
 .journey-card[draggable="true"]:active {
