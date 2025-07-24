@@ -17,21 +17,25 @@ window.StoryMapEventBridge = {
     // Listens for a generic 'update' event dispatched by any interaction module.
     document.addEventListener("storymap:update", this.handleUpdate.bind(this));
 
-    // --- LISTENER FOR CLICKS (to trigger popups) ---
-    // A single, delegated listener on the canvas is efficient.
     instance.canvas.on("click", ".card", (e) => {
+      // Prevent the event from bubbling up further if needed
+      e.stopPropagation();
+
       const card = $(e.currentTarget);
       const entityId = card.data("id");
       const entityType = card.data("type");
 
+      // Ensure we have a valid ID and type before sending the signal
       if (entityId && entityType) {
         console.log(`Card Clicked: Publishing ${entityType} - ${entityId}`);
 
-        // Publish the ID and Type to exposed states for Bubble to use.
+        // 1. Publish the ID of the clicked item to an exposed state
         this.instance.publishState("clicked_item_id", entityId);
+
+        // 2. Publish the Type of the clicked item to another exposed state
         this.instance.publishState("clicked_item_type", entityType);
 
-        // Trigger the event that Bubble workflows will listen for.
+        // 3. Trigger the generic 'card_clicked' event that our Bubble workflow will listen for.
         this.instance.triggerEvent("card_clicked");
       }
     });
