@@ -27,12 +27,13 @@ window.StoryMapDataStore = {
 
     // --- Journeys Transformation ---
     this.data.journeys.clear();
-    rawData.rawJourneys.forEach((j) => {
+    rawData.rawJourneys.forEach((j, index) => {
+      // Added index for fallback
       const journeyId = j.get("_id");
       this.data.journeys.set(journeyId, {
-        // Clean, generic properties
         id: journeyId,
-        name: j.get("name_text"),
+        // CORRECTED: Add a fallback for the name, similar to the old renderer
+        name: j.get("name_text") || `Journey ${index + 1}`,
         order: j.get("order_index_number"),
       });
     });
