@@ -81,76 +81,75 @@ window.StoryMapJourneyDragDrop = {
   // In journey-drag-drop.js, replace ONLY the handleDrop function
   // In journey-drag-drop.js, replace ONLY the handleDrop function
 
+  // In journey-drag-drop.js, replace ONLY the handleDrop function
+
   handleDrop: function (targetCard) {
     // All of your original debouncing and isProcessing checks remain the same.
     const now = Date.now();
-    if (now - this.lastTime < 300) return;
-    this.lastTime = now;
+    if (now - this.lastDropTime < 300) return;
+    this.lastDropTime = now;
+
     if (this.isProcessing) return;
-    if (!this.draggedCard) return;
+    if (!this.draggedCard) {
+      console.error("No dragged journey found");
+      return;
+    }
 
     try {
       this.isProcessing = true;
 
       const draggedId = this.draggedCard.dataset.id;
       const targetId = targetCard.dataset.id;
-      if (!draggedId || draggedId === targetId) return;
 
-      // Use the Data Store as the single source of truth.
+      if (!draggedId || draggedId === targetId) {
+        this.isProcessing = false;
+        return;
+      }
+
+      // --- THE UNIFIED & CORRECTED CALCULATION LOGIC ---
+
+      // 1. Get the reliably sorted list of journeys from our Data Store.
       const sortedJourneys =
         window.StoryMapDataStore.getEntitiesArray("journey");
       const draggedJourney = sortedJourneys.find((j) => j.id === draggedId);
       const targetIndex = sortedJourneys.findIndex((j) => j.id === targetId);
 
       if (targetIndex === -1 || !draggedJourney) {
-        console.error(
-          "Could not find dragged or target journey in Data Store."
-        );
+        console.error("Target or dragged journey not found in Data Store.");
+        this.isProcessing = false;
         return;
       }
 
-      // --- NEW, MORE ROBUST CALCULATION LOGIC ---
+      // 2. Calculate the new order value. This logic is now the same for all drag directions.
       let newOrderValue;
       const targetJourney = sortedJourneys[targetIndex];
 
-      // Determine if we are dragging the card to the left (a lower index) or right (a higher index)
-      const draggedIndex = sortedJourneys.findIndex((j) => j.id === draggedId);
-
-      if (draggedIndex > targetIndex) {
-        // Dragging LEFT (e.g., from pos 4 to pos 2)
-        if (targetIndex === 0) {
-          // Dropping at the very beginning of the list
-          newOrderValue = targetJourney.order / 2;
-        } else {
-          // Dropping between two items
-          const prevJourney = sortedJourneys[targetIndex - 1];
-          newOrderValue = (prevJourney.order + targetJourney.order) / 2;
-        }
+      if (targetIndex === 0) {
+        // Case 1: Dropping at the very beginning of the list.
+        // Place it before the first item.
+        newOrderValue = targetJourney.order / 2;
       } else {
-        // Dragging RIGHT (e.g., from pos 2 to pos 4)
-        const nextJourney = sortedJourneys[targetIndex + 1];
-        if (nextJourney) {
-          // Dropping between two items
-          newOrderValue = (targetJourney.order + nextJourney.order) / 2;
-        } else {
-          // Dropping at the very end of the list
-          newOrderValue = targetJourney.order + 10; // Add 10 to give space
-        }
+        // Case 2: Dropping anywhere else.
+        // Place it between the item before the target and the target itself.
+        const prevJourney = sortedJourneys[targetIndex - 1];
+        newOrderValue = (prevJourney.order + targetJourney.order) / 2;
       }
 
-      // Failsafe: if calculation results in the same order, add a tiny fraction to force a change.
+      // 3. Failsafe: if for any reason the order is the same, do nothing.
+      // This prevents sending unnecessary updates to Bubble.
       if (newOrderValue === draggedJourney.order) {
-        newOrderValue += 0.001;
+        this.isProcessing = false;
+        return;
       }
 
-      // Get the pre-formatted data object that Bubble expects.
+      // 4. Get the pre-formatted data object that your Bubble workflow expects.
       const fullJourneyData = window.StoryMapDataStore.getEntityForUpdate(
         "journey",
         draggedId
       );
       fullJourneyData.order_index = newOrderValue;
 
-      // Dispatch the rich payload, just like your original code.
+      // 5. Dispatch the rich payload, just like your original working code.
       console.log(
         `Publishing update for ${draggedId}. New Order: ${newOrderValue}`
       );
@@ -169,9 +168,11 @@ window.StoryMapJourneyDragDrop = {
     } catch (err) {
       console.error("Error in handleDrop:", err);
     } finally {
+      // Your original finally block is preserved.
       this.isProcessing = false;
       this.draggedCard = null;
       this.draggedData = null;
+      this.currentDropTarget = null;
     }
   },
 };
