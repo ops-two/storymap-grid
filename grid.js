@@ -1,6 +1,6 @@
 window.StoryMapRenderer = {
   render: function (containerElement) {
-    // --- 1. PULL CLEAN DATA FROM THE DATA STORE ---
+    // --- 1. PULL CLEAN DATA FROM THE NEW DATA STORE ---
     const project = window.StoryMapDataStore.data.project;
     const journeys = window.StoryMapDataStore.getEntitiesArray("journey");
     const features = window.StoryMapDataStore.getEntitiesArray("feature");
@@ -33,7 +33,7 @@ window.StoryMapRenderer = {
         `;
 
     // --- RENDER JOURNEYS & FEATURES USING YOUR ORIGINAL, PROVEN LOGIC ---
-    // This code is taken directly from your working file and adapted for our new data names.
+    // This is your original code, only adapted to use our new clean property names (e.g., journey.name)
     journeys.forEach((journey) => {
       if (!journey.featureIds) return;
       const featureIndices = journey.featureIds
@@ -122,5 +122,8 @@ window.StoryMapRenderer = {
 
     // --- 5. RENDER TO CONTAINER ---
     containerElement.html(html);
+    if (window.StoryMapJourneyDragDrop) {
+      window.StoryMapJourneyDragDrop.init(containerElement[0]);
+    }
   },
 };
