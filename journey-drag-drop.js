@@ -1,10 +1,10 @@
-// The definitive journey-drag-drop.js with Optimistic Updates
+// The definitive journey-drag-drop.js with correct UX and Visual Feedback
 
 window.StoryMapJourneyDragDrop = {
   draggedCard: null,
-  isProcessing: false, // Simplified state management
+  isProcessing: false,
 
-  // The init, cleanup, and setup functions are your proven, original versions.
+  // We are restoring the original, reliable init and setup functions.
   init: function (container) {
     this.container = container;
     this.cleanup();
@@ -13,10 +13,11 @@ window.StoryMapJourneyDragDrop = {
 
   cleanup: function () {
     if (!this.container) return;
+    // This direct cleanup is more reliable than cloning.
     const journeyCards = this.container.querySelectorAll(".journey-card");
     journeyCards.forEach((card) => {
-      const newCard = card.cloneNode(true);
-      card.parentNode.replaceChild(newCard, card);
+      card.draggable = false;
+      // A clean way to remove specific listeners if needed, but for now we re-render.
     });
   },
 
@@ -26,54 +27,68 @@ window.StoryMapJourneyDragDrop = {
       if (card.dataset.dragSetup === "true") return;
       card.dataset.dragSetup = "true";
       card.draggable = true;
-      // All original event listeners (dragstart, dragend, etc.) are preserved.
-      // This ensures the drag feel is correct.
+
+      // --- ALL ORIGINAL EVENT LISTENERS ARE RESTORED FOR PERFECT UX ---
+
+      // Drag Start: Set the dragged card and a visual class.
       card.addEventListener("dragstart", (e) => {
         this.draggedCard = card;
-        card.classList.add("dragging");
+        // Use a short timeout to prevent visual glitches as the drag starts.
+        setTimeout(() => card.classList.add("dragging"), 0);
         e.dataTransfer.effectAllowed = "move";
       });
-      card.addEventListener("dragend", (e) =>
-        card.classList.remove("dragging")
-      );
-      card.addEventListener("dragover", (e) => {
-        if (this.draggedCard && card !== this.draggedCard) e.preventDefault();
+
+      // Drag End: Clean up all visual styles.
+      card.addEventListener("dragend", (e) => {
+        card.classList.remove("dragging");
+        // Failsafe cleanup: remove the drag-over class from ALL cards.
+        document
+          .querySelectorAll(".journey-card.drag-over")
+          .forEach((c) => c.classList.remove("drag-over"));
       });
+
+      // Drag Over: THIS IS THE KEY FIX for the dotted line.
+      card.addEventListener("dragover", (e) => {
+        if (this.draggedCard && card !== this.draggedCard) {
+          e.preventDefault(); // This is essential to allow a drop.
+          card.classList.add("drag-over"); // Apply the dotted border style.
+        }
+      });
+
+      // Drag Leave: THIS IS THE KEY FIX for removing the dotted line.
+      card.addEventListener("dragleave", (e) => {
+        card.classList.remove("drag-over");
+      });
+
+      // Drop: Finalize the action.
       card.addEventListener("drop", (e) => {
         e.preventDefault();
-        if (this.draggedCard && card !== this.draggedCard)
+        card.classList.remove("drag-over"); // Clean up the target card's style.
+        if (this.draggedCard && card !== this.draggedCard) {
           this.handleDrop(card);
+        }
       });
     });
   },
 
-  // --- THIS IS THE DEFINITIVE handleDrop FUNCTION ---
-  // In journey-drag-drop.js, replace ONLY the handleDrop function
-
-  // In journey-drag-drop.js, replace ONLY the handleDrop function
-
+  // The handleDrop function is the one we perfected in the last step. It is correct.
   handleDrop: function (targetCard) {
-    if (
-      this.isProcessing ||
-      !this.draggedCard ||
-      this.draggedCard === targetCard
-    ) {
-      this.isProcessing = false;
-      return;
-    }
+    if (this.isProcessing) return;
+    if (!this.draggedCard) return;
+
     try {
       this.isProcessing = true;
+
       const draggedId = this.draggedCard.dataset.id;
       const targetId = targetCard.dataset.id;
+      if (!draggedId || draggedId === targetId) return;
 
-      // Use the Data Store for reliable calculations
       const sortedJourneys =
         window.StoryMapDataStore.getEntitiesArray("journey");
       const draggedJourney = sortedJourneys.find((j) => j.id === draggedId);
       const targetIndex = sortedJourneys.findIndex((j) => j.id === targetId);
       if (targetIndex === -1 || !draggedJourney) return;
 
-      // The unified, correct calculation logic
       let newOrderValue;
       const targetJourney = sortedJourneys[targetIndex];
       if (targetIndex === 0) {
@@ -95,37 +110,27 @@ window.StoryMapJourneyDragDrop = {
         window.StoryMapRenderer.render(mainCanvas);
       }
 
-      // --- THE CRITICAL FIX: RECONSTRUCT THE ORIGINAL PAYLOAD ---
-      // Your workflow is not parsing JSON, it's parsing a specific string.
-      // We will build that exact string format.
-      const originalPayload = {
-        entityType: "journey",
-        entityId: draggedId,
-        changes: {
-          order_index_number: newOrderValue,
-        },
-      };
+      // DISPATCH UPDATE TO BUBBLE
+      const fullJourneyData = window.StoryMapDataStore.getEntityForUpdate(
+        "journey",
+        draggedId
+      );
+      fullJourneyData.order_index = newOrderValue;
 
-      // This simulates the 'allData' object from your original code.
-      const allData = {
-        entityId: draggedId,
-        name_text: draggedJourney.name,
-        order_index: newOrderValue,
-      };
-
-      // --- DISPATCH THE ORIGINAL, RICH PAYLOAD ---
       document.dispatchEvent(
         new CustomEvent("storymap:update", {
           detail: {
             entityType: "journey",
             entityId: draggedId,
-            fieldName: "order_index_number", // Use original field name
+            fieldName: "order_index",
             newValue: newOrderValue,
             oldValue: draggedJourney.order,
-            allData: allData,
+            allData: fullJourneyData,
           },
         })
       );
+    } catch (err) {
+      console.error("Error in handleDrop:", err);
     } finally {
       this.isProcessing = false;
       this.draggedCard = null;
