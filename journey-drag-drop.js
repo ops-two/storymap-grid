@@ -48,6 +48,8 @@ window.StoryMapJourneyDragDrop = {
   },
 
   // --- THIS IS THE DEFINITIVE handleDrop FUNCTION ---
+  // In journey-drag-drop.js, replace ONLY the handleDrop function
+
   handleDrop: function (targetCard) {
     if (this.isProcessing) return;
     if (!this.draggedCard) return;
@@ -59,14 +61,12 @@ window.StoryMapJourneyDragDrop = {
       const targetId = targetCard.dataset.id;
       if (!draggedId || draggedId === targetId) return;
 
-      // 1. Get reliably sorted data from the Data Store.
       const sortedJourneys =
         window.StoryMapDataStore.getEntitiesArray("journey");
       const draggedJourney = sortedJourneys.find((j) => j.id === draggedId);
       const targetIndex = sortedJourneys.findIndex((j) => j.id === targetId);
       if (targetIndex === -1 || !draggedJourney) return;
 
-      // 2. Calculate the new order with unified logic that works in both directions.
       let newOrderValue;
       const targetJourney = sortedJourneys[targetIndex];
       if (targetIndex === 0) {
@@ -75,36 +75,36 @@ window.StoryMapJourneyDragDrop = {
         const prevJourney = sortedJourneys[targetIndex - 1];
         newOrderValue = (prevJourney.order + targetJourney.order) / 2;
       }
-      if (newOrderValue === draggedJourney.order) return; // No change needed
+      if (newOrderValue === draggedJourney.order) return;
 
-      // --- 3. THE OPTIMISTIC UI UPDATE ---
-      // Update our local data store immediately.
+      // --- OPTIMISTIC UI UPDATE ---
       window.StoryMapDataStore.updateEntityOrder(
         "journey",
         draggedId,
         newOrderValue
       );
-
-      // Force the renderer to redraw the entire grid with the new local order.
-      // We find the main canvas element to pass to the renderer.
       const mainCanvas = $(this.container).closest('[id^="bubble-r-box"]');
       if (window.StoryMapRenderer && mainCanvas.length) {
         window.StoryMapRenderer.render(mainCanvas);
       }
 
-      // 4. Dispatch the update event to Bubble to save the data in the background.
+      // --- DISPATCH THE CORRECT UPDATE EVENT TO BUBBLE ---
       const fullJourneyData = window.StoryMapDataStore.getEntityForUpdate(
         "journey",
         draggedId
       );
       fullJourneyData.order_index = newOrderValue;
 
+      console.log(
+        `Publishing update for ${draggedId}. Field: 'order_index', New Value: ${newOrderValue}`
+      );
       document.dispatchEvent(
         new CustomEvent("storymap:update", {
           detail: {
             entityType: "journey",
             entityId: draggedId,
-            fieldName: "order_index_number",
+            // THE CRITICAL FIX IS HERE:
+            fieldName: "order_index", // Use the EXACT field name from Bubble
             newValue: newOrderValue,
             oldValue: draggedJourney.order,
             allData: fullJourneyData,
