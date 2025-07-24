@@ -2,13 +2,26 @@ window.StoryMapRenderer = {
   render: function (containerElement) {
     // --- 1. PULL CLEAN DATA FROM OUR NEW DATA STORE ---
     const project = window.StoryMapDataStore.data.project;
+    // Get the BASE lists, already sorted by their own order property
     const journeys = window.StoryMapDataStore.getEntitiesArray("journey");
-    const features = window.StoryMapDataStore.getEntitiesArray("feature");
+    const allFeatures = window.StoryMapDataStore.getEntitiesArray("feature"); // Get ALL features first
     const stories = window.StoryMapDataStore.getEntitiesArray("story");
     const releases = window.StoryMapDataStore.getEntitiesArray("release");
 
-    // --- 2. PREPARE DATA USING YOUR ORIGINAL, PROVEN LOGIC ---
-    // The only change is using our new, clean property names (e.g., journeyId)
+    // --- 2. RE-CREATE THE EXACT FEATURE SORTING FROM YOUR ORIGINAL CODE ---
+    const features = []; // Start with an EMPTY array
+    journeys.forEach((journey) => {
+      const journeyFeatures = allFeatures.filter(
+        (f) => f.journeyId === journey.id
+      );
+      // No need to sort again, as getEntitiesArray already did it
+      features.push(...journeyFeatures);
+    });
+    // Add any features that might not have a journey
+    const unassignedFeatures = allFeatures.filter((f) => !f.journeyId);
+    features.push(...unassignedFeatures);
+
+    // --- THIS LOGIC IS NOW GUARANTEED TO WORK ---
     journeys.forEach((journey) => {
       const journeyFeatures = features.filter(
         (f) => f.journeyId === journey.id
@@ -21,7 +34,7 @@ window.StoryMapRenderer = {
     const totalColumns = features.length > 0 ? features.length : 1;
     document.documentElement.style.setProperty("--total-columns", totalColumns);
 
-    // --- 4. HTML GENERATION ---
+    // --- 4. HTML GENERATION (Using your proven algorithm) ---
     const projectTitle = project ? project.name : "Unnamed Project";
     let html = `
             <div class="story-map-container">
@@ -32,8 +45,6 @@ window.StoryMapRenderer = {
                 <div class="story-map-grid-container">
         `;
 
-    // --- RENDER JOURNEYS & FEATURES USING YOUR ORIGINAL, PROVEN LOGIC ---
-    // This is your exact original algorithm, adapted for our new clean property names.
     journeys.forEach((journey) => {
       if (!journey.featureIds) return;
       const featureIndices = journey.featureIds
@@ -76,7 +87,7 @@ window.StoryMapRenderer = {
       };"><span class="card-title">${feature.name}</span></div>`;
     });
 
-    // --- RENDER STORIES (This logic from your file was already correct) ---
+    // Story rendering logic (from your file)
     const unreleasedStories = stories.filter((s) => !s.releaseId);
     if (unreleasedStories.length > 0) {
       html += `<div class="release-header">Unassigned</div>`;
@@ -89,46 +100,52 @@ window.StoryMapRenderer = {
             index + 1
           };">`;
           storiesInColumn.forEach((story) => {
-            const cardType = story.type === "Tech-Req" ? "tech" : "story";
-            html += `<div class="card story-card ${cardType}" data-id="${story.id}" data-type="story"><span class="card-title">${story.name}</span></div>`;
+            html += `<div class="card story-card ${
+              story.type === "Tech-Req" ? "tech" : "story"
+            }" data-id="${
+              story.id
+            }" data-type="story"><span class="card-title">${
+              story.name
+            }</span></div>`;
           });
           html += "</div>";
         }
       });
     }
-
     releases.forEach((release) => {
       const releaseStories = stories.filter((s) => s.releaseId === release.id);
-      if (releaseStories.length === 0) return;
-      html += `<div class="release-header" data-id="${release.id}">${release.name}</div>`;
-      features.forEach((feature, index) => {
-        const storiesInColumn = releaseStories.filter(
-          (s) => s.featureId === feature.id
-        );
-        if (storiesInColumn.length > 0) {
-          html += `<div class="feature-column" style="grid-column: ${
-            index + 1
-          };">`;
-          storiesInColumn.forEach((story) => {
-            const cardType = story.type === "Tech-Req" ? "tech" : "story";
-            html += `<div class="card story-card ${cardType}" data-id="${story.id}" data-type="story"><span class="card-title">${story.name}</span></div>`;
-          });
-          html += "</div>";
-        }
-      });
+      if (releaseStories.length > 0) {
+        html += `<div class="release-header" data-id="${release.id}">${release.name}</div>`;
+        features.forEach((feature, index) => {
+          const storiesInColumn = releaseStories.filter(
+            (s) => s.featureId === feature.id
+          );
+          if (storiesInColumn.length > 0) {
+            html += `<div class="feature-column" style="grid-column: ${
+              index + 1
+            };">`;
+            storiesInColumn.forEach((story) => {
+              html += `<div class="card story-card ${
+                story.type === "Tech-Req" ? "tech" : "story"
+              }" data-id="${
+                story.id
+              }" data-type="story"><span class="card-title">${
+                story.name
+              }</span></div>`;
+            });
+            html += "</div>";
+          }
+        });
+      }
     });
 
     html += `</div></div>`;
-
-    // --- 5. RENDER TO CONTAINER ---
     containerElement.html(html);
 
-    // --- 6. INITIALIZE INTERACTION MODULES (The original, reliable pattern) ---
-    if (window.StoryMapInlineEdit) {
+    // --- 5. INITIALIZE INTERACTION MODULES ---
+    if (window.StoryMapInlineEdit)
       window.StoryMapInlineEdit.init(containerElement[0]);
-    }
-    if (window.StoryMapJourneyDragDrop) {
+    if (window.StoryMapJourneyDragDrop)
       window.StoryMapJourneyDragDrop.init(containerElement[0]);
-    }
   },
 };
