@@ -50,23 +50,30 @@ window.StoryMapJourneyDragDrop = {
   // --- THIS IS THE DEFINITIVE handleDrop FUNCTION ---
   // In journey-drag-drop.js, replace ONLY the handleDrop function
 
-  handleDrop: function (targetCard) {
-    if (this.isProcessing) return;
-    if (!this.draggedCard) return;
+  // In journey-drag-drop.js, replace ONLY the handleDrop function
 
+  handleDrop: function (targetCard) {
+    if (
+      this.isProcessing ||
+      !this.draggedCard ||
+      this.draggedCard === targetCard
+    ) {
+      this.isProcessing = false;
+      return;
+    }
     try {
       this.isProcessing = true;
-
       const draggedId = this.draggedCard.dataset.id;
       const targetId = targetCard.dataset.id;
-      if (!draggedId || draggedId === targetId) return;
 
+      // Use the Data Store for reliable calculations
       const sortedJourneys =
         window.StoryMapDataStore.getEntitiesArray("journey");
       const draggedJourney = sortedJourneys.find((j) => j.id === draggedId);
       const targetIndex = sortedJourneys.findIndex((j) => j.id === targetId);
       if (targetIndex === -1 || !draggedJourney) return;
 
+      // The unified, correct calculation logic
       let newOrderValue;
       const targetJourney = sortedJourneys[targetIndex];
       if (targetIndex === 0) {
@@ -77,7 +84,7 @@ window.StoryMapJourneyDragDrop = {
       }
       if (newOrderValue === draggedJourney.order) return;
 
-      // --- OPTIMISTIC UI UPDATE ---
+      // OPTIMISTIC UI UPDATE
       window.StoryMapDataStore.updateEntityOrder(
         "journey",
         draggedId,
@@ -88,31 +95,37 @@ window.StoryMapJourneyDragDrop = {
         window.StoryMapRenderer.render(mainCanvas);
       }
 
-      // --- DISPATCH THE CORRECT UPDATE EVENT TO BUBBLE ---
-      const fullJourneyData = window.StoryMapDataStore.getEntityForUpdate(
-        "journey",
-        draggedId
-      );
-      fullJourneyData.order_index = newOrderValue;
+      // --- THE CRITICAL FIX: RECONSTRUCT THE ORIGINAL PAYLOAD ---
+      // Your workflow is not parsing JSON, it's parsing a specific string.
+      // We will build that exact string format.
+      const originalPayload = {
+        entityType: "journey",
+        entityId: draggedId,
+        changes: {
+          order_index_number: newOrderValue,
+        },
+      };
 
-      console.log(
-        `Publishing update for ${draggedId}. Field: 'order_index', New Value: ${newOrderValue}`
-      );
+      // This simulates the 'allData' object from your original code.
+      const allData = {
+        entityId: draggedId,
+        name_text: draggedJourney.name,
+        order_index: newOrderValue,
+      };
+
+      // --- DISPATCH THE ORIGINAL, RICH PAYLOAD ---
       document.dispatchEvent(
         new CustomEvent("storymap:update", {
           detail: {
             entityType: "journey",
             entityId: draggedId,
-            // THE CRITICAL FIX IS HERE:
-            fieldName: "order_index", // Use the EXACT field name from Bubble
+            fieldName: "order_index_number", // Use original field name
             newValue: newOrderValue,
             oldValue: draggedJourney.order,
-            allData: fullJourneyData,
+            allData: allData,
           },
         })
       );
-    } catch (err) {
-      console.error("Error in handleDrop:", err);
     } finally {
       this.isProcessing = false;
       this.draggedCard = null;

@@ -41,18 +41,13 @@ window.StoryMapEventBridge = {
    * Handles any data update request from an interaction module.
    * @param {CustomEvent} event The event dispatched, containing update details.
    */
+  // In event-bridge.js, replace ONLY the handleUpdate function
   handleUpdate(event) {
     // This function now expects the rich detail object from the interaction modules
     const { entityType, entityId, fieldName, newValue, oldValue, allData } =
       event.detail;
 
-    console.log(
-      "Dispatching update to Bubble (original format):",
-      event.detail
-    );
-
-    // Publish the entire rich object to the 'pending_update' state.
-    // This is what your Bubble workflow was originally built to read.
+    // We are now sending the exact rich payload that your original workflow was designed for.
     this.instance.publishState("pending_update", JSON.stringify(event.detail));
 
     // Trigger the specific event for the entity type (e.g., 'journey_updated').
