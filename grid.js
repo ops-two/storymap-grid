@@ -24,37 +24,28 @@ window.StoryMapRenderer = {
 
     // --- RENDER JOURNEYS & FEATURES ---
     const featureOrderMap = new Map(features.map((f, i) => [f.id, i]));
+
     journeys.forEach((journey) => {
+      // Find all features belonging to this journey
       const journeyFeatures = features.filter(
         (f) => f.journeyId === journey.id
       );
-      if (journeyFeatures.length === 0) return;
-      const featureIndices = journeyFeatures
-        .map((f) => featureOrderMap.get(f.id))
-        .filter((i) => i !== undefined);
-      if (featureIndices.length === 0) return;
-      featureIndices.sort((a, b) => a - b);
-      const groups = [];
-      let currentGroup = [featureIndices[0]];
-      for (let i = 1; i < featureIndices.length; i++) {
-        if (featureIndices[i] === featureIndices[i - 1] + 1) {
-          currentGroup.push(featureIndices[i]);
-        } else {
-          groups.push(currentGroup);
-          currentGroup = [featureIndices[i]];
-        }
-      }
-      groups.push(currentGroup);
-      groups.forEach((group, groupIndex) => {
-        const startCol = Math.min(...group) + 1;
-        const span = group.length;
-        const title =
-          groups.length > 1
-            ? `${journey.name} (${groupIndex + 1}/${groups.length})`
-            : journey.name;
-        html += `<div class="card journey-card" data-id="${journey.id}" data-type="journey" data-order="${journey.order}" style="grid-column: ${startCol} / span ${span};"><span class="card-title">${title}</span></div>`;
-      });
+      if (journeyFeatures.length === 0) return; // Skip journeys with no features
+
+      // Find the start and end column indices for this journey's features
+      const featureIndices = journeyFeatures.map((f) =>
+        featureOrderMap.get(f.id)
+      );
+      const startCol = Math.min(...featureIndices) + 1;
+      const endCol = Math.max(...featureIndices) + 1;
+      const span = endCol - startCol + 1;
+
+      // Render a single journey card that spans all its features
+      html += `<div class="card journey-card" data-id="${journey.id}" data-type="journey" data-order="${journey.order}" style="grid-column: ${startCol} / span ${span};">
+                        <span class="card-title">${journey.name}</span>
+                     </div>`;
     });
+
     features.forEach((feature, index) => {
       html += `<div class="card feature-card" data-id="${
         feature.id
