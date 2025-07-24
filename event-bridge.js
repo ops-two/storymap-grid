@@ -4,15 +4,31 @@
  */
 window.StoryMapEventBridge = {
     instance: null,
-    properties: null,
-    initialized: false,
+    // Renamed 'initialized' to 'isInitialized' for clarity
+    isInitialized: false, 
 
-    init(instance, properties) {
-        if (this.initialized) return;
+    // The 'properties' object is no longer needed here
+    init(instance) {
+        if (this.isInitialized) return;
         
         this.instance = instance;
-        this.properties = properties;
-        this.initialized = true;
+        this.isInitialized = true;
+        
+        console.log("Event Bridge Initializing...");
+
+        // --- NEW: Attach delegated listener for card clicks ONCE ---
+        this.instance.canvas.on('click', '.card', (e) => {
+            const card = $(e.currentTarget);
+            const entityId = card.data('id');
+            const entityType = card.data('type');
+            
+            // This is the logic we moved from update.txt
+            if (entityId && entityType) {
+                this.instance.publishState('clicked_item_id', entityId);
+                this.instance.publishState('clicked_item_type', entityType);
+                this.instance.triggerEvent('card_clicked');
+            }
+        });
         
         // Subscribe to UI events
         document.addEventListener('storymap:update', this.handleUpdate.bind(this));

@@ -5,9 +5,13 @@
 window.StoryMapInlineEdit = {
     container: null,
     activeEdit: null,
+    isInitialized: false, 
 
     init(container) {
+        if (this.isInitialized) return; 
         this.container = container;
+                this.isInitialized = true; // --- NEW: Set flag after setup ---
+
         this.setupEditHandlers();
     },
     
