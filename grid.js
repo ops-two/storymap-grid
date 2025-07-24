@@ -41,17 +41,25 @@ window.StoryMapRenderer = {
       const span = endCol - startCol + 1;
 
       // Render a single journey card that spans all its features
-      html += `<div class="card journey-card" data-id="${journey.id}" data-type="journey" data-order="${journey.order}" style="grid-column: ${startCol} / span ${span};">
+      // --- NEW, SIMPLIFIED JOURNEY & FEATURE RENDERING ---
+
+      // Create a separate container for the journeys row
+      html += `<div class="journeys-row-container">`;
+      journeys.forEach((journey) => {
+        html += `<div class="card journey-card" data-id="${journey.id}" data-type="journey" data-order="${journey.order}">
                         <span class="card-title">${journey.name}</span>
                      </div>`;
-    });
+      });
+      html += `</div>`; // Close journeys-row-container
 
-    features.forEach((feature, index) => {
-      html += `<div class="card feature-card" data-id="${
-        feature.id
-      }" data-type="feature" style="grid-column: ${
-        index + 1
-      };"><span class="card-title">${feature.name}</span></div>`;
+      // The features row remains on the main grid
+      features.forEach((feature, index) => {
+        html += `<div class="card feature-card" data-id="${
+          feature.id
+        }" data-type="feature" style="grid-column: ${index + 1};">
+                        <span class="card-title">${feature.name}</span>
+                     </div>`;
+      });
     });
 
     // --- CORRECTED STORY RENDERING LOGIC ---
