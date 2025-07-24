@@ -1,7 +1,6 @@
-// in grid.js
 window.StoryMapRenderer = {
   render: function (containerElement) {
-    // 1. PULL CLEAN DATA from our new Data Store
+    // 1. PULL CLEAN DATA from the Data Store
     const project = window.StoryMapDataStore.data.project;
     const journeys = window.StoryMapDataStore.getEntitiesArray("journey");
     const features = window.StoryMapDataStore.getEntitiesArray("feature");
@@ -54,7 +53,8 @@ window.StoryMapRenderer = {
     // B. Render the single Feature row BELOW all the journeys
     const featureRowIndex = journeys.length + 1;
     features.forEach((feature, index) => {
-      html += `<div class.card feature-card" data-id="${
+      // THIS IS THE LINE WITH THE CORRECTED TYPO
+      html += `<div class="card feature-card" data-id="${
         feature.id
       }" data-type="feature" style="grid-column: ${
         index + 1
@@ -65,10 +65,11 @@ window.StoryMapRenderer = {
 
     // C. Render Stories, starting below the feature row
     let currentRow = featureRowIndex + 1;
-    // ... (This story logic is correct and taken from your original file)
+    // This story logic is correct and taken from your original file
     const unreleasedStories = stories.filter((s) => !s.releaseId);
     if (unreleasedStories.length > 0) {
       html += `<div class="release-header" style="grid-row: ${currentRow++};">Unassigned</div>`;
+      let maxStories = 0;
       features.forEach((feature, index) => {
         const storiesInColumn = unreleasedStories.filter(
           (s) => s.featureId === feature.id
@@ -82,14 +83,11 @@ window.StoryMapRenderer = {
             html += `<div class="card story-card ${cardType}" data-id="${story.id}" data-type="story"><span class="card-title">${story.name}</span></div>`;
           });
           html += "</div>";
+          if (storiesInColumn.length > maxStories)
+            maxStories = storiesInColumn.length;
         }
       });
-      currentRow += Math.max(
-        0,
-        ...features.map(
-          (f) => unreleasedStories.filter((s) => s.featureId === f.id).length
-        )
-      );
+      currentRow += maxStories;
     }
 
     releases.forEach((release) => {
@@ -98,6 +96,7 @@ window.StoryMapRenderer = {
         html += `<div class="release-header" style="grid-row: ${currentRow++};">${
           release.name
         }</div>`;
+        let maxStories = 0;
         features.forEach((feature, index) => {
           const storiesInColumn = releaseStories.filter(
             (s) => s.featureId === feature.id
@@ -111,14 +110,11 @@ window.StoryMapRenderer = {
               html += `<div class="card story-card ${cardType}" data-id="${story.id}" data-type="story"><span class="card-title">${story.name}</span></div>`;
             });
             html += "</div>";
+            if (storiesInColumn.length > maxStories)
+              maxStories = storiesInColumn.length;
           }
         });
-        currentRow += Math.max(
-          0,
-          ...features.map(
-            (f) => releaseStories.filter((s) => s.featureId === f.id).length
-          )
-        );
+        currentRow += maxStories;
       }
     });
 
