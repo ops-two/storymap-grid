@@ -74,7 +74,7 @@ window.StoryMapFeatureDragDrop = {
       const targetIndex = sortedFeatures.findIndex((f) => f.id === targetId);
       if (targetIndex === -1 || !draggedFeature) return;
 
-      // The calculation logic is IDENTICAL to the journey logic.
+      // The calculation logic is correct.
       let newOrderValue;
       const targetFeature = sortedFeatures[targetIndex];
       if (targetIndex === 0) {
@@ -85,7 +85,7 @@ window.StoryMapFeatureDragDrop = {
       }
       if (newOrderValue === draggedFeature.order) return;
 
-      // OPTIMISTIC UI UPDATE for Features
+      // OPTIMISTIC UI UPDATE for Features - This is why it wasn't refreshing
       window.StoryMapDataStore.updateEntityOrder(
         "feature",
         draggedId,
@@ -96,13 +96,17 @@ window.StoryMapFeatureDragDrop = {
         window.StoryMapRenderer.render(mainCanvas);
       }
 
-      // Dispatch the update event, but with entityType: "feature"
+      // --- THE CRITICAL FIX: Dispatch the SIMPLE update event ---
+      // This now sends the clean message that your new feature_updated workflow expects.
+      console.log(
+        `Publishing update for feature ${draggedId}. New Order: ${newOrderValue}`
+      );
       document.dispatchEvent(
         new CustomEvent("storymap:update", {
           detail: {
             entityType: "feature",
             entityId: draggedId,
-            fieldName: "order_index",
+            fieldName: "order_index", // This can be simplified for the new workflow
             newValue: newOrderValue,
           },
         })
