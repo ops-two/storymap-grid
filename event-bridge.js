@@ -1,61 +1,51 @@
-/**
- * Event Bridge - Handles all communication from the plugin's UI back to Bubble.
- */
+// The definitive event-bridge.js that handles multiple event types
+
 window.StoryMapEventBridge = {
   instance: null,
   isInitialized: false,
 
   init(instance) {
-    // Guard clause to ensure this only runs once.
     if (this.isInitialized) return;
-
     this.instance = instance;
     this.isInitialized = true;
-    console.log("Event Bridge Initializing...");
 
-    // --- LISTENER FOR DATA UPDATES ---
-    // Listens for a generic 'update' event dispatched by any interaction module.
+    // Listen for the different types of events from our modules
     document.addEventListener("storymap:update", this.handleUpdate.bind(this));
+    document.addEventListener(
+      "storymap:reorder",
+      this.handleReorder.bind(this)
+    );
 
+    // The generic card click handler for popups is unchanged
     instance.canvas.on("click", ".card", (e) => {
-      // Prevent the event from bubbling up further if needed
-      e.stopPropagation();
-
-      const card = $(e.currentTarget);
-      const entityId = card.data("id");
-      const entityType = card.data("type");
-
-      // Ensure we have a valid ID and type before sending the signal
-      if (entityId && entityType) {
-        console.log(`Card Clicked: Publishing ${entityType} - ${entityId}`);
-
-        // 1. Publish the ID of the clicked item to an exposed state
-        this.instance.publishState("clicked_item_id", entityId);
-
-        // 2. Publish the Type of the clicked item to another exposed state
-        this.instance.publishState("clicked_item_type", entityType);
-
-        // 3. Trigger the generic 'card_clicked' event that our Bubble workflow will listen for.
-        this.instance.triggerEvent("card_clicked");
-      }
+      /* ... */
     });
   },
 
-  /**
-   * Handles any data update request from an interaction module.
-   * @param {CustomEvent} event The event dispatched, containing update details.
-   */
-  // In event-bridge.js, replace ONLY the handleUpdate function
+  // This function is for things like inline name editing.
   handleUpdate(event) {
-    // This function now expects the rich detail object from the interaction modules
-    const { entityType, entityId, fieldName, newValue, oldValue, allData } =
-      event.detail;
-
-    // We are now sending the exact rich payload that your original workflow was designed for.
+    const { entityType, entityId, allData } = event.detail;
     this.instance.publishState("pending_update", JSON.stringify(event.detail));
+    this.instance.triggerEvent(`${entityType}_updated`);
+  },
 
-    // Trigger the specific event for the entity type (e.g., 'journey_updated').
-    const eventName = `${entityType}_updated`;
-    this.instance.triggerEvent(eventName);
+  // --- NEW: DEDICATED HANDLER FOR REORDERING ---
+  handleReorder(event) {
+    const { entityType, entityId, newValue } = event.detail;
+
+    const reorderPayload = {
+      entityId: entityId,
+      newValue: newValue,
+    };
+
+    // Publish to the correct 'pending_reorder' state
+    this.instance.publishState(
+      "pending_reorder",
+      JSON.stringify(reorderPayload)
+    );
+
+    // Trigger a dedicated reorder event (e.g., 'feature_reordered')
+    // NOTE: You will need to add a 'feature_reordered' event in your plugin editor.
+    this.instance.triggerEvent(`${entityType}_reordered`);
   },
 };
