@@ -60,6 +60,8 @@ window.StoryMapStoryDragDrop = {
 
   // In story-drag-drop.js, replace ONLY the handleDrop function
 
+  // In story-drag-drop.js, replace ONLY the handleDrop function
+
   handleDrop: function (targetCard) {
     if (this.isProcessing || !this.draggedCard) return;
 
@@ -78,7 +80,6 @@ window.StoryMapStoryDragDrop = {
       if (draggedColumn.dataset.featureId === targetColumn.dataset.featureId) {
         // --- CASE 1: VERTICAL REORDERING (The fix is here) ---
 
-        // THE PROVEN "CLEAN ARRAY" CALCULATION
         const allStoryIdsInColumn = Array.from(
           targetColumn.querySelectorAll(".story-card")
         ).map((c) => c.dataset.id);
@@ -88,23 +89,21 @@ window.StoryMapStoryDragDrop = {
         const draggedItem = originalSortedList.find(
           (item) => item.id === draggedId
         );
-
         const listWithoutDragged = originalSortedList.filter(
           (item) => item.id !== draggedId
         );
-
         const targetIndex = listWithoutDragged.findIndex(
           (item) => item.id === targetId
         );
+
         if (targetIndex === -1 || !draggedItem) return;
 
         const targetItem = listWithoutDragged[targetIndex];
         if (targetIndex === 0) {
-          // This correctly handles dropping at the top of the column.
           newOrderValue = targetItem.order / 2;
         } else {
-          // This correctly handles all other cases in both directions (up and down).
           const prevItem = listWithoutDragged[targetIndex - 1];
+          // THIS IS THE DEFINITIVE FIX:
           newOrderValue = (prevItem.order + targetItem.order) / 2;
         }
         if (newOrderValue === draggedItem.order) return;
@@ -138,9 +137,19 @@ window.StoryMapStoryDragDrop = {
       }
 
       // --- Optimistic UI Update and Event Dispatch (Unchanged) ---
-      // (Your existing, working code for UI updates and dispatching 'storymap:update' goes here)
-      // ...
-
+      window.StoryMapDataStore.updateEntityOrder(
+        "story",
+        draggedId,
+        newOrderValue
+      );
+      if (payload.newParentId) {
+        const story = window.StoryMapDataStore.getEntity("story", draggedId);
+        if (story) story.featureId = payload.newParentId;
+      }
+      const mainCanvas = $(this.container).closest('[id^="bubble-r-box"]');
+      if (window.StoryMapRenderer && mainCanvas.length) {
+        window.StoryMapRenderer.render(mainCanvas);
+      }
       document.dispatchEvent(
         new CustomEvent("storymap:update", { detail: payload })
       );
