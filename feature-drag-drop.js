@@ -60,6 +60,12 @@ window.StoryMapFeatureDragDrop = {
   // In BOTH journey-drag-drop.js AND feature-drag-drop.js,
   // replace ONLY the handleDrop function with this version.
 
+  // In BOTH journey-drag-drop.js AND feature-drag-drop.js,
+  // replace ONLY the handleDrop function with this version.
+
+  // In BOTH journey-drag-drop.js AND feature-drag-drop.js,
+  // replace ONLY the handleDrop function with this version.
+
   handleDrop: function (targetCard) {
     // Failsafes to prevent errors
     if (this.isProcessing || !this.draggedCard) return;
@@ -72,7 +78,7 @@ window.StoryMapFeatureDragDrop = {
 
       if (!draggedId || draggedId === targetId) return;
 
-      // --- THE DEFINITIVE, CORRECTED CALCULATION LOGIC ---
+      // --- THE DEFINITIVE, UNIFIED CALCULATION LOGIC ---
 
       // 1. Get the original, reliably sorted list from our Data Store.
       const originalSortedList =
@@ -81,7 +87,7 @@ window.StoryMapFeatureDragDrop = {
         (item) => item.id === draggedId
       );
 
-      // 2. Create a "clean" array for calculation by removing the item being dragged.
+      // 2. CRITICAL FIX: Create a "clean" array for calculation by removing the item being dragged.
       const listWithoutDragged = originalSortedList.filter(
         (item) => item.id !== draggedId
       );
@@ -92,21 +98,22 @@ window.StoryMapFeatureDragDrop = {
       );
       if (targetIndex === -1 || !draggedItem) return;
 
-      // 4. Calculate the new order value based on the clean array.
+      // 4. Calculate the new order value based on the clean array. The logic is now universal.
       let newOrderValue;
       const targetItem = listWithoutDragged[targetIndex];
 
       if (targetIndex === 0) {
+        // Case 1: Dropping at the very beginning of the list.
         newOrderValue = targetItem.order / 2;
       } else {
+        // Case 2: Dropping anywhere else. Place it between the item before the target and the target itself.
         const prevItem = listWithoutDragged[targetIndex - 1];
-        // THIS IS THE CORRECTED CALCULATION
         newOrderValue = (prevItem.order + targetItem.order) / 2;
       }
 
-      if (newOrderValue === draggedItem.order) return;
+      if (newOrderValue === draggedItem.order) return; // No change needed
 
-      // --- OPTIMISTIC UI UPDATE & BUBBLE DISPATCH ---
+      // --- OPTIMISTIC UI UPDATE & BUBBLE DISPATCH (This part is correct) ---
       window.StoryMapDataStore.updateEntityOrder(
         entityType,
         draggedId,
@@ -117,8 +124,7 @@ window.StoryMapFeatureDragDrop = {
         window.StoryMapRenderer.render(mainCanvas);
       }
 
-      // --- THE CRITICAL FIX: DISPATCH THE CORRECT 'reorder' EVENT ---
-      // This is the correct internal signal for your working Event Bridge.
+      // The 'storymap:reorder' event is the correct internal signal.
       document.dispatchEvent(
         new CustomEvent("storymap:reorder", {
           detail: {
