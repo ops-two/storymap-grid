@@ -100,6 +100,10 @@
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
+.journey-card,
+.feature-card {
+  cursor: move;
+}
 
 .journey-card {
   height: var(--journey-height);
@@ -107,20 +111,23 @@
   font-size: 14px;
   border: 1px solid #ffc107;
   border-left: 5px solid #ffc107;
-  cursor: move;
 }
 
-.journey-card[draggable="true"]:active {
-  cursor: grabbing;
+.feature-card {
+  height: var(--feature-height);
+  font-weight: 500;
+  border: 1px solid #6f42c1;
+  border-left: 5px solid #6f42c1;
 }
-
-.journey-card.dragging {
+.journey-card.dragging,
+.feature-card.dragging {
   opacity: 0.5;
 }
 
-.journey-card.drag-over {
-  border: 2px dashed #ffc107;
-  background-color: rgba(255, 193, 7, 0.1);
+/* Style for the "grabbing" hand cursor when a card is picked up */
+.journey-card[draggable="true"]:active,
+.feature-card[draggable="true"]:active {
+  cursor: grabbing;
 }
 
 /* Drop zones for journeys */

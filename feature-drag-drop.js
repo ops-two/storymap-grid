@@ -12,6 +12,10 @@ window.StoryMapFeatureDragDrop = {
   setupFeatureDragging: function () {
     // We are targeting '.feature-card' instead of '.journey-card'
     const featureCards = this.container.querySelectorAll(".feature-card");
+    console.log(
+      `Found ${featureCards.length} feature cards to make draggable.`
+    );
+
     featureCards.forEach((card) => {
       if (card.dataset.dragSetup === "true") return;
       card.dataset.dragSetup = "true";

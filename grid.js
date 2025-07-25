@@ -147,7 +147,12 @@ window.StoryMapRenderer = {
       window.StoryMapInlineEdit.init(containerElement[0]);
     if (window.StoryMapJourneyDragDrop)
       window.StoryMapJourneyDragDrop.init(containerElement[0]);
-    if (window.StoryMapFeatureDragDrop)
+    console.log("Attempting to initialize Feature Drag Drop...");
+    if (window.StoryMapFeatureDragDrop) {
+      console.log("StoryMapFeatureDragDrop object FOUND. Initializing...");
       window.StoryMapFeatureDragDrop.init(containerElement[0]);
+    } else {
+      console.error("StoryMapFeatureDragDrop object NOT FOUND!");
+    }
   },
 };
