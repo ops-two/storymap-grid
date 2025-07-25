@@ -1,4 +1,4 @@
-// The definitive event-bridge.js that handles multiple event types
+// The definitive event-bridge.js that aligns with your existing plugin events.
 
 window.StoryMapEventBridge = {
   instance: null,
@@ -9,27 +9,38 @@ window.StoryMapEventBridge = {
     this.instance = instance;
     this.isInitialized = true;
 
-    // Listen for the different types of events from our modules
+    console.log("Event Bridge Initializing with correct event triggers...");
+
+    // Listen for the different types of events from our internal modules.
     document.addEventListener("storymap:update", this.handleUpdate.bind(this));
     document.addEventListener(
       "storymap:reorder",
       this.handleReorder.bind(this)
     );
 
-    // The generic card click handler for popups is unchanged
+    // The generic card click handler for popups is correct.
     instance.canvas.on("click", ".card", (e) => {
-      /* ... */
+      e.stopPropagation();
+      const card = $(e.currentTarget);
+      const entityId = card.data("id");
+      const entityType = card.data("type");
+
+      if (entityId && entityType) {
+        this.instance.publishState("clicked_item_id", entityId);
+        this.instance.publishState("clicked_item_type", entityType);
+        this.instance.triggerEvent("card_clicked");
+      }
     });
   },
 
-  // This function is for things like inline name editing.
+  // This function handles actions like inline name edits.
   handleUpdate(event) {
-    const { entityType, entityId, allData } = event.detail;
+    // This function passes the rich payload for Regex parsing.
     this.instance.publishState("pending_update", JSON.stringify(event.detail));
-    this.instance.triggerEvent(`${entityType}_updated`);
+    this.instance.triggerEvent(`${event.detail.entityType}_updated`);
   },
 
-  // --- NEW: DEDICATED HANDLER FOR REORDERING ---
+  // --- THIS IS THE DEFINITIVE, CORRECTED REORDER HANDLER ---
   handleReorder(event) {
     const { entityType, entityId, newValue } = event.detail;
 
@@ -38,14 +49,17 @@ window.StoryMapEventBridge = {
       newValue: newValue,
     };
 
-    // Publish to the correct 'pending_reorder' state
+    // 1. Publish to the dedicated 'pending_reorder' state. This is correct.
     this.instance.publishState(
       "pending_reorder",
       JSON.stringify(reorderPayload)
     );
 
-    // Trigger a dedicated reorder event (e.g., 'feature_reordered')
-    // NOTE: You will need to add a 'feature_reordered' event in your plugin editor.
-    this.instance.triggerEvent(`${entityType}_reordered`);
+    // 2. THE CRITICAL FIX: Trigger the EXISTING '_updated' event.
+    const eventName = `${entityType}_updated`;
+    console.log(
+      `A reorder occurred. Triggering the existing Bubble event: '${eventName}'`
+    );
+    this.instance.triggerEvent(eventName);
   },
 };
