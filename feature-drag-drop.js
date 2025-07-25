@@ -66,49 +66,67 @@ window.StoryMapFeatureDragDrop = {
   // In BOTH journey-drag-drop.js AND feature-drag-drop.js,
   // replace ONLY the handleDrop function with this version.
 
+  // In BOTH journey-drag-drop.js AND feature-drag-drop.js,
+  // replace ONLY the handleDrop function with this version.
+
   handleDrop: function (targetCard) {
-    // Failsafes to prevent errors
+    // Failsafes to prevent errors.
     if (this.isProcessing || !this.draggedCard) return;
 
     try {
       this.isProcessing = true;
+
       const draggedId = this.draggedCard.dataset.id;
       const targetId = targetCard.dataset.id;
       const entityType = this.draggedCard.dataset.type;
 
       if (!draggedId || draggedId === targetId) return;
 
-      // --- THE DEFINITIVE, UNIFIED CALCULATION LOGIC ---
+      // --- THE DEFINITIVE, DIRECTION-AWARE CALCULATION LOGIC ---
 
       // 1. Get the original, reliably sorted list from our Data Store.
-      const originalSortedList =
-        window.StoryMapDataStore.getEntitiesArray(entityType);
-      const draggedItem = originalSortedList.find(
+      // We will use this original list for ALL calculations to avoid errors.
+      const sortedList = window.StoryMapDataStore.getEntitiesArray(entityType);
+
+      const draggedItem = sortedList.find((item) => item.id === draggedId);
+      const targetItem = sortedList.find((item) => item.id === targetId);
+
+      const draggedIndex = sortedList.findIndex(
         (item) => item.id === draggedId
       );
+      const targetIndex = sortedList.findIndex((item) => item.id === targetId);
 
-      // 2. CRITICAL FIX: Create a "clean" array for calculation by removing the item being dragged.
-      const listWithoutDragged = originalSortedList.filter(
-        (item) => item.id !== draggedId
-      );
+      if (targetIndex === -1 || draggedIndex === -1) {
+        console.error("Could not find dragged or target item.");
+        return;
+      }
 
-      // 3. Find the target's index in this NEW, clean array.
-      const targetIndex = listWithoutDragged.findIndex(
-        (item) => item.id === targetId
-      );
-      if (targetIndex === -1 || !draggedItem) return;
-
-      // 4. Calculate the new order value based on the clean array. The logic is now universal.
+      // 2. Calculate the new order value based on the drag direction.
       let newOrderValue;
-      const targetItem = listWithoutDragged[targetIndex];
 
-      if (targetIndex === 0) {
-        // Case 1: Dropping at the very beginning of the list.
-        newOrderValue = targetItem.order / 2;
+      if (draggedIndex > targetIndex) {
+        // --- CASE 1: DRAGGING RIGHT-TO-LEFT ---
+        // The user wants to place the item BEFORE the target.
+        // This logic is simple and correct.
+        if (targetIndex === 0) {
+          // This handles the "0 index" case you mentioned. We place it before the first item.
+          newOrderValue = targetItem.order / 2;
+        } else {
+          const prevItem = sortedList[targetIndex - 1];
+          newOrderValue = (prevItem.order + targetItem.order) / 2;
+        }
       } else {
-        // Case 2: Dropping anywhere else. Place it between the item before the target and the target itself.
-        const prevItem = listWithoutDragged[targetIndex - 1];
-        newOrderValue = (prevItem.order + targetItem.order) / 2;
+        // --- CASE 2: DRAGGING LEFT-TO-RIGHT ---
+        // The user also wants to place the item BEFORE the target, but the UI feels different.
+        // The correct logic is to place it between the target and the item AFTER the target.
+        const nextItem = sortedList[targetIndex + 1];
+        if (nextItem) {
+          // Dropping between two items
+          newOrderValue = (targetItem.order + nextItem.order) / 2;
+        } else {
+          // Dropping at the very end of the list
+          newOrderValue = targetItem.order + 10;
+        }
       }
 
       if (newOrderValue === draggedItem.order) return; // No change needed
@@ -124,7 +142,7 @@ window.StoryMapFeatureDragDrop = {
         window.StoryMapRenderer.render(mainCanvas);
       }
 
-      // The 'storymap:reorder' event is the correct internal signal.
+      // This correctly dispatches to the 'reorder' event for your robust workflow.
       document.dispatchEvent(
         new CustomEvent("storymap:reorder", {
           detail: {
