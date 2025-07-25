@@ -40,7 +40,6 @@ window.StoryMapEventBridge = {
     this.instance.triggerEvent(`${event.detail.entityType}_updated`);
   },
 
-  // --- THIS IS THE DEFINITIVE, CORRECTED REORDER HANDLER ---
   handleReorder(event) {
     const { entityType, entityId, newValue } = event.detail;
 
