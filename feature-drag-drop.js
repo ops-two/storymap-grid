@@ -57,6 +57,11 @@ window.StoryMapFeatureDragDrop = {
     });
   },
 
+  // In feature-drag-drop.js, replace ONLY the handleDrop function
+
+  // In BOTH journey-drag-drop.js AND feature-drag-drop.js,
+  // replace ONLY the handleDrop function with this version.
+
   handleDrop: function (targetCard) {
     if (this.isProcessing || !this.draggedCard) return;
 
@@ -67,26 +72,46 @@ window.StoryMapFeatureDragDrop = {
       const targetId = targetCard.dataset.id;
       if (!draggedId || draggedId === targetId) return;
 
-      // The calculation logic is correct.
-      const sortedFeatures =
-        window.StoryMapDataStore.getEntitiesArray("feature");
-      const draggedFeature = sortedFeatures.find((f) => f.id === draggedId);
-      const targetIndex = sortedFeatures.findIndex((f) => f.id === targetId);
-      if (targetIndex === -1 || !draggedFeature) return;
+      // --- THE DEFINITIVE, CORRECTED CALCULATION LOGIC ---
+      const entityType = this.draggedCard.dataset.type; // 'journey' or 'feature'
 
+      // 1. Get the original, reliably sorted list from our Data Store.
+      const originalSortedList =
+        window.StoryMapDataStore.getEntitiesArray(entityType);
+      const draggedItem = originalSortedList.find(
+        (item) => item.id === draggedId
+      );
+      if (!draggedItem) return;
+
+      // 2. CRITICAL FIX: Create a "clean" array for calculation by removing the item being dragged.
+      const listWithoutDragged = originalSortedList.filter(
+        (item) => item.id !== draggedId
+      );
+
+      // 3. Find the target's index in this NEW, clean array.
+      const targetIndex = listWithoutDragged.findIndex(
+        (item) => item.id === targetId
+      );
+      if (targetIndex === -1) return;
+
+      // 4. Calculate the new order value based on the clean array. The logic is now universal.
       let newOrderValue;
-      const targetFeature = sortedFeatures[targetIndex];
-      if (targetIndex === 0) {
-        newOrderValue = targetFeature.order / 2;
-      } else {
-        const prevFeature = sortedFeatures[targetIndex - 1];
-        newOrderValue = (prevFeature.order + targetFeature.order) / 2;
-      }
-      if (newOrderValue === draggedFeature.order) return;
+      const targetItem = listWithoutDragged[targetIndex];
 
-      // OPTIMISTIC UI UPDATE (This is correct)
+      if (targetIndex === 0) {
+        // Case 1: Dropping at the very beginning of the list.
+        newOrderValue = targetItem.order / 2;
+      } else {
+        // Case 2: Dropping anywhere else. Place it between the item before the target and the target itself.
+        const prevItem = listWithoutDragged[targetIndex - 1];
+        newOrderValue = (prevItem.order + targetItem.order) / 2;
+      }
+
+      if (newOrderValue === draggedItem.order) return; // No change needed
+
+      // OPTIMISTIC UI UPDATE & BUBBLE DISPATCH (This part is correct)
       window.StoryMapDataStore.updateEntityOrder(
-        "feature",
+        entityType,
         draggedId,
         newOrderValue
       );
@@ -95,21 +120,26 @@ window.StoryMapFeatureDragDrop = {
         window.StoryMapRenderer.render(mainCanvas);
       }
 
-      // --- THE CRITICAL FIX: DISPATCH A DEDICATED REORDER EVENT ---
-      console.log(
-        `Dispatching reorder for feature ${draggedId}. New Order: ${newOrderValue}`
+      const fullData = window.StoryMapDataStore.getEntityForUpdate(
+        entityType,
+        draggedId
       );
+      if (fullData) fullData.order_index = newOrderValue;
+
       document.dispatchEvent(
-        new CustomEvent("storymap:reorder", {
+        new CustomEvent("storymap:update", {
           detail: {
-            entityType: "feature",
+            entityType: entityType,
             entityId: draggedId,
+            fieldName: "order_index",
             newValue: newOrderValue,
+            oldValue: draggedItem.order,
+            allData: fullData,
           },
         })
       );
     } catch (err) {
-      console.error("Error in Feature handleDrop:", err);
+      console.error(`Error in ${entityType} handleDrop:`, err);
     } finally {
       this.isProcessing = false;
       this.draggedCard = null;
