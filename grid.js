@@ -98,7 +98,8 @@ window.StoryMapRenderer = {
         if (storiesInColumn.length > 0) {
           html += `<div class="feature-column" style="grid-column: ${
             index + 1
-          };">`;
+          };" data-feature-id="${feature.id}">`;
+
           storiesInColumn.forEach((story) => {
             html += `<div class="card story-card ${
               story.type === "Tech-Req" ? "tech" : "story"
@@ -123,7 +124,8 @@ window.StoryMapRenderer = {
           if (storiesInColumn.length > 0) {
             html += `<div class="feature-column" style="grid-column: ${
               index + 1
-            };">`;
+            };" data-feature-id="${feature.id}">`;
+
             storiesInColumn.forEach((story) => {
               html += `<div class="card story-card ${
                 story.type === "Tech-Req" ? "tech" : "story"
@@ -154,5 +156,7 @@ window.StoryMapRenderer = {
     } else {
       console.error("StoryMapFeatureDragDrop object NOT FOUND!");
     }
+    if (window.StoryMapStoryDragDrop)
+      window.StoryMapStoryDragDrop.init(containerElement[0]);
   },
 };
