@@ -36,6 +36,7 @@ window.StoryMapFeatureDragDrop = {
       });
 
       card.addEventListener("dragover", (e) => {
+        console.log("Dragover event fired on card:", card.dataset.id);
         if (this.draggedCard && card !== this.draggedCard) {
           e.preventDefault();
           card.classList.add("drag-over");
