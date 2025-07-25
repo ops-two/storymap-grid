@@ -81,71 +81,51 @@ window.StoryMapJourneyDragDrop = {
   // In BOTH journey-drag-drop.js AND feature-drag-drop.js,
   // replace ONLY the handleDrop function with this version.
 
+  // In journey-drag-drop.js, replace ONLY the handleDrop function
+
   handleDrop: function (targetCard) {
-    // Failsafes to prevent errors.
     if (this.isProcessing || !this.draggedCard) return;
 
     try {
       this.isProcessing = true;
-
       const draggedId = this.draggedCard.dataset.id;
       const targetId = targetCard.dataset.id;
-      const entityType = this.draggedCard.dataset.type;
-
       if (!draggedId || draggedId === targetId) return;
 
-      // --- THE DEFINITIVE, DIRECTION-AWARE CALCULATION LOGIC ---
-
-      // 1. Get the original, reliably sorted list from our Data Store.
-      // We will use this original list for ALL calculations to avoid errors.
-      const sortedList = window.StoryMapDataStore.getEntitiesArray(entityType);
-
+      // The perfected, direction-aware calculation logic
+      const sortedList = window.StoryMapDataStore.getEntitiesArray("journey");
       const draggedItem = sortedList.find((item) => item.id === draggedId);
-      const targetItem = sortedList.find((item) => item.id === targetId);
+      const targetIndex = sortedList.findIndex((item) => item.id === targetId);
+      if (targetIndex === -1 || !draggedItem) return;
 
+      let newOrderValue;
+      const targetItem = sortedList[targetIndex];
       const draggedIndex = sortedList.findIndex(
         (item) => item.id === draggedId
       );
-      const targetIndex = sortedList.findIndex((item) => item.id === targetId);
-
-      if (targetIndex === -1 || draggedIndex === -1) {
-        console.error("Could not find dragged or target item.");
-        return;
-      }
-
-      // 2. Calculate the new order value based on the drag direction.
-      let newOrderValue;
 
       if (draggedIndex > targetIndex) {
-        // --- CASE 1: DRAGGING RIGHT-TO-LEFT ---
-        // The user wants to place the item BEFORE the target.
-        // This logic is simple and correct.
+        // Dragging RIGHT-TO-LEFT
         if (targetIndex === 0) {
-          // This handles the "0 index" case you mentioned. We place it before the first item.
           newOrderValue = targetItem.order / 2;
         } else {
           const prevItem = sortedList[targetIndex - 1];
           newOrderValue = (prevItem.order + targetItem.order) / 2;
         }
       } else {
-        // --- CASE 2: DRAGGING LEFT-TO-RIGHT ---
-        // The user also wants to place the item BEFORE the target, but the UI feels different.
-        // The correct logic is to place it between the target and the item AFTER the target.
+        // Dragging LEFT-TO-RIGHT
         const nextItem = sortedList[targetIndex + 1];
         if (nextItem) {
-          // Dropping between two items
           newOrderValue = (targetItem.order + nextItem.order) / 2;
         } else {
-          // Dropping at the very end of the list
           newOrderValue = targetItem.order + 10;
         }
       }
+      if (newOrderValue === draggedItem.order) return;
 
-      if (newOrderValue === draggedItem.order) return; // No change needed
-
-      // --- OPTIMISTIC UI UPDATE & BUBBLE DISPATCH (This part is correct) ---
+      // Optimistic UI Update is the same
       window.StoryMapDataStore.updateEntityOrder(
-        entityType,
+        "journey",
         draggedId,
         newOrderValue
       );
@@ -154,18 +134,27 @@ window.StoryMapJourneyDragDrop = {
         window.StoryMapRenderer.render(mainCanvas);
       }
 
-      // This correctly dispatches to the 'reorder' event for your robust workflow.
+      // --- CRITICAL: DISPATCH THE 'update' EVENT WITH RICH PAYLOAD ---
+      const fullJourneyData = window.StoryMapDataStore.getEntityForUpdate(
+        "journey",
+        draggedId
+      );
+      if (fullJourneyData) fullJourneyData.order_index = newOrderValue;
+
       document.dispatchEvent(
-        new CustomEvent("storymap:reorder", {
+        new CustomEvent("storymap:update", {
           detail: {
-            entityType: entityType,
+            entityType: "journey",
             entityId: draggedId,
+            fieldName: "order_index",
             newValue: newOrderValue,
+            oldValue: draggedItem.order,
+            allData: fullJourneyData,
           },
         })
       );
     } catch (err) {
-      console.error(`Error in ${entityType} handleDrop:`, err);
+      console.error("Error in Journey handleDrop:", err);
     } finally {
       this.isProcessing = false;
       this.draggedCard = null;
