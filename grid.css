@@ -94,13 +94,15 @@
 
 /* Style for the "grabbing" hand cursor when a card is picked up */
 .journey-card[draggable="true"]:active,
-.feature-card[draggable="true"]:active {
+.feature-card[draggable="true"]:active,
+.story-card[draggable="true"]:active {
   cursor: grabbing;
 }
 
 /* Style for the card being actively dragged (semi-transparent) */
 .journey-card.dragging,
-.feature-card.dragging {
+.feature-card.dragging,
+.story-card.dragging {
   opacity: 0.5;
 }
 
@@ -110,6 +112,10 @@
   background-color: rgba(255, 193, 7, 0.1);
 }
 
+.story-card.drag-over {
+  border: 2px dashed #28a745 !important; /* Green */
+  background-color: rgba(40, 167, 69, 0.1) !important;
+}
 /* Dotted border for a FEATURE drop target */
 .feature-card.drag-over {
   border: 2px dashed #6f42c1; /* Use the feature's purple color */

@@ -71,20 +71,6 @@ window.StoryMapJourneyDragDrop = {
     });
   },
 
-  // The handleDrop function is the one we perfected in the last step. It is correct.
-  // In journey-drag-drop.js, replace ONLY the handleDrop function
-
-  // In journey-drag-drop.js, replace ONLY the handleDrop function
-
-  // In journey-drag-drop.js, replace ONLY the handleDrop function
-
-  // In BOTH journey-drag-drop.js AND feature-drag-drop.js,
-  // replace ONLY the handleDrop function with this version.
-
-  // In journey-drag-drop.js, replace ONLY the handleDrop function
-
-  // In journey-drag-drop.js, replace ONLY the handleDrop function
-
   handleDrop: function (targetCard) {
     // Failsafes to prevent errors.
     if (this.isProcessing || !this.draggedCard) return;

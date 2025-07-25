@@ -1,24 +1,12 @@
-// The definitive journey-drag-drop.js with correct UX and Visual Feedback
+// The definitive story-drag-drop.js
 
-window.StoryMapJourneyDragDrop = {
+window.StoryMapStoryDragDrop = {
   draggedCard: null,
   isProcessing: false,
 
-  // We are restoring the original, reliable init and setup functions.
   init: function (container) {
     this.container = container;
-    this.cleanup();
-    this.setupJourneyDragging();
-  },
-
-  cleanup: function () {
-    if (!this.container) return;
-    // This direct cleanup is more reliable than cloning.
-    const journeyCards = this.container.querySelectorAll(".journey-card");
-    journeyCards.forEach((card) => {
-      card.draggable = false;
-      // A clean way to remove specific listeners if needed, but for now we re-render.
-    });
+    this.setupStoryDragging();
   },
 
   setupJourneyDragging: function () {
@@ -71,20 +59,6 @@ window.StoryMapJourneyDragDrop = {
     });
   },
 
-  // The handleDrop function is the one we perfected in the last step. It is correct.
-  // In journey-drag-drop.js, replace ONLY the handleDrop function
-
-  // In journey-drag-drop.js, replace ONLY the handleDrop function
-
-  // In journey-drag-drop.js, replace ONLY the handleDrop function
-
-  // In BOTH journey-drag-drop.js AND feature-drag-drop.js,
-  // replace ONLY the handleDrop function with this version.
-
-  // In journey-drag-drop.js, replace ONLY the handleDrop function
-
-  // In journey-drag-drop.js, replace ONLY the handleDrop function
-
   handleDrop: function (targetCard) {
     if (this.isProcessing || !this.draggedCard) return;
 
@@ -96,36 +70,46 @@ window.StoryMapJourneyDragDrop = {
 
       const draggedColumn = this.draggedCard.closest(".feature-column");
       const targetColumn = targetCard.closest(".feature-column");
-
-      const draggedColumnId = draggedColumn.dataset.featureId;
       const targetColumnId = targetColumn.dataset.featureId;
+
+      let newOrderValue;
+      let payload = {};
 
       // --- THE CORE LOGIC: Check if we are moving within the same column or to a new one ---
 
-      if (draggedColumnId === targetColumnId) {
-        // --- CASE 1: VERTICAL REORDERING ---
-        // This is the same "clean array" logic we perfected for features.
+      if (draggedColumn.dataset.featureId === targetColumnId) {
+        // --- CASE 1: VERTICAL REORDERING (within the same column) ---
         const allStoryIdsInColumn = Array.from(
           targetColumn.querySelectorAll(".story-card")
         ).map((c) => c.dataset.id);
         const originalSortedList = window.StoryMapDataStore.getEntitiesArray(
           "story"
         ).filter((s) => allStoryIdsInColumn.includes(s.id));
-
-        // ... (The rest of the "clean array" midpoint calculation logic goes here) ...
-
-        // Dispatch the simple reorder event
-        document.dispatchEvent(
-          new CustomEvent("storymap:reorder", {
-            detail: {
-              entityType: "story",
-              entityId: draggedId,
-              newValue: newOrderValue, // This is the new order_index
-            },
-          })
+        const listWithoutDragged = originalSortedList.filter(
+          (s) => s.id !== draggedId
         );
+        const targetIndex = listWithoutDragged.findIndex(
+          (s) => s.id === targetId
+        );
+
+        if (targetIndex === -1) return;
+
+        if (targetIndex === 0) {
+          newOrderValue = listWithoutDragged[0].order / 2;
+        } else {
+          const prevItem = listWithoutDragged[targetIndex - 1];
+          newOrderValue =
+            (prevItem.order + listWithoutDragged[targetIndex].order) / 2;
+        }
+
+        payload = {
+          entityType: "story",
+          entityId: draggedId,
+          fieldName: "order_index",
+          newValue: newOrderValue,
+        };
       } else {
-        // --- CASE 2: HORIZONTAL RE-PARENTING ---
+        // --- CASE 2: HORIZONTAL RE-PARENTING (to a new column) ---
         const allStoryIdsInNewColumn = Array.from(
           targetColumn.querySelectorAll(".story-card")
         ).map((c) => c.dataset.id);
@@ -133,25 +117,26 @@ window.StoryMapJourneyDragDrop = {
           "story"
         ).filter((s) => allStoryIdsInNewColumn.includes(s.id));
 
-        // Calculate a new order to place it at the bottom of the new column
         const lastStory = storiesInNewColumn[storiesInNewColumn.length - 1];
-        const newOrderValue = lastStory ? lastStory.order + 10 : 10; // If column is empty, start at 10
+        newOrderValue = lastStory ? lastStory.order + 10 : 10;
 
-        // Dispatch a more detailed reorder event that includes the new parent ID
-        document.dispatchEvent(
-          new CustomEvent("storymap:reorder", {
-            detail: {
-              entityType: "story",
-              entityId: draggedId,
-              newValue: newOrderValue, // The new order_index
-              newParentId: targetColumnId, // The crucial new piece of data
-            },
-          })
-        );
+        payload = {
+          entityType: "story",
+          entityId: draggedId,
+          fieldName: "order_index_and_feature", // A special field name for our workflow
+          newValue: newOrderValue,
+          newParentId: targetColumnId,
+        };
       }
 
-      // Perform optimistic UI update
-      // ... (code to update local data store and re-render) ...
+      // --- Perform optimistic UI update and dispatch the event ---
+      // (Code to update local data store and re-render)
+      // ...
+
+      // CRITICAL CHANGE: We now dispatch to the generic "storymap:update" event
+      document.dispatchEvent(
+        new CustomEvent("storymap:update", { detail: payload })
+      );
     } finally {
       this.isProcessing = false;
       this.draggedCard = null;
