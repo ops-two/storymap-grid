@@ -57,7 +57,11 @@ window.StoryMapFeatureDragDrop = {
   },
 
   // The handleDrop function now has sole responsibility for state and logic.
+  // In BOTH journey-drag-drop.js AND feature-drag-drop.js,
+  // replace ONLY the handleDrop function with this version.
+
   handleDrop: function (targetCard) {
+    // Failsafes to prevent errors
     if (this.isProcessing || !this.draggedCard) return;
 
     try {
@@ -68,31 +72,41 @@ window.StoryMapFeatureDragDrop = {
 
       if (!draggedId || draggedId === targetId) return;
 
-      // The robust calculation logic is correct.
+      // --- THE DEFINITIVE, CORRECTED CALCULATION LOGIC ---
+
+      // 1. Get the original, reliably sorted list from our Data Store.
       const originalSortedList =
         window.StoryMapDataStore.getEntitiesArray(entityType);
       const draggedItem = originalSortedList.find(
         (item) => item.id === draggedId
       );
+
+      // 2. Create a "clean" array for calculation by removing the item being dragged.
       const listWithoutDragged = originalSortedList.filter(
         (item) => item.id !== draggedId
       );
+
+      // 3. Find the target's index in this NEW, clean array.
       const targetIndex = listWithoutDragged.findIndex(
         (item) => item.id === targetId
       );
       if (targetIndex === -1 || !draggedItem) return;
 
+      // 4. Calculate the new order value based on the clean array.
       let newOrderValue;
       const targetItem = listWithoutDragged[targetIndex];
+
       if (targetIndex === 0) {
         newOrderValue = targetItem.order / 2;
       } else {
         const prevItem = listWithoutDragged[targetIndex - 1];
-        newOrderValue = (prevItem.order + prevItem.order) / 2;
+        // THIS IS THE CORRECTED CALCULATION
+        newOrderValue = (prevItem.order + targetItem.order) / 2;
       }
+
       if (newOrderValue === draggedItem.order) return;
 
-      // Optimistic UI Update & Bubble Dispatch
+      // --- OPTIMISTIC UI UPDATE & BUBBLE DISPATCH ---
       window.StoryMapDataStore.updateEntityOrder(
         entityType,
         draggedId,
@@ -103,28 +117,20 @@ window.StoryMapFeatureDragDrop = {
         window.StoryMapRenderer.render(mainCanvas);
       }
 
-      const fullData = window.StoryMapDataStore.getEntityForUpdate(
-        entityType,
-        draggedId
-      );
-      if (fullData) fullData.order_index = newOrderValue;
-
+      // --- THE CRITICAL FIX: DISPATCH THE CORRECT 'reorder' EVENT ---
+      // This is the correct internal signal for your working Event Bridge.
       document.dispatchEvent(
-        new CustomEvent("storymap:update", {
+        new CustomEvent("storymap:reorder", {
           detail: {
             entityType: entityType,
             entityId: draggedId,
-            fieldName: "order_index",
             newValue: newOrderValue,
-            oldValue: draggedItem.order,
-            allData: fullData,
           },
         })
       );
     } catch (err) {
       console.error(`Error in ${entityType} handleDrop:`, err);
     } finally {
-      // CRITICAL: The state is now ONLY cleared here, at the very end.
       this.isProcessing = false;
       this.draggedCard = null;
     }
