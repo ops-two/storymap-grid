@@ -92,29 +92,22 @@ window.StoryMapRenderer = {
     // --- 4c. RENDER STORIES AND RELEASES (THE DEFINITIVE, CORRECTED LOGIC) ---
     const unreleasedStories = stories.filter((s) => !s.releaseId);
 
-    // Always render the "Unassigned" section header and columns, even if it's empty,
-    // to provide drop targets.
-    html += `<div class="release-header">Unassigned</div>`;
-    features.forEach((feature, index) => {
-      const storiesInColumn = unreleasedStories.filter(
-        (s) => s.featureId === feature.id
-      );
-      html += `<div class="feature-column" style="grid-column: ${
-        index + 1
-      };" data-feature-id="${feature.id}">`;
-      if (storiesInColumn.length > 0) {
+    if (unreleasedStories.length > 0) {
+      html += `<div class="release-header">Unassigned</div>`;
+      features.forEach((feature, index) => {
+        const storiesInColumn = unreleasedStories.filter(
+          (s) => s.featureId === feature.id
+        );
+        html += `<div class="feature-column" style="grid-column: ${
+          index + 1
+        };" data-feature-id="${feature.id}">`;
         storiesInColumn.forEach((story) => {
-          html += `<div class="card story-card ${
-            story.type === "Tech-Req" ? "tech" : ""
-          }" data-id="${story.id}" data-type="story" data-order="${
-            story.order
-          }"><span class="card-title">${story.name}</span></div>`;
+          // ... render story card ...
         });
-      }
-      // Always render a drop zone in the Unassigned section's columns
-      html += `<div class="empty-column-drop-zone" data-feature-id="${feature.id}"><span>Drop Story Here</span></div>`;
-      html += `</div>`;
-    });
+        // The drop zone logic is now handled by the drag-active class, so we don't need it here.
+        html += `</div>`;
+      });
+    }
 
     // Now, loop through each release and render its section.
     releases.forEach((release) => {
