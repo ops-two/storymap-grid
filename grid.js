@@ -84,32 +84,41 @@ window.StoryMapRenderer = {
     features.forEach((feature, index) => {
       html += `<div class="card feature-card" data-id="${
         feature.id
-      }" data-type="feature" style="grid-column: ${
-        index + 1
-      };"><span class="card-title">${feature.name}</span></div>`;
+      }" data-type="feature" data-order="${
+        feature.order
+      }" style="grid-column: ${index + 1};"><span class="card-title">${
+        feature.name
+      }</span></div>`;
     });
 
     // --- 4c. RENDER STORIES AND RELEASES (THE DEFINITIVE, CORRECTED LOGIC) ---
     const unreleasedStories = stories.filter((s) => !s.releaseId);
 
-    if (unreleasedStories.length > 0) {
-      html += `<div class="release-header">Unassigned</div>`;
-      features.forEach((feature, index) => {
-        const storiesInColumn = unreleasedStories.filter(
-          (s) => s.featureId === feature.id
-        );
-        html += `<div class="feature-column" style="grid-column: ${
-          index + 1
-        };" data-feature-id="${feature.id}">`;
+    // Always render the "Unassigned" section header.
+    html += `<div class="release-header">Unassigned</div>`;
+    features.forEach((feature, index) => {
+      const storiesInColumn = unreleasedStories.filter(
+        (s) => s.featureId === feature.id
+      );
+      // This line is now correct for the "Unassigned" section.
+      html += `<div class="feature-column" style="grid-column: ${
+        index + 1
+      };" data-feature-id="${feature.id}" data-release-id="unassigned">`;
+      if (storiesInColumn.length > 0) {
         storiesInColumn.forEach((story) => {
-          // ... render story card ...
+          html += `<div class="card story-card ${
+            story.type === "Tech-Req" ? "tech" : ""
+          }" data-id="${story.id}" data-type="story" data-order="${
+            story.order
+          }"><span class="card-title">${story.name}</span></div>`;
         });
-        // The drop zone logic is now handled by the drag-active class, so we don't need it here.
-        html += `</div>`;
-      });
-    }
+      }
+      // Always render a drop zone in the Unassigned section's columns.
+      html += `<div class="empty-column-drop-zone" data-feature-id="${feature.id}" data-release-id="unassigned"><span>Drop Story Here</span></div>`;
+      html += `</div>`;
+    });
 
-    // Now, loop through each release and render its section.
+    // Now, loop through each release and render its section correctly.
     releases.forEach((release) => {
       const releaseStories = stories.filter((s) => s.releaseId === release.id);
 
@@ -118,9 +127,10 @@ window.StoryMapRenderer = {
         const storiesInColumn = releaseStories.filter(
           (s) => s.featureId === feature.id
         );
+        // THE CRITICAL FIX IS HERE: This now correctly uses 'release.id'.
         html += `<div class="feature-column" style="grid-column: ${
           index + 1
-        };" data-feature-id="${feature.id}">`;
+        };" data-feature-id="${feature.id}" data-release-id="${release.id}">`;
         if (storiesInColumn.length > 0) {
           storiesInColumn.forEach((story) => {
             html += `<div class="card story-card ${
@@ -131,7 +141,7 @@ window.StoryMapRenderer = {
           });
         }
         // Always render a drop zone in this release's columns as well.
-        html += `<div class="empty-column-drop-zone" data-feature-id="${feature.id}"><span>Drop Story Here</span></div>`;
+        html += `<div class="empty-column-drop-zone" data-feature-id="${feature.id}" data-release-id="${release.id}"><span>Drop Story Here</span></div>`;
         html += `</div>`;
       });
     });

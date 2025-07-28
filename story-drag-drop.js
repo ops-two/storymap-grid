@@ -59,69 +59,99 @@ window.StoryMapStoryDragDrop = {
     });
   },
 
+  // In story-drag-drop.js, replace ONLY the handleDrop function
+
+  // In story-drag-drop.js, replace ONLY the handleDrop function
+
   handleDrop: function (target) {
-    // Renamed to 'target' for clarity
-    if (this.isProcessing || !this.draggedCard) return;
+    console.log(
+      "%c--- STORY DROP INITIATED ---",
+      "color: #ff00ff; font-weight: bold;"
+    );
+    if (this.isProcessing || !this.draggedCard) {
+      console.error("Drop cancelled: isProcessing or no draggedCard.");
+      return;
+    }
 
     try {
       this.isProcessing = true;
       const draggedId = this.draggedCard.dataset.id;
-
-      // --- CHANGE #3: Intelligent identification of target and columns ---
       const isDropZone = target.classList.contains("empty-column-drop-zone");
-      const targetId = isDropZone ? null : target.dataset.id; // A drop zone has no targetId
-
-      if (!draggedId || draggedId === targetId) return;
+      const targetId = isDropZone ? null : target.dataset.id;
+      console.log(
+        `STEP 1: Dragged ID: ${draggedId}, Target ID: ${
+          targetId || "EMPTY DROP ZONE"
+        }`
+      );
+      if (!draggedId || draggedId === targetId) {
+        this.isProcessing = false;
+        return;
+      }
 
       const draggedColumn = this.draggedCard.closest(".feature-column");
-      // If the target is a drop zone, it IS the column. Otherwise, find the closest column.
       const targetColumn = isDropZone
         ? target.parentElement
         : target.closest(".feature-column");
-      const targetColumnId = targetColumn.dataset.featureId;
+      const draggedFeatureId = draggedColumn.dataset.featureId;
+      const targetFeatureId = targetColumn.dataset.featureId;
+      const draggedReleaseId = draggedColumn.dataset.releaseId;
+      const targetReleaseId = targetColumn.dataset.releaseId;
+      console.log(
+        `STEP 2: Dragged [F:${draggedFeatureId}, R:${draggedReleaseId}], Target [F:${targetFeatureId}, R:${targetReleaseId}]`
+      );
 
       let newOrderValue;
       let payload;
 
-      // --- The core logic is now even more robust ---
-      if (isDropZone || draggedColumn.dataset.featureId !== targetColumnId) {
-        // --- CASE 1: HORIZONTAL RE-PARENTING (or dropping in an empty column) ---
-        const allStoryIdsInNewColumn = Array.from(
+      if (draggedFeatureId !== targetFeatureId) {
+        console.log("VERDICT: HORIZONTAL (Feature) move.");
+        const storiesInNewColumn = Array.from(
           targetColumn.querySelectorAll(".story-card")
-        ).map((c) => c.dataset.id);
-        const storiesInNewColumn = window.StoryMapDataStore.getEntitiesArray(
-          "story"
-        ).filter((s) => allStoryIdsInNewColumn.includes(s.id));
+        ).map((c) => window.StoryMapDataStore.getEntity("story", c.dataset.id));
         const lastStory = storiesInNewColumn[storiesInNewColumn.length - 1];
-
-        newOrderValue = lastStory ? lastStory.order + 10 : 10; // If column is empty, start at 10
-
+        newOrderValue = lastStory ? lastStory.order + 10 : 10;
         payload = {
           entityType: "story",
           entityId: draggedId,
           fieldName: "order_index_and_feature",
           newValue: newOrderValue,
-          newParentId: targetColumnId,
+          newParentId: targetFeatureId,
+        };
+      } else if (draggedReleaseId !== targetReleaseId) {
+        console.log("VERDICT: VERTICAL (Release) move.");
+        const storiesInNewColumn = Array.from(
+          targetColumn.querySelectorAll(".story-card")
+        ).map((c) => window.StoryMapDataStore.getEntity("story", c.dataset.id));
+        const lastStory = storiesInNewColumn[storiesInNewColumn.length - 1];
+        newOrderValue = lastStory ? lastStory.order + 10 : 10;
+        payload = {
+          entityType: "story",
+          entityId: draggedId,
+          fieldName: "order_index_and_release",
+          newValue: newOrderValue,
+          newReleaseId: targetReleaseId === "unassigned" ? "" : targetReleaseId,
         };
       } else {
-        // --- CASE 2: VERTICAL REORDERING (This logic is your proven, working code) ---
-        const allStoryIdsInColumn = Array.from(
+        console.log("VERDICT: SIMPLE VERTICAL reorder.");
+        // --- THIS IS THE COMPLETE, WORKING "CLEAN ARRAY" LOGIC ---
+        const allStoriesInColumn = Array.from(
           targetColumn.querySelectorAll(".story-card")
-        ).map((c) => c.dataset.id);
-        const originalSortedList = window.StoryMapDataStore.getEntitiesArray(
-          "story"
-        ).filter((s) => allStoryIdsInColumn.includes(s.id));
-        const draggedItem = originalSortedList.find(
+        ).map((c) => window.StoryMapDataStore.getEntity("story", c.dataset.id));
+        const draggedItem = allStoriesInColumn.find(
           (item) => item.id === draggedId
         );
-        const listWithoutDragged = originalSortedList.filter(
+        const listWithoutDragged = allStoriesInColumn.filter(
           (item) => item.id !== draggedId
         );
         const targetIndex = listWithoutDragged.findIndex(
           (item) => item.id === targetId
         );
 
-        if (targetIndex === -1 || !draggedItem) return;
+        if (targetIndex === -1 || !draggedItem) {
+          console.error("ABORT: Target not found.");
+          this.isProcessing = false;
+          return;
+        }
 
         const targetItem = listWithoutDragged[targetIndex];
         if (targetIndex === 0) {
@@ -130,8 +160,10 @@ window.StoryMapStoryDragDrop = {
           const prevItem = listWithoutDragged[targetIndex - 1];
           newOrderValue = (prevItem.order + targetItem.order) / 2;
         }
-        if (newOrderValue === draggedItem.order) return;
-
+        if (newOrderValue === draggedItem.order) {
+          this.isProcessing = false;
+          return;
+        }
         payload = {
           entityType: "story",
           entityId: draggedId,
@@ -140,21 +172,37 @@ window.StoryMapStoryDragDrop = {
         };
       }
 
-      // Optimistic UI Update and Event Dispatch (Unchanged)
+      console.log(
+        `%cSTEP 3: FINAL PAYLOAD = `,
+        "color: green; font-weight: bold;",
+        payload
+      );
+
+      // --- Optimistic UI Update & Dispatch ---
       window.StoryMapDataStore.updateEntityOrder(
         "story",
         draggedId,
         newOrderValue
       );
       if (payload.newParentId) {
-        /* ... */
+        const story = window.StoryMapDataStore.getEntity("story", draggedId);
+        if (story) story.featureId = payload.newParentId;
       }
+      if (payload.newReleaseId !== undefined) {
+        const story = window.StoryMapDataStore.getEntity("story", draggedId);
+        if (story) story.releaseId = payload.newReleaseId;
+      }
+
       const mainCanvas = $(this.container).closest('[id^="bubble-r-box"]');
       if (window.StoryMapRenderer && mainCanvas.length) {
+        window.StoryMapRenderer.render(mainCanvas);
       }
+
       document.dispatchEvent(
         new CustomEvent("storymap:update", { detail: payload })
       );
+    } catch (err) {
+      console.error("CRITICAL ERROR in handleDrop:", err);
     } finally {
       this.isProcessing = false;
       this.draggedCard = null;
