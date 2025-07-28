@@ -41,24 +41,17 @@ window.StoryMapEventBridge = {
   },
 
   handleReorder(event) {
-    const { entityType, entityId, newValue } = event.detail;
+    // This now correctly handles a payload that might include newParentId.
+    const payload = event.detail; // Get the entire detail object
+    const { entityType } = payload;
 
-    const reorderPayload = {
-      entityId: entityId,
-      newValue: newValue,
-    };
+    console.log("Dispatching reorder to Bubble:", payload);
 
-    // 1. Publish to the dedicated 'pending_reorder' state. This is correct.
-    this.instance.publishState(
-      "pending_reorder",
-      JSON.stringify(reorderPayload)
-    );
+    // Publish the entire rich object to the 'pending_reorder' state.
+    this.instance.publishState("pending_reorder", JSON.stringify(payload));
 
-    // 2. THE CRITICAL FIX: Trigger the EXISTING '_updated' event.
-    const eventName = `${entityType}_updated`;
-    console.log(
-      `A reorder occurred. Triggering the existing Bubble event: '${eventName}'`
-    );
+    // Trigger the specific event for the entity type (e.g., 'feature_reordered').
+    const eventName = `${entityType}_reordered`;
     this.instance.triggerEvent(eventName);
   },
 };

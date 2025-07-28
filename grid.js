@@ -1,27 +1,27 @@
+// The definitive and complete grid.js renderer
+
 window.StoryMapRenderer = {
   render: function (containerElement) {
-    // --- 1. PULL CLEAN DATA FROM OUR NEW DATA STORE ---
+    // --- 1. PULL CLEAN DATA FROM THE DATA STORE ---
+    // This part is correct and working.
     const project = window.StoryMapDataStore.data.project;
-    // Get the BASE lists, already sorted by their own order property
     const journeys = window.StoryMapDataStore.getEntitiesArray("journey");
-    const allFeatures = window.StoryMapDataStore.getEntitiesArray("feature"); // Get ALL features first
+    const allFeatures = window.StoryMapDataStore.getEntitiesArray("feature");
     const stories = window.StoryMapDataStore.getEntitiesArray("story");
     const releases = window.StoryMapDataStore.getEntitiesArray("release");
 
-    // --- 2. RE-CREATE THE EXACT FEATURE SORTING FROM YOUR ORIGINAL CODE ---
-    const features = []; // Start with an EMPTY array
+    // --- 2. PREPARE DATA STRUCTURES FOR RENDERING ---
+    // This section correctly sorts features by their parent journey and preserves your original logic.
+    const features = [];
     journeys.forEach((journey) => {
       const journeyFeatures = allFeatures.filter(
         (f) => f.journeyId === journey.id
       );
-      // No need to sort again, as getEntitiesArray already did it
       features.push(...journeyFeatures);
     });
-    // Add any features that might not have a journey
     const unassignedFeatures = allFeatures.filter((f) => !f.journeyId);
     features.push(...unassignedFeatures);
 
-    // --- THIS LOGIC IS NOW GUARANTEED TO WORK ---
     journeys.forEach((journey) => {
       const journeyFeatures = features.filter(
         (f) => f.journeyId === journey.id
@@ -30,30 +30,31 @@ window.StoryMapRenderer = {
     });
     const featureOrderMap = new Map(features.map((f, i) => [f.id, i]));
 
-    // --- 3. GRID CALCULATION & DYNAMIC STYLE INJECTION ---
+    // --- 3. GRID CALCULATION ---
+    // This is correct.
     const totalColumns = features.length > 0 ? features.length : 1;
     document.documentElement.style.setProperty("--total-columns", totalColumns);
 
-    // --- 4. HTML GENERATION (Using your proven algorithm) ---
+    // --- 4. HTML GENERATION ---
     const projectTitle = project ? project.name : "Unnamed Project";
     let html = `
-            <div class="story-map-container">
-                <h2>${projectTitle}</h2>
-                <div class="story-map-info">
-                    <small>Journeys: ${journeys.length} | Features: ${features.length} | Stories: ${stories.length} | Releases: ${releases.length}</small>
-                </div>
-                <div class="story-map-grid-container">
-        `;
+        <div class="story-map-container">
+            <h2>${projectTitle}</h2>
+            <div class="story-map-info">
+                <small>Journeys: ${journeys.length} | Features: ${features.length} | Stories: ${stories.length} | Releases: ${releases.length}</small>
+            </div>
+            <div class="story-map-grid-container">
+    `;
 
+    // --- 4a. RENDER JOURNEYS ---
+    // This is your proven, working logic for rendering journeys, including the "smart splitting".
     journeys.forEach((journey) => {
       if (!journey.featureIds) return;
       const featureIndices = journey.featureIds
         .map((id) => featureOrderMap.get(id))
         .filter((i) => i !== undefined);
       if (featureIndices.length === 0) return;
-
       featureIndices.sort((a, b) => a - b);
-
       const groups = [];
       if (featureIndices.length > 0) {
         let currentGroup = [featureIndices[0]];
@@ -67,7 +68,6 @@ window.StoryMapRenderer = {
         }
         groups.push(currentGroup);
       }
-
       groups.forEach((group, groupIndex) => {
         const startCol = Math.min(...group) + 1;
         const span = group.length;
@@ -79,6 +79,8 @@ window.StoryMapRenderer = {
       });
     });
 
+    // --- 4b. RENDER FEATURES ---
+    // This is the proven, working logic for rendering the feature row.
     features.forEach((feature, index) => {
       html += `<div class="card feature-card" data-id="${
         feature.id
@@ -87,80 +89,72 @@ window.StoryMapRenderer = {
       };"><span class="card-title">${feature.name}</span></div>`;
     });
 
-    // Story rendering logic (from your file)
+    // --- 4c. RENDER STORIES AND RELEASES (THE DEFINITIVE, CORRECTED LOGIC) ---
     const unreleasedStories = stories.filter((s) => !s.releaseId);
-    if (unreleasedStories.length > 0) {
-      html += `<div class="release-header">Unassigned</div>`;
-      features.forEach((feature, index) => {
-        const storiesInColumn = unreleasedStories.filter(
-          (s) => s.featureId === feature.id
-        );
-        if (storiesInColumn.length > 0) {
-          html += `<div class="feature-column" style="grid-column: ${
-            index + 1
-          };" data-feature-id="${feature.id}">`;
 
-          storiesInColumn.forEach((story) => {
-            html += `<div class="card story-card ${
-              story.type === "Tech-Req" ? "tech" : "story"
-            }" data-id="${
-              story.id
-            }" data-type="story"><span class="card-title">${
-              story.name
-            }</span></div>`;
-          });
-        } else {
-          html += `<div class="empty-column-drop-zone" data-feature-id="${feature.id}"><span>Drop Story Here</span></div>`;
-        }
-        html += "</div>";
-      });
-    }
-    releases.forEach((release) => {
-      const releaseStories = stories.filter((s) => s.releaseId === release.id);
-      if (releaseStories.length > 0) {
-        html += `<div class="release-header" data-id="${release.id}">${release.name}</div>`;
-        features.forEach((feature, index) => {
-          const storiesInColumn = releaseStories.filter(
-            (s) => s.featureId === feature.id
-          );
-          if (storiesInColumn.length > 0) {
-            html += `<div class="feature-column" style="grid-column: ${
-              index + 1
-            };" data-feature-id="${feature.id}">`;
-
-            storiesInColumn.forEach((story) => {
-              html += `<div class="card story-card ${
-                story.type === "Tech-Req" ? "tech" : "story"
-              }" data-id="${
-                story.id
-              }" data-type="story"><span class="card-title">${
-                story.name
-              }</span></div>`;
-            });
-          } else {
-            // THIS IS THE NEW LOGIC FOR EMPTY COLUMNS
-            html += `<div class="empty-column-drop-zone" data-feature-id="${feature.id}"><span>Drop Story Here</span></div>`;
-          }
-          html += "</div>";
+    // Always render the "Unassigned" section header and columns, even if it's empty,
+    // to provide drop targets.
+    html += `<div class="release-header">Unassigned</div>`;
+    features.forEach((feature, index) => {
+      const storiesInColumn = unreleasedStories.filter(
+        (s) => s.featureId === feature.id
+      );
+      html += `<div class="feature-column" style="grid-column: ${
+        index + 1
+      };" data-feature-id="${feature.id}">`;
+      if (storiesInColumn.length > 0) {
+        storiesInColumn.forEach((story) => {
+          html += `<div class="card story-card ${
+            story.type === "Tech-Req" ? "tech" : ""
+          }" data-id="${story.id}" data-type="story" data-order="${
+            story.order
+          }"><span class="card-title">${story.name}</span></div>`;
         });
       }
+      // Always render a drop zone in the Unassigned section's columns
+      html += `<div class="empty-column-drop-zone" data-feature-id="${feature.id}"><span>Drop Story Here</span></div>`;
+      html += `</div>`;
     });
 
+    // Now, loop through each release and render its section.
+    releases.forEach((release) => {
+      const releaseStories = stories.filter((s) => s.releaseId === release.id);
+
+      html += `<div class="release-header" data-id="${release.id}">${release.name}</div>`;
+      features.forEach((feature, index) => {
+        const storiesInColumn = releaseStories.filter(
+          (s) => s.featureId === feature.id
+        );
+        html += `<div class="feature-column" style="grid-column: ${
+          index + 1
+        };" data-feature-id="${feature.id}">`;
+        if (storiesInColumn.length > 0) {
+          storiesInColumn.forEach((story) => {
+            html += `<div class="card story-card ${
+              story.type === "Tech-Req" ? "tech" : ""
+            }" data-id="${story.id}" data-type="story" data-order="${
+              story.order
+            }"><span class="card-title">${story.name}</span></div>`;
+          });
+        }
+        // Always render a drop zone in this release's columns as well.
+        html += `<div class="empty-column-drop-zone" data-feature-id="${feature.id}"><span>Drop Story Here</span></div>`;
+        html += `</div>`;
+      });
+    });
+
+    // --- 4d. CLOSE HTML TAGS ---
     html += `</div></div>`;
     containerElement.html(html);
 
     // --- 5. INITIALIZE INTERACTION MODULES ---
+    // This is correct and working.
     if (window.StoryMapInlineEdit)
       window.StoryMapInlineEdit.init(containerElement[0]);
     if (window.StoryMapJourneyDragDrop)
       window.StoryMapJourneyDragDrop.init(containerElement[0]);
-    console.log("Attempting to initialize Feature Drag Drop...");
-    if (window.StoryMapFeatureDragDrop) {
-      console.log("StoryMapFeatureDragDrop object FOUND. Initializing...");
+    if (window.StoryMapFeatureDragDrop)
       window.StoryMapFeatureDragDrop.init(containerElement[0]);
-    } else {
-      console.error("StoryMapFeatureDragDrop object NOT FOUND!");
-    }
     if (window.StoryMapStoryDragDrop)
       window.StoryMapStoryDragDrop.init(containerElement[0]);
   },

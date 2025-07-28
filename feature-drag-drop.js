@@ -127,11 +127,10 @@ window.StoryMapFeatureDragDrop = {
           entityType: "feature",
           entityId: draggedId,
           newValue: newOrderValue,
-          newParentId: targetJourneyId, // The ID of the new parent journey
+          newParentId: targetJourneyId,
         };
       }
 
-      // Optimistic UI Update and Event Dispatch (Unchanged)
       window.StoryMapDataStore.updateEntityOrder(
         "feature",
         draggedId,
