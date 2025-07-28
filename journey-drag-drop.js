@@ -101,7 +101,15 @@ window.StoryMapJourneyDragDrop = {
       const targetIndex = listWithoutDragged.findIndex(
         (item) => item.id === targetId
       );
-      if (targetIndex === -1 || !draggedItem) return;
+      if (targetIndex === -1 || !draggedItem) {
+        console.error(
+          "Could not find dragged or target journey in clean list."
+        );
+        // Reset state and exit cleanly
+        this.isProcessing = false;
+        this.draggedCard = null;
+        return;
+      }
 
       // 4. Calculate the new order value based on the clean array. This logic is universal.
       let newOrderValue;
@@ -116,10 +124,13 @@ window.StoryMapJourneyDragDrop = {
         newOrderValue = (prevItem.order + targetItem.order) / 2;
       }
 
-      if (newOrderValue === draggedItem.order) return;
+      if (newOrderValue === draggedItem.order) {
+        this.isProcessing = false;
+        this.draggedCard = null;
+        return; // No change needed
+      }
 
-      // --- OPTIMISTIC UI UPDATE & BUBBLE DISPATCH ---
-      // This section is correctly tailored for your journey workflow.
+      // --- OPTIMISTIC UI UPDATE & BUBBLE DISPATCH (Your proven, working code) ---
 
       window.StoryMapDataStore.updateEntityOrder(
         "journey",
@@ -131,14 +142,10 @@ window.StoryMapJourneyDragDrop = {
         window.StoryMapRenderer.render(mainCanvas);
       }
 
-      // This correctly gets the rich payload for the 'update' event.
-      const fullJourneyData = window.StoryMapDataStore.getEntityForUpdate(
-        "journey",
-        draggedId
-      );
+      const fullJourneyData =
+        window.StoryMapData - Store.getEntityForUpdate("journey", draggedId);
       if (fullJourneyData) fullJourneyData.order_index = newOrderValue;
 
-      // This correctly dispatches to the "storymap:update" event.
       document.dispatchEvent(
         new CustomEvent("storymap:update", {
           detail: {
