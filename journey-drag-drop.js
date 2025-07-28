@@ -75,6 +75,8 @@ window.StoryMapJourneyDragDrop = {
 
   // In journey-drag-drop.js, replace ONLY the handleDrop function
 
+  // In journey-drag-drop.js, replace ONLY the handleDrop function
+
   handleDrop: function (targetCard) {
     // Failsafes to prevent errors.
     if (this.isProcessing || !this.draggedCard) return;
@@ -86,53 +88,46 @@ window.StoryMapJourneyDragDrop = {
       const targetId = targetCard.dataset.id;
       if (!draggedId || draggedId === targetId) return;
 
-      // --- THE PROVEN "CLEAN ARRAY" CALCULATION LOGIC ---
-      // This is the exact algorithm that is working perfectly for your features.
+      // --- THE PROVEN "DIRECTION-AWARE" LOGIC FROM YOUR WORKING FEATURE MODULE ---
+      const sortedList = window.StoryMapDataStore.getEntitiesArray("journey");
+      const draggedItem = sortedList.find((item) => item.id === draggedId);
+      const targetIndex = sortedList.findIndex((item) => item.id === targetId);
 
-      // 1. Get the original, reliably sorted list from our Data Store.
-      const originalSortedList =
-        window.StoryMapDataStore.getEntitiesArray("journey");
-      const draggedItem = originalSortedList.find(
+      if (targetIndex === -1 || !draggedItem) {
+        console.error("Could not find dragged or target journey.");
+        this.isProcessing = false;
+        this.draggedCard = null;
+        return;
+      }
+
+      let newOrderValue;
+      const targetItem = sortedList[targetIndex];
+      const draggedIndex = sortedList.findIndex(
         (item) => item.id === draggedId
       );
 
-      // 2. Create a "clean" array for calculation by removing the item being dragged.
-      const listWithoutDragged = originalSortedList.filter(
-        (item) => item.id !== draggedId
-      );
-
-      // 3. Find the target's index in this NEW, clean array.
-      const targetIndex = listWithoutDragged.findIndex(
-        (item) => item.id === targetId
-      );
-      if (targetIndex === -1 || !draggedItem) {
-        console.error(
-          "Could not find dragged or target journey in clean list."
-        );
-        // Reset state and exit cleanly
-        this.isProcessing = false;
-        this.draggedCard = null;
-        return;
-      }
-
-      // 4. Calculate the new order value based on the clean array. This logic is universal.
-      let newOrderValue;
-      const targetItem = listWithoutDragged[targetIndex];
-
-      if (targetIndex === 0) {
-        // This correctly handles the "first index" case.
-        newOrderValue = targetItem.order / 2;
+      if (draggedIndex > targetIndex) {
+        // DRAGGING RIGHT-TO-LEFT
+        if (targetIndex === 0) {
+          newOrderValue = targetItem.order / 2;
+        } else {
+          const prevItem = sortedList[targetIndex - 1];
+          newOrderValue = (prevItem.order + targetItem.order) / 2;
+        }
       } else {
-        // This correctly handles all other cases in both directions.
-        const prevItem = listWithoutDragged[targetIndex - 1];
-        newOrderValue = (prevItem.order + targetItem.order) / 2;
+        // DRAGGING LEFT-TO-RIGHT
+        const nextItem = sortedList[targetIndex + 1];
+        if (nextItem) {
+          newOrderValue = (targetItem.order + nextItem.order) / 2;
+        } else {
+          newOrderValue = targetItem.order + 10;
+        }
       }
 
       if (newOrderValue === draggedItem.order) {
-        // No change needed, so we can exit early.
         this.isProcessing = false;
         this.draggedCard = null;
-        return;
+        return; // No change needed
       }
 
       // --- OPTIMISTIC UI UPDATE & BUBBLE DISPATCH (Tailored for Journeys) ---
