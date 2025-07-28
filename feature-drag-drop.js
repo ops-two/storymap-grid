@@ -58,6 +58,8 @@ window.StoryMapFeatureDragDrop = {
 
   // In feature-drag-drop.js, replace ONLY the handleDrop function
 
+  // In feature-drag-drop.js, replace ONLY the handleDrop function
+
   handleDrop: function (targetCard) {
     if (this.isProcessing || !this.draggedCard) return;
 
@@ -67,38 +69,91 @@ window.StoryMapFeatureDragDrop = {
       const targetId = targetCard.dataset.id;
       if (!draggedId || draggedId === targetId) return;
 
-      // --- The proven, direction-aware calculation logic ---
-      const sortedList = window.StoryMapDataStore.getEntitiesArray("feature");
-      const draggedItem = sortedList.find((item) => item.id === draggedId);
-      const targetIndex = sortedList.findIndex((item) => item.id === targetId);
-      if (targetIndex === -1 || !draggedItem) return;
+      // 1. Get the full feature objects from the Data Store to check their parents.
+      const features = window.StoryMapDataStore.getEntitiesArray("feature");
+      const draggedFeature = features.find((f) => f.id === draggedId);
+      const targetFeature = features.find((f) => f.id === targetId);
+      if (!draggedFeature || !targetFeature) return;
+
+      const draggedJourneyId = draggedFeature.journeyId;
+      const targetJourneyId = targetFeature.journeyId;
 
       let newOrderValue;
-      const targetItem = sortedList[targetIndex];
-      const draggedIndex = sortedList.findIndex(
-        (item) => item.id === draggedId
-      );
+      let payload; // Initialize payload object
 
-      if (draggedIndex > targetIndex) {
-        // Dragging RIGHT-TO-LEFT
-        if (targetIndex === 0) {
-          newOrderValue = targetItem.order / 2;
+      if (draggedJourneyId === targetJourneyId) {
+        // --- CASE 1: SIMPLE REORDERING (within the same journey) ---
+        const sortedList = features.filter(
+          (f) => f.journeyId === draggedJourneyId
+        );
+        const draggedIndex = sortedList.findIndex(
+          (item) => item.id === draggedId
+        );
+        const targetIndex = sortedList.findIndex(
+          (item) => item.id === targetId
+        );
+        const targetItem = sortedList[targetIndex];
+
+        if (draggedIndex > targetIndex) {
+          // Dragging RIGHT-TO-LEFT
+          if (targetIndex === 0) {
+            newOrderValue = targetItem.order / 2;
+          } else {
+            const prevItem = sortedList[targetIndex - 1];
+            newOrderValue = (prevItem.order + targetItem.order) / 2;
+          }
         } else {
-          const prevItem = sortedList[targetIndex - 1];
-          newOrderValue = (prevItem.order + targetItem.order) / 2;
+          // Dragging LEFT-TO-RIGHT
+          const nextItem = sortedList[targetIndex + 1];
+          if (nextItem) {
+            newOrderValue = (targetItem.order + nextItem.order) / 2;
+          } else {
+            newOrderValue = targetItem.order + 10;
+          }
         }
+        if (newOrderValue === draggedFeature.order) return;
+
+        // Create the payload for a simple reorder
+        const fullFeatureData = window.StoryMapDataStore.getEntityForUpdate(
+          "feature",
+          draggedId
+        );
+        if (fullFeatureData) fullFeatureData.order_index = newOrderValue;
+        payload = {
+          entityType: "feature",
+          entityId: draggedId,
+          fieldName: "order_index",
+          newValue: newOrderValue,
+          oldValue: draggedFeature.order,
+          allData: fullFeatureData,
+        };
       } else {
-        // Dragging LEFT-TO-RIGHT
-        const nextItem = sortedList[targetIndex + 1];
-        if (nextItem) {
-          newOrderValue = (targetItem.order + nextItem.order) / 2;
-        } else {
-          newOrderValue = targetItem.order + 10;
-        }
-      }
-      if (newOrderValue === draggedItem.order) return;
+        // --- CASE 2: RE-PARENTING (to a new journey) ---
+        const featuresInNewJourney = features.filter(
+          (f) => f.journeyId === targetJourneyId
+        );
+        const lastFeature =
+          featuresInNewJourney[featuresInNewJourney.length - 1];
+        newOrderValue = lastFeature ? lastFeature.order + 10 : 10;
 
-      // --- Optimistic UI Update ---
+        // Create the payload for a re-parenting action
+        const fullFeatureData = window.StoryMapDataStore.getEntityForUpdate(
+          "feature",
+          draggedId
+        );
+        if (fullFeatureData) fullFeatureData.order_index = newOrderValue;
+        payload = {
+          entityType: "feature",
+          entityId: draggedId,
+          fieldName: "order_index_and_journey",
+          newValue: newOrderValue,
+          oldValue: draggedFeature.order,
+          allData: fullFeatureData,
+          newParentId: targetJourneyId,
+        };
+      }
+
+      // Optimistic UI Update - This now uses the correctly created payload
       window.StoryMapDataStore.updateEntityOrder(
         "feature",
         draggedId,
@@ -116,25 +171,9 @@ window.StoryMapFeatureDragDrop = {
         window.StoryMapRenderer.render(mainCanvas);
       }
 
-      // --- THE CRITICAL FIX: DISPATCH THE 'update' EVENT WITH RICH PAYLOAD ---
-      const fullFeatureData = window.StoryMapDataStore.getEntityForUpdate(
-        "feature",
-        draggedId
-      );
-      if (fullFeatureData) fullFeatureData.order_index = newOrderValue;
-
+      // Dispatch the 'update' event with the correctly created payload
       document.dispatchEvent(
-        new CustomEvent("storymap:update", {
-          detail: {
-            entityType: "feature",
-            entityId: draggedId,
-            fieldName: "order_index",
-            newValue: newOrderValue,
-            oldValue: draggedItem.order,
-            allData: fullFeatureData,
-            newParentId: payload.newParentId, // Make sure to pass this along
-          },
-        })
+        new CustomEvent("storymap:update", { detail: payload })
       );
     } catch (err) {
       console.error("Error in Feature handleDrop:", err);

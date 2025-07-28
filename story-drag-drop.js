@@ -149,7 +149,6 @@ window.StoryMapStoryDragDrop = {
       }
       const mainCanvas = $(this.container).closest('[id^="bubble-r-box"]');
       if (window.StoryMapRenderer && mainCanvas.length) {
-        /* ... */
       }
       document.dispatchEvent(
         new CustomEvent("storymap:update", { detail: payload })
