@@ -248,22 +248,34 @@
   font-size: 14px;
 }
 /* ADD THIS ENTIRE NEW BLOCK TO grid.css */
+/* In grid.css, update this entire rule */
 
 .empty-column-drop-zone {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: var(--story-height);
   border-radius: 6px;
   border: 2px dashed #ccc;
   color: #aaa;
   font-size: 13px;
   box-sizing: border-box;
-  transition: background-color 0.2s, border-color 0.2s;
+  transition: all 0.2s ease; /* Animate all properties */
+
+  /* --- THE NEW, CRITICAL PROPERTIES --- */
+  opacity: 0; /* Make it invisible by default */
+  height: 10px; /* Make it very small by default */
+  pointer-events: none; /* Prevent it from interfering with mouse events */
 }
 
-/* This style applies when a story is dragged over the placeholder */
-.empty-column-drop-zone.drag-over {
-  border-color: #28a745; /* Green */
+/* This rule activates when a story drag starts */
+.story-drag-active .empty-column-drop-zone {
+  opacity: 1;
+  height: var(--story-height);
+  pointer-events: auto; /* Make it clickable/droppable */
+}
+
+/* This is our existing rule, but now it will only apply when the zone is active */
+.story-drag-active .empty-column-drop-zone.drag-over {
+  border-color: #28a745;
   background-color: rgba(40, 167, 69, 0.1);
 }

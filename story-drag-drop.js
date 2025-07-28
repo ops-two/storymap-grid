@@ -22,12 +22,14 @@ window.StoryMapStoryDragDrop = {
         this.draggedCard = card;
         setTimeout(() => card.classList.add("dragging"), 0);
         e.dataTransfer.effectAllowed = "move";
+        this.container.classList.add("story-drag-active");
       });
       card.addEventListener("dragend", (e) => {
         card.classList.remove("dragging");
         document
           .querySelectorAll(".drag-over")
           .forEach((c) => c.classList.remove("drag-over"));
+        this.container.classList.remove("story-drag-active");
       });
     });
 
