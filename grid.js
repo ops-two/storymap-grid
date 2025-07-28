@@ -109,8 +109,10 @@ window.StoryMapRenderer = {
               story.name
             }</span></div>`;
           });
-          html += "</div>";
+        } else {
+          html += `<div class="empty-column-drop-zone" data-feature-id="${feature.id}"><span>Drop Story Here</span></div>`;
         }
+        html += "</div>";
       });
     }
     releases.forEach((release) => {
@@ -135,8 +137,11 @@ window.StoryMapRenderer = {
                 story.name
               }</span></div>`;
             });
-            html += "</div>";
+          } else {
+            // THIS IS THE NEW LOGIC FOR EMPTY COLUMNS
+            html += `<div class="empty-column-drop-zone" data-feature-id="${feature.id}"><span>Drop Story Here</span></div>`;
           }
+          html += "</div>";
         });
       }
     });

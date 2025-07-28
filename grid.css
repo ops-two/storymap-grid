@@ -247,3 +247,23 @@
   font-style: italic;
   font-size: 14px;
 }
+/* ADD THIS ENTIRE NEW BLOCK TO grid.css */
+
+.empty-column-drop-zone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--story-height);
+  border-radius: 6px;
+  border: 2px dashed #ccc;
+  color: #aaa;
+  font-size: 13px;
+  box-sizing: border-box;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+/* This style applies when a story is dragged over the placeholder */
+.empty-column-drop-zone.drag-over {
+  border-color: #28a745; /* Green */
+  background-color: rgba(40, 167, 69, 0.1);
+}
