@@ -71,6 +71,8 @@ window.StoryMapJourneyDragDrop = {
     });
   },
 
+  // In journey-drag-drop.js, replace ONLY the handleDrop function
+
   handleDrop: function (targetCard) {
     // Failsafes to prevent errors.
     if (this.isProcessing || !this.draggedCard) return;
@@ -83,43 +85,31 @@ window.StoryMapJourneyDragDrop = {
       if (!draggedId || draggedId === targetId) return;
 
       // --- THE PROVEN "CLEAN ARRAY" CALCULATION LOGIC ---
-      // This is the exact algorithm that is working for your features.
-
-      // 1. Get the original, reliably sorted list from our Data Store.
       const originalSortedList =
         window.StoryMapDataStore.getEntitiesArray("journey");
       const draggedItem = originalSortedList.find(
         (item) => item.id === draggedId
       );
 
-      // 2. Create a "clean" array for calculation by removing the item being dragged.
       const listWithoutDragged = originalSortedList.filter(
         (item) => item.id !== draggedId
       );
 
-      // 3. Find the target's index in this NEW, clean array.
       const targetIndex = listWithoutDragged.findIndex(
         (item) => item.id === targetId
       );
       if (targetIndex === -1 || !draggedItem) {
-        console.error(
-          "Could not find dragged or target journey in clean list."
-        );
-        // Reset state and exit cleanly
         this.isProcessing = false;
         this.draggedCard = null;
         return;
       }
 
-      // 4. Calculate the new order value based on the clean array. This logic is universal.
       let newOrderValue;
       const targetItem = listWithoutDragged[targetIndex];
 
       if (targetIndex === 0) {
-        // This correctly handles the "first index" case.
         newOrderValue = targetItem.order / 2;
       } else {
-        // This correctly handles all other cases in both directions.
         const prevItem = listWithoutDragged[targetIndex - 1];
         newOrderValue = (prevItem.order + targetItem.order) / 2;
       }
@@ -127,11 +117,10 @@ window.StoryMapJourneyDragDrop = {
       if (newOrderValue === draggedItem.order) {
         this.isProcessing = false;
         this.draggedCard = null;
-        return; // No change needed
+        return;
       }
 
-      // --- OPTIMISTIC UI UPDATE & BUBBLE DISPATCH (Your proven, working code) ---
-
+      // --- OPTIMISTIC UI UPDATE & BUBBLE DISPATCH ---
       window.StoryMapDataStore.updateEntityOrder(
         "journey",
         draggedId,
@@ -142,8 +131,11 @@ window.StoryMapJourneyDragDrop = {
         window.StoryMapRenderer.render(mainCanvas);
       }
 
-      const fullJourneyData =
-        window.StoryMapData - Store.getEntityForUpdate("journey", draggedId);
+      // THIS IS THE DEFINITIVE FIX:
+      const fullJourneyData = window.StoryMapDataStore.getEntityForUpdate(
+        "journey",
+        draggedId
+      );
       if (fullJourneyData) fullJourneyData.order_index = newOrderValue;
 
       document.dispatchEvent(
