@@ -317,3 +317,11 @@
   color: white;
   border-color: #007bff;
 }
+
+.empty-feature-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--feature-height);
+  box-sizing: border-box;
+}
