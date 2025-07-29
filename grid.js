@@ -81,22 +81,33 @@ window.StoryMapRenderer = {
     });
 
     features.forEach((feature, index) => {
-      // Use the simpler, more robust neighbor-finding logic.
-      const prevFeature = index > 0 ? features[index - 1] : null;
+      // THE GUARANTEE: First, get only the features that are siblings under the same journey.
+      const featuresInSameJourney = allFeatures.filter(
+        (f) => f.journeyId === feature.journeyId
+      );
+      const ownIndexInJourney = featuresInSameJourney.findIndex(
+        (f) => f.id === feature.id
+      );
+
+      // Now, find the true previous and next siblings *within that group*.
+      const prevFeature =
+        ownIndexInJourney > 0
+          ? featuresInSameJourney[ownIndexInJourney - 1]
+          : null;
       const nextFeature =
-        index < features.length - 1 ? features[index + 1] : null;
+        ownIndexInJourney < featuresInSameJourney.length - 1
+          ? featuresInSameJourney[ownIndexInJourney + 1]
+          : null;
 
-      // THE GUARANTEE: Only use the neighbor if it belongs to the same parent journey.
-      const beforeOrder =
-        prevFeature && prevFeature.journeyId === feature.journeyId
-          ? prevFeature.order
-          : (feature.order || 0) - 20;
-      const afterOrder =
-        nextFeature && nextFeature.journeyId === feature.journeyId
-          ? nextFeature.order
-          : (feature.order || 0) + 20;
+      // This logic is now mathematically guaranteed to be correct.
+      const beforeOrder = prevFeature
+        ? prevFeature.order
+        : (feature.order || 0) - 20;
+      const afterOrder = nextFeature
+        ? nextFeature.order
+        : (feature.order || 0) + 20;
 
-      html += `<div class="card feature-card" ...>
+      html += `<div class="card feature-card" data-id="${feature.id}" ...>
                   <div class="add-item-button before" data-add-type="feature" data-journey-id="${feature.journeyId}" data-before-order="${beforeOrder}" data-after-order="${feature.order}">+</div>
                   <span class="card-title-text">${feature.name}</span>
                   <div class="card-icon-button">${iconSvg}</div>
