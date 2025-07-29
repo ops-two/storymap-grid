@@ -1,9 +1,8 @@
-// The definitive and complete grid.js renderer
+// The definitive and complete grid.js renderer, with the corrected card structure and all fixes.
 
 window.StoryMapRenderer = {
   render: function (containerElement) {
     // --- 1. PULL CLEAN DATA FROM THE DATA STORE ---
-    // This part is correct and working.
     const project = window.StoryMapDataStore.data.project;
     const journeys = window.StoryMapDataStore.getEntitiesArray("journey");
     const allFeatures = window.StoryMapDataStore.getEntitiesArray("feature");
@@ -11,7 +10,6 @@ window.StoryMapRenderer = {
     const releases = window.StoryMapDataStore.getEntitiesArray("release");
 
     // --- 2. PREPARE DATA STRUCTURES FOR RENDERING ---
-    // This section correctly sorts features by their parent journey and preserves your original logic.
     const features = [];
     journeys.forEach((journey) => {
       const journeyFeatures = allFeatures.filter(
@@ -30,10 +28,12 @@ window.StoryMapRenderer = {
     });
     const featureOrderMap = new Map(features.map((f, i) => [f.id, i]));
 
-    // --- 3. GRID CALCULATION ---
-    // This is correct.
+    // --- 3. GRID CALCULATION & SVG DEFINITION ---
     const totalColumns = features.length > 0 ? features.length : 1;
     document.documentElement.style.setProperty("--total-columns", totalColumns);
+
+    // Define the icon SVG as a variable for safe and clean insertion.
+    const iconSvg = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w.org/2000/svg"><path d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 2V8H20" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 13H8" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 17H8" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 9H8" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
     // --- 4. HTML GENERATION ---
     const projectTitle = project ? project.name : "Unnamed Project";
@@ -47,7 +47,6 @@ window.StoryMapRenderer = {
     `;
 
     // --- 4a. RENDER JOURNEYS ---
-    // This is your proven, working logic for rendering journeys, including the "smart splitting".
     journeys.forEach((journey) => {
       if (!journey.featureIds) return;
       const featureIndices = journey.featureIds
@@ -75,67 +74,54 @@ window.StoryMapRenderer = {
           groups.length > 1
             ? `${journey.name} (${groupIndex + 1}/${groups.length})`
             : journey.name;
-        html += `<div class="card journey-card" data-id="${journey.id}" data-type="journey" data-order="${journey.order}" style="grid-column: ${startCol} / span ${span};"> <span class="card-title-text">${title}</span>
-            <div class="card-icon-button">
-                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 2V8H20" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 13H8" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 17H8" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 9H8" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </div>
-         </div>`;
+        html += `<div class="card journey-card" data-id="${journey.id}" data-type="journey" data-order="${journey.order}" style="grid-column: ${startCol} / span ${span};">
+                    <span class="card-title-text">${title}</span>
+                    <div class="card-icon-button">${iconSvg}</div>
+                 </div>`;
       });
     });
 
     // --- 4b. RENDER FEATURES ---
-    // This is the proven, working logic for rendering the feature row.
     features.forEach((feature, index) => {
       html += `<div class="card feature-card" data-id="${
         feature.id
       }" data-type="feature" data-order="${
         feature.order
-      }" style="grid-column: ${index + 1};"><span class="card-title-text">${
-        feature.name
-      }</span>
-            <div class="card-icon-button">
-                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 2V8H20" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 13H8" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 17H8" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 9H8" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </div>
-         </div>`;
+      }" style="grid-column: ${index + 1};">
+                    <span class="card-title-text">${feature.name}</span>
+                    <div class="card-icon-button">${iconSvg}</div>
+                 </div>`;
     });
 
-    // --- 4c. RENDER STORIES AND RELEASES (THE DEFINITIVE, CORRECTED LOGIC) ---
+    // --- 4c. RENDER STORIES AND RELEASES ---
     const unreleasedStories = stories.filter((s) => !s.releaseId);
 
-    // Always render the "Unassigned" section header.
     if (unreleasedStories.length > 0) {
       html += `<div class="release-header">Unassigned</div>`;
       features.forEach((feature, index) => {
         const storiesInColumn = unreleasedStories.filter(
           (s) => s.featureId === feature.id
         );
-        // This line is now correct for the "Unassigned" section.
         html += `<div class="feature-column" style="grid-column: ${
           index + 1
         };" data-feature-id="${feature.id}" data-release-id="unassigned">`;
-        if (storiesInColumn.length > 0) {
-          storiesInColumn.forEach((story) => {
-            html += `<div class="card story-card ${
-              story.type === "Tech-Req" ? "tech" : ""
-            }" data-id="${story.id}" data-type="story" data-order="${
-              story.order
-            }"><span class="card-title-text">${story.name}</span>
-            <div class="card-icon-button">
-                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 2V8H20" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 13H8" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 17H8" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 9H8" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </div>
-         </div>`;
-          });
-        }
-        // Always render a drop zone in the Unassigned section's columns.
+        storiesInColumn.forEach((story) => {
+          html += `<div class="card story-card ${
+            story.type === "Tech-Req" ? "tech" : ""
+          }" data-id="${story.id}" data-type="story" data-order="${
+            story.order
+          }">
+                        <span class="card-title-text">${story.name}</span>
+                        <div class="card-icon-button">${iconSvg}</div>
+                     </div>`;
+        });
         html += `<div class="empty-column-drop-zone" data-feature-id="${feature.id}" data-release-id="unassigned"><span>Drop Story Here</span></div>`;
         html += `</div>`;
       });
     }
-    // Now, loop through each release and render its section correctly.
+
     releases.forEach((release) => {
-      if (!release || !release.name) {
-        return; // Skip this iteration if the release is null or has no name.
-      }
+      if (!release || !release.name) return;
       const releaseStories = stories.filter((s) => s.releaseId === release.id);
       if (releaseStories.length > 0) {
         html += `<div class="release-header" data-id="${release.id}">${release.name}</div>`;
@@ -143,24 +129,19 @@ window.StoryMapRenderer = {
           const storiesInColumn = releaseStories.filter(
             (s) => s.featureId === feature.id
           );
-          // THE CRITICAL FIX IS HERE: This now correctly uses 'release.id'.
           html += `<div class="feature-column" style="grid-column: ${
             index + 1
           };" data-feature-id="${feature.id}" data-release-id="${release.id}">`;
-          if (storiesInColumn.length > 0) {
-            storiesInColumn.forEach((story) => {
-              html += `<div class="card story-card ${
-                story.type === "Tech-Req" ? "tech" : ""
-              }" data-id="${story.id}" data-type="story" data-order="${
-                story.order
-              }"><span class="card-title-text">${story.name}</span>
-            <div class="card-icon-button">
-                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 2V8H20" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 13H8" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 17H8" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 9H8" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </div>
-         </div>`;
-            });
-          }
-          // Always render a drop zone in this release's columns as well.
+          storiesInColumn.forEach((story) => {
+            html += `<div class="card story-card ${
+              story.type === "Tech-Req" ? "tech" : ""
+            }" data-id="${story.id}" data-type="story" data-order="${
+              story.order
+            }">
+                          <span class="card-title-text">${story.name}</span>
+                          <div class="card-icon-button">${iconSvg}</div>
+                       </div>`;
+          });
           html += `<div class="empty-column-drop-zone" data-feature-id="${feature.id}" data-release-id="${release.id}"><span>Drop Story Here</span></div>`;
           html += `</div>`;
         });
@@ -172,7 +153,6 @@ window.StoryMapRenderer = {
     containerElement.html(html);
 
     // --- 5. INITIALIZE INTERACTION MODULES ---
-    // This is correct and working.
     if (window.StoryMapInlineEdit)
       window.StoryMapInlineEdit.init(containerElement[0]);
     if (window.StoryMapJourneyDragDrop)
