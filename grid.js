@@ -290,3 +290,4 @@ window.StoryMapRenderer = {
       window.StoryMapAddItemHandler.init(containerElement[0]);
   },
 };
+// Checkpoint 4 Working Everything Check rigorously
