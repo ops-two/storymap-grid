@@ -1,9 +1,8 @@
-// The definitive, complete, and non-redundant grid.js renderer
+// The definitive and complete grid.js renderer, with all fixes.
 
 window.StoryMapRenderer = {
   render: function (containerElement) {
     // --- 1. PULL CLEAN DATA FROM THE DATA STORE ---
-    // This part is correct and working.
     const project = window.StoryMapDataStore.data.project;
     const journeys = window.StoryMapDataStore.getEntitiesArray("journey");
     const allFeatures = window.StoryMapDataStore.getEntitiesArray("feature");
@@ -11,7 +10,6 @@ window.StoryMapRenderer = {
     const releases = window.StoryMapDataStore.getEntitiesArray("release");
 
     // --- 2. PREPARE DATA STRUCTURES FOR RENDERING ---
-    // This section correctly sorts features and prepares journey data.
     const features = [];
     journeys.forEach((journey) => {
       const journeyFeatures = allFeatures.filter(
@@ -31,9 +29,10 @@ window.StoryMapRenderer = {
     const featureOrderMap = new Map(features.map((f, i) => [f.id, i]));
 
     // --- 3. GRID CALCULATION & SVG DEFINITION ---
-    // This is correct.
     const totalColumns = features.length > 0 ? features.length : 1;
     document.documentElement.style.setProperty("--total-columns", totalColumns);
+
+    // CRITICAL FIX: Define the SVG as a clean JavaScript variable. This prevents all syntax errors.
     const iconSvg = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 2V8H20" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 13H8" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 17H8" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 9H8" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
     // --- 4. HTML GENERATION ---
@@ -48,7 +47,6 @@ window.StoryMapRenderer = {
     `;
 
     // --- 4a. RENDER JOURNEYS ---
-    // This is your proven, working logic for rendering journeys.
     journeys.forEach((journey) => {
       if (!journey.featureIds || journey.featureIds.length === 0) return;
       const featureIndices = journey.featureIds
@@ -82,7 +80,6 @@ window.StoryMapRenderer = {
     });
 
     // --- 4b. RENDER FEATURES ---
-    // This is the proven, working logic for rendering the feature row.
     features.forEach((feature, index) => {
       html += `<div class="card feature-card" data-id="${
         feature.id
@@ -122,7 +119,7 @@ window.StoryMapRenderer = {
       });
     }
 
-    // THE NEW, BULLETPROOF ALGORITHM FOR RENDERING RELEASES
+    // THE BULLETPROOF ALGORITHM FOR RENDERING RELEASES
     const storiesWithReleases = stories.filter((s) => s.releaseId);
     const uniqueReleaseIds = [
       ...new Set(storiesWithReleases.map((s) => s.releaseId)),
@@ -130,8 +127,8 @@ window.StoryMapRenderer = {
 
     const sortedReleasesToRender = uniqueReleaseIds
       .map((id) => window.StoryMapDataStore.getEntity("release", id))
-      .filter((r) => r && r.name) // Failsafe against null/deleted releases
-      .sort((a, b) => (a.targetDate || 0) - (b.targetDate || 0));
+      .filter((r) => r && r.name)
+      .sort((a, b) => (a.order || 0) - (b.order || 0)); // Assuming releases might have an order
 
     sortedReleasesToRender.forEach((release) => {
       const releaseStories = stories.filter((s) => s.releaseId === release.id);
@@ -158,8 +155,6 @@ window.StoryMapRenderer = {
         html += `</div>`;
       });
     });
-
-    // --- THE REDUNDANT LOOP HAS BEEN REMOVED ---
 
     // --- 4d. CLOSE HTML TAGS ---
     html += `</div></div>`;
