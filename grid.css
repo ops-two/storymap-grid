@@ -4,8 +4,7 @@
   --feature-height: 45px;
   --story-height: 50px;
   --column-gap: 12px;
-  --vertical-gap: 8px;
-  /* --total-columns will be injected by JS */
+  --vertical-gap: 12px;
 }
 
 .story-map-container {
