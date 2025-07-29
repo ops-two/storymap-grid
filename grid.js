@@ -191,9 +191,7 @@ window.StoryMapRenderer = {
             });
           } else {
             // If the column is empty, render the new "+ Add Story" button.
-            html += `<div class="empty-story-placeholder">
-                    <div class="add-item-button-static" data-add-type="story" data-feature-id="${feature.id}" data-release-id="unassigned" data-before-order="0" data-after-order="20">+ Add Story</div>
-                 </div>`;
+            html += `<div class="empty-story-placeholder" data-feature-id="${feature.id}" data-release-id="unassigned">`;
           }
 
           // The "Drop Story Here" zone is now only needed if stories already exist.
@@ -255,9 +253,7 @@ window.StoryMapRenderer = {
                      </div>`;
               });
             } else {
-              html += `<div class="empty-story-placeholder">
-                    <div class="add-item-button-static" data-add-type="story" data-feature-id="${feature.id}" data-release-id="${release.id}" data-before-order="0" data-after-order="20">+ Add Story</div>
-                 </div>`;
+              html += `<div class="empty-story-placeholder" data-feature-id="${feature.id}" data-release-id="${release.id}">`;
             }
 
             html += `<div class="empty-column-drop-zone" data-feature-id="${feature.id}" data-release-id="${release.id}"><span>Drop Story Here</span></div>`;
