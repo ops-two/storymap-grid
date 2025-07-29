@@ -53,105 +53,72 @@ window.StoryMapFeatureDragDrop = {
     });
   },
 
+  // In feature-drag-drop.js, replace ONLY the handleDrop function
+
   handleDrop: function (target) {
-    // Renamed to 'target' for clarity
-    if (this.isProcessing || !this.draggedCard) return;
+    console.log(
+      "%c--- FEATURE DROP INITIATED ---",
+      "color: #ff00ff; font-weight: bold;"
+    );
+    if (this.isProcessing || !this.draggedCard) {
+      console.error("Drop cancelled: isProcessing or no draggedCard.");
+      return;
+    }
 
     try {
       this.isProcessing = true;
       const draggedId = this.draggedCard.dataset.id;
-
-      // --- THE UPGRADED LOGIC ---
       const isDropZone = target.classList.contains("empty-feature-drop-zone");
       const targetId = isDropZone ? null : target.dataset.id;
-
+      console.log(
+        `STEP 1: IDENTIFY CARDS. Dragged ID: ${draggedId}, Target ID: ${
+          targetId || "EMPTY DROP ZONE"
+        }`
+      );
       if (!draggedId || draggedId === targetId) {
         this.isProcessing = false;
         return;
       }
 
+      // --- THE CRITICAL DIAGNOSTIC ---
       const allFeatures = window.StoryMapDataStore.getEntitiesArray("feature");
       const draggedFeature = allFeatures.find((f) => f.id === draggedId);
 
-      // Get the target journey ID directly from the target's data attribute.
-      // This works for both cards and the new empty drop zone.
+      // We get the dragged feature's parent from the RELIABLE Data Store.
+      const draggedJourneyId = draggedFeature.journeyId;
+
+      // We get the target's parent from the HTML ATTRIBUTE, which is the likely point of failure.
       const targetJourneyId = target.dataset.journeyId;
 
-      let newOrderValue;
-      let payload;
-
-      if (draggedFeature.journeyId === targetJourneyId) {
-        // --- CASE 1: SIMPLE REORDERING (This is your proven, working logic) ---
-        const targetFeature = allFeatures.find((f) => f.id === targetId);
-        const sortedList = allFeatures.filter(
-          (f) => f.journeyId === draggedFeature.journeyId
-        );
-        const draggedIndex = sortedList.findIndex(
-          (item) => item.id === draggedId
-        );
-        const targetIndex = sortedList.findIndex(
-          (item) => item.id === targetId
-        );
-
-        if (draggedIndex > targetIndex) {
-          if (targetIndex === 0) {
-            newOrderValue = targetFeature.order / 2;
-          } else {
-            const prevItem = sortedList[targetIndex - 1];
-            newOrderValue = (prevItem.order + targetFeature.order) / 2;
-          }
-        } else {
-          const nextItem = sortedList[targetIndex + 1];
-          if (nextItem) {
-            newOrderValue = (targetFeature.order + nextItem.order) / 2;
-          } else {
-            newOrderValue = targetFeature.order + 10;
-          }
-        }
-
-        payload = {
-          entityType: "feature",
-          entityId: draggedId,
-          fieldName: "order_index",
-          newValue: newOrderValue /* ...allData, etc... */,
-        };
-      } else {
-        // --- CASE 2: RE-PARENTING (including to an empty journey) ---
-        const featuresInNewJourney = allFeatures.filter(
-          (f) => f.journeyId === targetJourneyId
-        );
-        const lastFeature =
-          featuresInNewJourney[featuresInNewJourney.length - 1];
-        newOrderValue = lastFeature ? lastFeature.order + 10 : 10;
-
-        payload = {
-          entityType: "feature",
-          entityId: draggedId,
-          fieldName: "order_index_and_journey",
-          newValue: newOrderValue,
-          newParentId: targetJourneyId /* ...allData, etc... */,
-        };
-      }
-
-      // --- (Your proven Optimistic UI Update and Event Dispatch logic is preserved here) ---
-      window.StoryMapDataStore.updateEntityOrder(
-        "feature",
-        draggedId,
-        newOrderValue
+      console.log(
+        `STEP 2: IDENTIFY PARENTS. Dragged Journey ID (from Data Store): "${draggedJourneyId}", Target Journey ID (from HTML attribute): "${targetJourneyId}"`
       );
-      if (payload.newParentId) {
-        /* ... */
+
+      // This is the check that is likely failing.
+      if (draggedJourneyId === targetJourneyId) {
+        console.log(
+          "%cVERDICT: SIMPLE REORDER. (This block is likely not running)",
+          "color: green;"
+        );
+      } else {
+        console.error(
+          "%cVERDICT: RE-PARENTING. (The code incorrectly entered this block because the Target Journey ID was wrong)",
+          "color: red;"
+        );
       }
+
+      // For safety, we will stop the code here. We just want the logs.
+      console.log("--- DEBUGGING COMPLETE. NO EVENT FIRED. ---");
+    } catch (err) {
+      console.error("CRITICAL ERROR in handleDrop:", err);
+    } finally {
+      this.isProcessing = false;
+      this.draggedCard = null;
+      // Re-render to put the card back for the next test.
       const mainCanvas = $(this.container).closest('[id^="bubble-r-box"]');
       if (window.StoryMapRenderer && mainCanvas.length) {
         window.StoryMapRenderer.render(mainCanvas);
       }
-      document.dispatchEvent(
-        new CustomEvent("storymap:update", { detail: payload })
-      );
-    } finally {
-      this.isProcessing = false;
-      this.draggedCard = null;
     }
   },
 };
