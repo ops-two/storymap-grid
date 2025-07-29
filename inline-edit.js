@@ -1,7 +1,3 @@
-/**
- * Inline Edit Module - Handles double-click to edit functionality
- * Works with any card that has data-type and data-id attributes
- */
 window.StoryMapInlineEdit = {
   container: null,
   activeEdit: null,
@@ -10,34 +6,31 @@ window.StoryMapInlineEdit = {
   init(container) {
     if (this.isInitialized) return;
     this.container = container;
-    this.isInitialized = true; // --- NEW: Set flag after setup ---
-
+    this.isInitialized = true;
     this.setupEditHandlers();
   },
 
   setupEditHandlers() {
-    // Use event delegation for efficiency
-    this.container.addEventListener("click", (e) => {
-      if (!e.target.classList.contains("card-title-text")) return;
+    // --- THE CRITICAL FIX: We are restoring the DBLCLICK event ---
+    // It is more robust and avoids conflicts with the icon's single-click.
+    this.container.addEventListener("dblclick", (e) => {
+      // We ONLY want to trigger an edit if the user double-clicks the TEXT,
+      // NOT the icon or the empty space on the card.
+      if (!e.target.classList.contains("card-title-text")) {
+        return; // Exit if the double-click was not on the text itself.
+      }
 
       const card = e.target.closest(".card");
-      if (!card) return;
-
-      // Don't edit if already editing
-      if (card.querySelector(".inline-edit-input")) return;
+      if (!card || card.querySelector(".inline-edit-input")) return;
 
       const entityType = card.dataset.type;
       const entityId = card.dataset.id;
-
-      if (!entityType || !entityId) {
-        console.warn("Card missing data attributes:", card);
-        return;
-      }
+      if (!entityType || !entityId) return;
 
       this.startEdit(card, entityType, entityId);
     });
 
-    // Global click handler to save on click outside
+    // This global listener to save on click-outside is correct and preserved.
     document.addEventListener("click", (e) => {
       if (this.activeEdit && !e.target.closest(".inline-edit-input")) {
         this.saveEdit();
@@ -46,19 +39,18 @@ window.StoryMapInlineEdit = {
   },
 
   startEdit(card, entityType, entityId) {
-    // Find the text element to edit
-    const textElement = card.querySelector(".card-title-text") || card;
-    if (!textElement) return; // Add a failsafe
+    // --- THE SECOND CRITICAL FIX: The selector is now correct ---
+    const textElement = card.querySelector(".card-title-text");
+    if (!textElement) return; // Failsafe
 
     const currentText = textElement.textContent.trim();
 
-    // Create input element
+    // The rest of this function (creating the input, etc.) is your proven, working code.
     const input = document.createElement("input");
     input.type = "text";
     input.value = currentText;
     input.className = "inline-edit-input";
 
-    // Store edit state
     this.activeEdit = {
       card,
       textElement,
@@ -69,15 +61,12 @@ window.StoryMapInlineEdit = {
       fieldName: this.getFieldName(entityType),
     };
 
-    // Replace text with input
     textElement.style.display = "none";
     card.appendChild(input);
 
-    // Focus and select text
     input.focus();
     input.select();
 
-    // Add keyboard handlers
     input.addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
         e.preventDefault();
@@ -88,7 +77,6 @@ window.StoryMapInlineEdit = {
       }
     });
 
-    // Prevent card click from propagating
     input.addEventListener("click", (e) => {
       e.stopPropagation();
     });
