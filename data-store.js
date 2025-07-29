@@ -1,4 +1,4 @@
-// The definitive, complete, and schema-aligned data-store.js
+// The definitive, stable, and schema-aligned data-store.js
 
 window.StoryMapDataStore = {
   data: {
@@ -12,22 +12,20 @@ window.StoryMapDataStore = {
   init(rawData) {
     this.data.project = { id: rawData.projectId, name: rawData.projectName };
 
-    // --- JOURNEYS --- (Matches your schema)
     this.data.journeys.clear();
     rawData.rawJourneys.forEach((j) => {
       const id = j.get("_id");
       this.data.journeys.set(id, {
         id: id,
-        name: j.get("name_text"), // Correct for 'name' (text)
-        order: j.get("order_index_number"), // Correct for 'order_index' (number)
+        name: j.get("name_text"),
+        order: j.get("order_index_number"),
       });
     });
 
-    // --- FEATURES --- (Matches your schema)
     this.data.features.clear();
     rawData.rawFeatures.forEach((f) => {
       const id = f.get("_id");
-      const journeyRef = f.get("journey"); // Correct for 'journey' (Journey)
+      const journeyRef = f.get("journey_custom_journey");
       this.data.features.set(id, {
         id: id,
         name: f.get("name_text"),
@@ -36,35 +34,30 @@ window.StoryMapDataStore = {
       });
     });
 
-    // --- STORIES --- (Meticulously corrected to match your Story screenshot)
     this.data.stories.clear();
     rawData.rawStories.forEach((s) => {
       const id = s.get("_id");
-      const featureRef = s.get("feature");
-      const releaseRef = s.get("release"); // Your schema shows the field is 'release'
+      const featureRef = s.get("feature_custom_feature3");
+      const releaseRef = s.get("release_custom_release");
       this.data.stories.set(id, {
         id: id,
-        name: s.get("name_text"), // Your schema shows the field is 'name'
-        order: s.get("order_index"), // Your schema shows 'order_index'
-        type: s.get("type"), // Your schema shows 'type'
+        name: s.get("title_text"),
+        order: s.get("order_index_number"),
+        type: s.get("type_option_storytype"),
         featureId: featureRef ? featureRef.get("_id") : null,
         releaseId: releaseRef ? releaseRef.get("_id") : null,
       });
     });
 
-    // --- RELEASES --- (Meticulously corrected to match your Release screenshot)
     this.data.releases.clear();
     rawData.rawReleases.forEach((r) => {
       const id = r.get("_id");
       this.data.releases.set(id, {
         id: id,
-        name: r.get("name_text"), // Your schema shows 'name' (text)
-        // targetDate is removed as it does not exist in your schema.
+        name: r.get("name_text"),
       });
     });
   },
-
-  // --- HELPER FUNCTIONS --- (All preserved and correct)
 
   getEntityForUpdate(entityType, entityId) {
     const entity = this.getEntity(entityType, entityId);
