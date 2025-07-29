@@ -143,7 +143,7 @@
   background-color: rgba(255, 193, 7, 0.1) !important;
 }
 .feature-card.drag-over,
-.empty-feature-drop-zone.drag-over {
+.empty-feature-placeholder.drag-over {
   border: 2px dashed #6f42c1 !important;
   background-color: rgba(111, 66, 193, 0.1) !important;
 }
