@@ -111,9 +111,11 @@ window.StoryMapRenderer = {
     const uniqueReleaseIds = [
       ...new Set(storiesWithReleases.map((s) => s.releaseId)),
     ];
+    // REPLACE WITH THIS SECTION
     const sortedReleasesToRender = uniqueReleaseIds
       .map((id) => window.StoryMapDataStore.getEntity("release", id))
-      .filter((r) => r && r.name);
+      .filter((r) => r && r.name)
+      .sort((a, b) => a.name.localeCompare(b.name));
 
     sortedReleasesToRender.forEach((release) => {
       html += `<div class="release-header" data-id="${release.id}">${release.name}</div>`;
