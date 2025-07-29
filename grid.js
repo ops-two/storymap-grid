@@ -40,44 +40,74 @@ window.StoryMapRenderer = {
     `;
 
     // --- 4a. RENDER JOURNEYS (with Corrected Attributes) ---
-    journeys.forEach((journey, index) => {
-      const prevJourney = index > 0 ? journeys[index - 1] : null;
-      const nextJourney =
-        index < journeys.length - 1 ? journeys[index + 1] : null;
-      const beforeOrder = prevJourney ? prevJourney.order : journey.order - 20;
-      const afterOrder = nextJourney ? nextJourney.order : journey.order + 20;
+    // In grid.js, this is the definitive and complete journeys.forEach loop.
 
-      if (!journey.featureIds || journey.featureIds.length === 0) return;
-      const featureIndices = journey.featureIds
-        .map((id) => featureOrderMap.get(id))
-        .filter((i) => i !== undefined);
-      if (featureIndices.length === 0) return;
-      featureIndices.sort((a, b) => a - b);
-      const groups = [];
-      let currentGroup = [featureIndices[0]];
-      for (let i = 1; i < featureIndices.length; i++) {
-        if (featureIndices[i] === featureIndices[i - 1] + 1) {
-          currentGroup.push(featureIndices[i]);
-        } else {
-          groups.push(currentGroup);
-          currentGroup = [featureIndices[i]];
+    journeys.forEach((journey, index) => {
+      // First, find the features that belong to this specific journey.
+      const journeyFeatures = allFeatures.filter(
+        (f) => f.journeyId === journey.id
+      );
+
+      if (journeyFeatures.length > 0) {
+        // --- CASE 1: Journey has features. Use the proven "smart splitting" logic. ---
+
+        // The logic for adding items is the same as for features now.
+        const prevJourney = index > 0 ? journeys[index - 1] : null;
+        const nextJourney =
+          index < journeys.length - 1 ? journeys[index + 1] : null;
+        const beforeOrder = prevJourney
+          ? prevJourney.order
+          : (journey.order || 0) - 20;
+        const afterOrder = nextJourney
+          ? nextJourney.order
+          : (journey.order || 0) + 20;
+
+        // Your proven grouping logic is preserved perfectly.
+        const featureIndices = journey.featureIds
+          .map((id) => featureOrderMap.get(id))
+          .filter((i) => i !== undefined);
+
+        if (featureIndices.length === 0) return; // Failsafe
+
+        featureIndices.sort((a, b) => a - b);
+        const groups = [];
+        let currentGroup = [featureIndices[0]];
+        for (let i = 1; i < featureIndices.length; i++) {
+          if (featureIndices[i] === featureIndices[i - 1] + 1) {
+            currentGroup.push(featureIndices[i]);
+          } else {
+            groups.push(currentGroup);
+            currentGroup = [featureIndices[i]];
+          }
         }
+        groups.push(currentGroup);
+
+        groups.forEach((group, groupIndex) => {
+          const startCol = Math.min(...group) + 1;
+          const span = group.length;
+          const title =
+            groups.length > 1
+              ? `${journey.name} (${groupIndex + 1}/${groups.length})`
+              : journey.name;
+
+          html += `<div class="card journey-card" data-id="${journey.id}" data-type="journey" data-order="${journey.order}" style="grid-column: ${startCol} / span ${span};">
+                  <div class="add-item-button before" data-add-type="journey" data-before-order="${beforeOrder}" data-after-order="${journey.order}">+</div>
+                  <span class="card-title-text">${title}</span>
+                  <div class="card-icon-button">${iconSvg}</div>
+                  <div class="add-item-button after" data-add-type="journey" data-before-order="${journey.order}" data-after-order="${afterOrder}">+</div>
+               </div>`;
+        });
+      } else {
+        // --- CASE 2: Journey is EMPTY. Render a special placeholder. ---
+
+        // We need to decide where to place it. We will try to place it at the end of the entire feature row.
+        let startColumn = features.length + 1;
+
+        html += `<div class="empty-journey-placeholder" style="grid-column: ${startColumn} / span 2;">
+                <span class="card-title-text">${journey.name}</span>
+                <div class="add-item-button-static" data-add-type="feature" data-journey-id="${journey.id}" data-before-order="0" data-after-order="20">+ Add Feature</div>
+             </div>`;
       }
-      groups.push(currentGroup);
-      groups.forEach((group, groupIndex) => {
-        const startCol = Math.min(...group) + 1;
-        const span = group.length;
-        const title =
-          groups.length > 1
-            ? `${journey.name} (${groupIndex + 1}/${groups.length})`
-            : journey.name;
-        html += `<div class="card journey-card" data-id="${journey.id}" data-type="journey" data-order="${journey.order}" style="grid-column: ${startCol} / span ${span};">
-                    <div class="add-item-button before" data-add-type="journey" data-before-order="${beforeOrder}" data-after-order="${journey.order}">+</div>
-                    <span class="card-title-text">${title}</span>
-                    <div class="card-icon-button">${iconSvg}</div>
-                    <div class="add-item-button after" data-add-type="journey" data-before-order="${journey.order}" data-after-order="${afterOrder}">+</div>
-                 </div>`;
-      });
     });
     features.forEach((feature, index) => {
       // --- THE GUARANTEE: Failsafe logic for order values ---

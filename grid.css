@@ -272,3 +272,48 @@
   outline: none;
   box-sizing: border-box;
 }
+
+/* --- DEFINITIVE STYLES FOR EMPTY JOURNEYS --- */
+
+.empty-journey-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  grid-row: 1; /* Ensure it's in the top journey row */
+  height: var(--journey-height);
+  padding: 8px;
+  border: 2px dashed #ccc;
+  border-radius: 6px;
+  background-color: #fafafa;
+  box-sizing: border-box;
+}
+
+.empty-journey-placeholder .card-title-text {
+  font-weight: 600;
+  font-size: 14px;
+  color: #888;
+  margin-bottom: 8px;
+}
+
+/* This is the new, always-visible button for adding the FIRST feature */
+.add-item-button-static {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 8px;
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  color: #555;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.add-item-button-static:hover {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
+}
