@@ -1,3 +1,5 @@
+// The definitive, complete, and final grid.js renderer.
+
 window.StoryMapRenderer = {
   render: function (containerElement) {
     // --- 1. PULL CLEAN DATA FROM THE DATA STORE ---
@@ -7,24 +9,23 @@ window.StoryMapRenderer = {
     const stories = window.StoryMapDataStore.getEntitiesArray("story");
     const releases = window.StoryMapDataStore.getEntitiesArray("release");
 
-    // --- 2. PREPARE DATA STRUCTURES (This is your proven, working logic) ---
-    const displayFeatures = [];
+    // --- 2. PREPARE DATA STRUCTURES FOR RENDERING (THE DEFINITIVE FIX) ---
+    const displayItems = [];
     journeys.forEach((journey) => {
       const journeyFeatures = allFeatures.filter(
         (f) => f.journeyId === journey.id
       );
       if (journeyFeatures.length > 0) {
-        displayFeatures.push(...journeyFeatures);
+        displayItems.push(...journeyFeatures);
       } else {
-        displayFeatures.push({ isPlaceholder: true, journey: journey });
+        displayItems.push({ isPlaceholder: true, journey: journey });
       }
     });
     const unassignedFeatures = allFeatures.filter((f) => !f.journeyId);
-    displayFeatures.push(...unassignedFeatures);
+    displayItems.push(...unassignedFeatures);
 
-    // --- 3. GRID CALCULATION & SVG DEFINITION (This is your proven, working logic) ---
-    const totalColumns =
-      displayFeatures.length > 0 ? displayFeatures.length : 1;
+    // --- 3. GRID CALCULATION & SVG DEFINITION ---
+    const totalColumns = displayItems.length > 0 ? displayItems.length : 1;
     document.documentElement.style.setProperty("--total-columns", totalColumns);
     const iconSvg = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 2V8H20" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 13H8" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 17H8" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 9H8" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
@@ -39,7 +40,7 @@ window.StoryMapRenderer = {
             <div class="story-map-grid-container">
     `;
 
-    // --- 4a. RENDER JOURNEYS (THE DEFINITIVE FIX IS HERE) ---
+    // --- 4a. RENDER JOURNEYS (ALWAYS RENDERS ALL JOURNEYS CORRECTLY) ---
     journeys.forEach((journey, index) => {
       const journeyFeatures = allFeatures.filter(
         (f) => f.journeyId === journey.id
@@ -47,63 +48,48 @@ window.StoryMapRenderer = {
       let startCol, span;
 
       if (journeyFeatures.length > 0) {
-        // This logic is flawed for calculating span, we will correct it.
         const featureIndices = journeyFeatures
-          .map((f) => displayFeatures.findIndex((df) => df.id === f.id))
+          .map((f) => displayItems.findIndex((df) => df.id === f.id))
           .filter((i) => i !== -1);
         startCol = Math.min(...featureIndices) + 1;
         span = featureIndices.length;
+      } else {
+        const placeholderIndex = displayItems.findIndex(
+          (df) => df.isPlaceholder && df.journey.id === journey.id
+        );
+        startCol = placeholderIndex + 1;
+        span = 1;
+      }
 
-        const prevJourney = journeys[index - 1];
-        const nextJourney = journeys[index + 1];
-        const beforeOrder = prevJourney
-          ? prevJourney.order
-          : (journey.order || 0) - 20;
-        const afterOrder = nextJourney
-          ? nextJourney.order
-          : (journey.order || 0) + 20;
+      const prevJourney = journeys[index - 1];
+      const nextJourney = journeys[index + 1];
+      const beforeOrder = prevJourney
+        ? prevJourney.order
+        : (journey.order || 0) - 20;
+      const afterOrder = nextJourney
+        ? nextJourney.order
+        : (journey.order || 0) + 20;
 
-        // The HTML structure is now CORRECT, restoring the inline-edit functionality.
-        html += `<div class="card journey-card" data-id="${journey.id}" data-type="journey" data-order="${journey.order}" style="grid-column: ${startCol} / span ${span};">
+      html += `<div class="card journey-card" data-id="${journey.id}" data-type="journey" data-order="${journey.order}" style="grid-column: ${startCol} / span ${span};">
                     <div class="add-item-button before" data-add-type="journey" data-before-order="${beforeOrder}" data-after-order="${journey.order}">+</div>
                     <span class="card-title-text">${journey.name}</span>
                     <div class="card-icon-button">${iconSvg}</div>
                     <div class="add-item-button after" data-add-type="journey" data-before-order="${journey.order}" data-after-order="${afterOrder}">+</div>
                  </div>`;
-      } else {
-        const placeholderIndex = displayFeatures.findIndex(
-          (df) => df.isPlaceholder && df.journey.id === journey.id
-        );
-        startCol = placeholderIndex + 1;
-        span = 1;
-
-        // This is your proven, working placeholder logic.
-        html += `<div class="empty-journey-placeholder" style="grid-column: ${startCol} / span ${span};">
-                    <span class="card-title-text">${journey.name}</span>
-                    <div class="add-item-button-static" data-add-type="feature" data-journey-id="${journey.id}" data-before-order="0" data-after-order="20">+ Add Feature</div>
-                 </div>`;
-      }
     });
 
-    // --- 4b. RENDER FEATURES (Now Placeholder-Aware and Draggable) ---
-    displayFeatures.forEach((feature, index) => {
-      // CRITICAL FIX: Check if this item is a placeholder.
-      if (feature.isPlaceholder) {
-        // If it's a placeholder, render the new, intelligent drop zone.
-        // It is a drop target for FEATURES and contains the ADD button.
-        html += `<div class="feature-column empty" style="grid-column: ${
+    // --- 4b. RENDER FEATURES (HANDLES PLACEHOLDERS CORRECTLY) ---
+    displayItems.forEach((item, index) => {
+      if (item.isPlaceholder) {
+        html += `<div class="empty-feature-placeholder" style="grid-column: ${
           index + 1
-        };" data-journey-id="${feature.journey.id}">
-                <div class="empty-feature-drop-zone" data-journey-id="${
-                  feature.journey.id
-                }">
+        };">
                     <div class="add-item-button-static" data-add-type="feature" data-journey-id="${
-                      feature.journey.id
+                      item.journey.id
                     }" data-before-order="0" data-after-order="20">+ Add Feature</div>
-                </div>
-             </div>`;
+                 </div>`;
       } else {
-        // If it's a real feature, render it using the proven logic.
+        const feature = item;
         const featuresInSameJourney = allFeatures.filter(
           (f) => f.journeyId === feature.journeyId
         );
@@ -130,19 +116,19 @@ window.StoryMapRenderer = {
         }" data-type="feature" data-order="${
           feature.order
         }" style="grid-column: ${index + 1};">
-                <div class="add-item-button before" data-add-type="feature" data-journey-id="${
-                  feature.journeyId
-                }" data-before-order="${beforeOrder}" data-after-order="${
+                    <div class="add-item-button before" data-add-type="feature" data-journey-id="${
+                      feature.journeyId
+                    }" data-before-order="${beforeOrder}" data-after-order="${
           feature.order
         }">+</div>
-                <span class="card-title-text">${feature.name}</span>
-                <div class="card-icon-button">${iconSvg}</div>
-                <div class="add-item-button after" data-add-type="feature" data-journey-id="${
-                  feature.journeyId
-                }" data-before-order="${
+                    <span class="card-title-text">${feature.name}</span>
+                    <div class="card-icon-button">${iconSvg}</div>
+                    <div class="add-item-button after" data-add-type="feature" data-journey-id="${
+                      feature.journeyId
+                    }" data-before-order="${
           feature.order
         }" data-after-order="${afterOrder}">+</div>
-             </div>`;
+                 </div>`;
       }
     });
 
@@ -151,17 +137,21 @@ window.StoryMapRenderer = {
       .filter((r) => r && r.name)
       .sort((a, b) => a.name.localeCompare(b.name));
 
-    // First, handle the "Unassigned" section
+    // Unassigned Section
     const unreleasedStories = stories.filter((s) => !s.releaseId);
-    if (unreleasedStories.length > 0) {
+    if (
+      unreleasedStories.length > 0 ||
+      (stories.length === 0 && releases.length === 0)
+    ) {
       html += `<div class="release-header">Unassigned</div>`;
-      displayFeatures.forEach((feature, index) => {
+      displayItems.forEach((item, index) => {
         html += `<div class="feature-column" style="grid-column: ${
           index + 1
         };" data-feature-id="${
-          feature.isPlaceholder ? "" : feature.id
+          item.isPlaceholder ? "" : item.id
         }" data-release-id="unassigned">`;
-        if (!feature.isPlaceholder) {
+        if (!item.isPlaceholder) {
+          const feature = item;
           const storiesInColumn = unreleasedStories.filter(
             (s) => s.featureId === feature.id
           );
@@ -205,18 +195,19 @@ window.StoryMapRenderer = {
       });
     }
 
-    // Then, handle all other releases
+    // Released Sections
     sortedReleasesToRender.forEach((release) => {
       const releaseStories = stories.filter((s) => s.releaseId === release.id);
       if (releaseStories.length > 0) {
         html += `<div class="release-header" data-id="${release.id}">${release.name}</div>`;
-        displayFeatures.forEach((feature, index) => {
+        displayItems.forEach((item, index) => {
           html += `<div class="feature-column" style="grid-column: ${
             index + 1
           };" data-feature-id="${
-            feature.isPlaceholder ? "" : feature.id
+            item.isPlaceholder ? "" : item.id
           }" data-release-id="${release.id}">`;
-          if (!feature.isPlaceholder) {
+          if (!item.isPlaceholder) {
+            const feature = item;
             const storiesInColumn = releaseStories.filter(
               (s) => s.featureId === feature.id
             );
