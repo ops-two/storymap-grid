@@ -14,6 +14,13 @@ window.StoryMapAddItemHandler = {
       e.stopPropagation();
       this.handleAdd(button);
     });
+    container.addEventListener("click", (e) => {
+      if (e.target.classList.contains("add-item-button-static")) {
+        const button = e.target;
+        e.stopPropagation();
+        this.handleAdd(button);
+      }
+    });
   },
 
   // This is your proven function, now upgraded to handle stories.
