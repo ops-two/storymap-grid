@@ -103,46 +103,16 @@ window.StoryMapRenderer = {
     const unreleasedStories = stories.filter((s) => !s.releaseId);
 
     // Always render the "Unassigned" section header.
-    html += `<div class="release-header">Unassigned</div>`;
-    features.forEach((feature, index) => {
-      const storiesInColumn = unreleasedStories.filter(
-        (s) => s.featureId === feature.id
-      );
-      // This line is now correct for the "Unassigned" section.
-      html += `<div class="feature-column" style="grid-column: ${
-        index + 1
-      };" data-feature-id="${feature.id}" data-release-id="unassigned">`;
-      if (storiesInColumn.length > 0) {
-        storiesInColumn.forEach((story) => {
-          html += `<div class="card story-card ${
-            story.type === "Tech-Req" ? "tech" : ""
-          }" data-id="${story.id}" data-type="story" data-order="${
-            story.order
-          }"><span class="card-title-text">${story.name}</span>
-            <div class="card-icon-button">
-                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 2V8H20" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 13H8" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 17H8" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 9H8" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </div>
-         </div>`;
-        });
-      }
-      // Always render a drop zone in the Unassigned section's columns.
-      html += `<div class="empty-column-drop-zone" data-feature-id="${feature.id}" data-release-id="unassigned"><span>Drop Story Here</span></div>`;
-      html += `</div>`;
-    });
-
-    // Now, loop through each release and render its section correctly.
-    releases.forEach((release) => {
-      const releaseStories = stories.filter((s) => s.releaseId === release.id);
-
-      html += `<div class="release-header" data-id="${release.id}">${release.name}</div>`;
+    if (unreleasedStories.length > 0) {
+      html += `<div class="release-header">Unassigned</div>`;
       features.forEach((feature, index) => {
-        const storiesInColumn = releaseStories.filter(
+        const storiesInColumn = unreleasedStories.filter(
           (s) => s.featureId === feature.id
         );
-        // THE CRITICAL FIX IS HERE: This now correctly uses 'release.id'.
+        // This line is now correct for the "Unassigned" section.
         html += `<div class="feature-column" style="grid-column: ${
           index + 1
-        };" data-feature-id="${feature.id}" data-release-id="${release.id}">`;
+        };" data-feature-id="${feature.id}" data-release-id="unassigned">`;
         if (storiesInColumn.length > 0) {
           storiesInColumn.forEach((story) => {
             html += `<div class="card story-card ${
@@ -156,10 +126,45 @@ window.StoryMapRenderer = {
          </div>`;
           });
         }
-        // Always render a drop zone in this release's columns as well.
-        html += `<div class="empty-column-drop-zone" data-feature-id="${feature.id}" data-release-id="${release.id}"><span>Drop Story Here</span></div>`;
+        // Always render a drop zone in the Unassigned section's columns.
+        html += `<div class="empty-column-drop-zone" data-feature-id="${feature.id}" data-release-id="unassigned"><span>Drop Story Here</span></div>`;
         html += `</div>`;
       });
+    }
+    // Now, loop through each release and render its section correctly.
+    releases.forEach((release) => {
+      if (!release || !release.name) {
+        return; // Skip this iteration if the release is null or has no name.
+      }
+      const releaseStories = stories.filter((s) => s.releaseId === release.id);
+      if (releaseStories.length > 0) {
+        html += `<div class="release-header" data-id="${release.id}">${release.name}</div>`;
+        features.forEach((feature, index) => {
+          const storiesInColumn = releaseStories.filter(
+            (s) => s.featureId === feature.id
+          );
+          // THE CRITICAL FIX IS HERE: This now correctly uses 'release.id'.
+          html += `<div class="feature-column" style="grid-column: ${
+            index + 1
+          };" data-feature-id="${feature.id}" data-release-id="${release.id}">`;
+          if (storiesInColumn.length > 0) {
+            storiesInColumn.forEach((story) => {
+              html += `<div class="card story-card ${
+                story.type === "Tech-Req" ? "tech" : ""
+              }" data-id="${story.id}" data-type="story" data-order="${
+                story.order
+              }"><span class="card-title-text">${story.name}</span>
+            <div class="card-icon-button">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 2V8H20" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 13H8" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 17H8" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 9H8" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+         </div>`;
+            });
+          }
+          // Always render a drop zone in this release's columns as well.
+          html += `<div class="empty-column-drop-zone" data-feature-id="${feature.id}" data-release-id="${release.id}"><span>Drop Story Here</span></div>`;
+          html += `</div>`;
+        });
+      }
     });
 
     // --- 4d. CLOSE HTML TAGS ---
