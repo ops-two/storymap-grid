@@ -39,12 +39,14 @@ window.StoryMapRenderer = {
             <div class="story-map-grid-container">
     `;
 
-    // --- 4a. RENDER JOURNEYS ---
+    // --- 4a. RENDER JOURNEYS (with Corrected Attributes) ---
     journeys.forEach((journey, index) => {
-      const prevJourney = journeys[index - 1];
-      const nextJourney = journeys[index + 1];
+      const prevJourney = index > 0 ? journeys[index - 1] : null;
+      const nextJourney =
+        index < journeys.length - 1 ? journeys[index + 1] : null;
+      const beforeOrder = prevJourney ? prevJourney.order : journey.order - 20;
+      const afterOrder = nextJourney ? nextJourney.order : journey.order + 20;
 
-      // Your proven journey rendering logic
       if (!journey.featureIds || journey.featureIds.length === 0) return;
       const featureIndices = journey.featureIds
         .map((id) => featureOrderMap.get(id))
@@ -69,29 +71,36 @@ window.StoryMapRenderer = {
           groups.length > 1
             ? `${journey.name} (${groupIndex + 1}/${groups.length})`
             : journey.name;
-        html += `<div class="card journey-card" data-id="${
-          journey.id
-        }" data-type="journey" data-order="${
-          journey.order
-        }" style="grid-column: ${startCol} / span ${span};">
-                    <div class="add-item-button before" data-add-type="journey" data-before-order="${
-                      prevJourney ? prevJourney.order : journey.order / 2
-                    }" data-after-order="${journey.order}">+</div>
+        html += `<div class="card journey-card" data-id="${journey.id}" data-type="journey" data-order="${journey.order}" style="grid-column: ${startCol} / span ${span};">
+                    <div class="add-item-button before" data-add-type="journey" data-before-order="${beforeOrder}" data-after-order="${journey.order}">+</div>
                     <span class="card-title-text">${title}</span>
                     <div class="card-icon-button">${iconSvg}</div>
-                    <div class="add-item-button after" data-add-type="journey" data-before-order="${
-                      journey.order
-                    }" data-after-order="${
-          nextJourney ? nextJourney.order : journey.order + 10
-        }">+</div>
+                    <div class="add-item-button after" data-add-type="journey" data-before-order="${journey.order}" data-after-order="${afterOrder}">+</div>
                  </div>`;
       });
     });
 
-    // --- 4b. RENDER FEATURES ---
+    // --- 4b. RENDER FEATURES (with Corrected Attributes) ---
     features.forEach((feature, index) => {
-      const prevFeature = features[index - 1];
-      const nextFeature = features[index + 1];
+      const featuresInSameJourney = features.filter(
+        (f) => f.journeyId === feature.journeyId
+      );
+      const ownIndexInJourney = featuresInSameJourney.findIndex(
+        (f) => f.id === feature.id
+      );
+
+      const prevFeature =
+        ownIndexInJourney > 0
+          ? featuresInSameJourney[ownIndexInJourney - 1]
+          : null;
+      const nextFeature =
+        ownIndexInJourney < featuresInSameJourney.length - 1
+          ? featuresInSameJourney[ownIndexInJourney + 1]
+          : null;
+
+      const beforeOrder = prevFeature ? prevFeature.order : feature.order - 20;
+      const afterOrder = nextFeature ? nextFeature.order : feature.order + 20;
+
       html += `<div class="card feature-card" data-id="${
         feature.id
       }" data-type="feature" data-order="${
@@ -99,24 +108,20 @@ window.StoryMapRenderer = {
       }" style="grid-column: ${index + 1};">
                   <div class="add-item-button before" data-add-type="feature" data-journey-id="${
                     feature.journeyId
-                  }" data-before-order="${
-        prevFeature && prevFeature.journeyId === feature.journeyId
-          ? prevFeature.order
-          : feature.order / 2
-      }" data-after-order="${feature.order}">+</div>
+                  }" data-before-order="${beforeOrder}" data-after-order="${
+        feature.order
+      }">+</div>
                   <span class="card-title-text">${feature.name}</span>
                   <div class="card-icon-button">${iconSvg}</div>
                   <div class="add-item-button after" data-add-type="feature" data-journey-id="${
                     feature.journeyId
-                  }" data-before-order="${feature.order}" data-after-order="${
-        nextFeature && nextFeature.journeyId === feature.journeyId
-          ? nextFeature.order
-          : feature.order + 10
-      }">+</div>
+                  }" data-before-order="${
+        feature.order
+      }" data-after-order="${afterOrder}">+</div>
                </div>`;
     });
 
-    // --- 4c. RENDER STORIES AND RELEASES ---
+    // --- 4c. RENDER STORIES AND RELEASES (with Corrected Attributes) ---
     const unreleasedStories = stories.filter((s) => !s.releaseId);
     if (unreleasedStories.length > 0) {
       html += `<div class="release-header">Unassigned</div>`;
@@ -128,8 +133,15 @@ window.StoryMapRenderer = {
           (s) => s.featureId === feature.id
         );
         storiesInColumn.forEach((story, storyIndex) => {
-          const prevStory = storiesInColumn[storyIndex - 1];
-          const nextStory = storiesInColumn[storyIndex + 1];
+          const prevStory =
+            storyIndex > 0 ? storiesInColumn[storyIndex - 1] : null;
+          const nextStory =
+            storyIndex < storiesInColumn.length - 1
+              ? storiesInColumn[storyIndex + 1]
+              : null;
+          const beforeOrder = prevStory ? prevStory.order : story.order - 20;
+          const afterOrder = nextStory ? nextStory.order : story.order + 20;
+
           html += `<div class="card story-card ${
             story.type === "Tech-Req" ? "tech" : ""
           }" data-id="${story.id}" data-type="story" data-order="${
@@ -137,18 +149,16 @@ window.StoryMapRenderer = {
           }">
                             <div class="add-item-button above" data-add-type="story" data-feature-id="${
                               feature.id
-                            }" data-release-id="unassigned" data-before-order="${
-            prevStory ? prevStory.order : story.order / 2
-          }" data-after-order="${story.order}">+</div>
+                            }" data-release-id="unassigned" data-before-order="${beforeOrder}" data-after-order="${
+            story.order
+          }">+</div>
                             <span class="card-title-text">${story.name}</span>
                             <div class="card-icon-button">${iconSvg}</div>
                             <div class="add-item-button below" data-add-type="story" data-feature-id="${
                               feature.id
                             }" data-release-id="unassigned" data-before-order="${
             story.order
-          }" data-after-order="${
-            nextStory ? nextStory.order : story.order + 10
-          }">+</div>
+          }" data-after-order="${afterOrder}">+</div>
                          </div>`;
         });
         html += `<div class="empty-column-drop-zone" data-feature-id="${feature.id}" data-release-id="unassigned"><span>Drop Story Here</span></div>`;
@@ -171,8 +181,15 @@ window.StoryMapRenderer = {
             (s) => s.featureId === feature.id
           );
           storiesInColumn.forEach((story, storyIndex) => {
-            const prevStory = storiesInColumn[storyIndex - 1];
-            const nextStory = storiesInColumn[storyIndex + 1];
+            const prevStory =
+              storyIndex > 0 ? storiesInColumn[storyIndex - 1] : null;
+            const nextStory =
+              storyIndex < storiesInColumn.length - 1
+                ? storiesInColumn[storyIndex + 1]
+                : null;
+            const beforeOrder = prevStory ? prevStory.order : story.order - 20;
+            const afterOrder = nextStory ? nextStory.order : story.order + 20;
+
             html += `<div class="card story-card ${
               story.type === "Tech-Req" ? "tech" : ""
             }" data-id="${story.id}" data-type="story" data-order="${
@@ -182,9 +199,9 @@ window.StoryMapRenderer = {
                                   feature.id
                                 }" data-release-id="${
               release.id
-            }" data-before-order="${
-              prevStory ? prevStory.order : story.order / 2
-            }" data-after-order="${story.order}">+</div>
+            }" data-before-order="${beforeOrder}" data-after-order="${
+              story.order
+            }">+</div>
                                 <span class="card-title-text">${
                                   story.name
                                 }</span>
@@ -193,9 +210,9 @@ window.StoryMapRenderer = {
                                   feature.id
                                 }" data-release-id="${
               release.id
-            }" data-before-order="${story.order}" data-after-order="${
-              nextStory ? nextStory.order : story.order + 10
-            }">+</div>
+            }" data-before-order="${
+              story.order
+            }" data-after-order="${afterOrder}">+</div>
                              </div>`;
           });
           html += `<div class="empty-column-drop-zone" data-feature-id="${feature.id}" data-release-id="${release.id}"><span>Drop Story Here</span></div>`;
@@ -217,13 +234,7 @@ window.StoryMapRenderer = {
       window.StoryMapFeatureDragDrop.init(containerElement[0]);
     if (window.StoryMapStoryDragDrop)
       window.StoryMapStoryDragDrop.init(containerElement[0]);
-    if (window.StoryMapAddItemHandler) {
-      console.log("AddItemHandler FOUND. Initializing...");
+    if (window.StoryMapAddItemHandler)
       window.StoryMapAddItemHandler.init(containerElement[0]);
-    } else {
-      console.error(
-        "CRITICAL FAILURE: window.StoryMapAddItemHandler was NOT FOUND. The script may not be loading."
-      );
-    }
   },
 };
