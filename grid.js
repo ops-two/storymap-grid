@@ -103,6 +103,7 @@ window.StoryMapRenderer = {
     const unreleasedStories = stories.filter((s) => !s.releaseId);
 
     // Always render the "Unassigned" section header.
+
     html += `<div class="release-header">Unassigned</div>`;
     features.forEach((feature, index) => {
       const storiesInColumn = unreleasedStories.filter(
