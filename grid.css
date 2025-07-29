@@ -147,7 +147,7 @@
   background-color: rgba(40, 167, 69, 0.1) !important;
 }
 .empty-column-drop-zone.drag-over {
-  border-color: #28a745;
+  border-color: #28a745; /* Green, like stories */
   background-color: rgba(40, 167, 69, 0.1);
 }
 
@@ -171,11 +171,11 @@
   justify-content: center;
   height: var(--story-height);
   border-radius: 6px;
-  border: 2px dashed #ccc;
+  border: 2px dashed transparent;
+  transition: border-color 0.2s, background-color 0.2s;
   color: #aaa;
   font-size: 13px;
   box-sizing: border-box;
-  transition: background-color 0.2s, border-color 0.2s;
 }
 
 /* --- ADD ITEM BUTTONS (MIRO-LIKE) --- */
@@ -347,11 +347,54 @@
   justify-content: center;
   min-height: var(--story-height); /* Ensure it has a minimum height */
   border-radius: 6px;
-  border: 2px dashed #ccc; /* Dotted border */
+  border: 2px dashed #ccc;
+  transition: background-color 0.2s, border-color 0.2s;
   box-sizing: border-box;
   padding: 8px;
   margin-bottom: var(--vertical-gap); /* Add spacing to match other stories */
 }
 
+.empty-story-placeholder .add-item-button-static {
+  width: 100%;
+  height: 100%;
+
+  /* NEW: Make the button itself transparent */
+  background-color: transparent;
+  border: none;
+
+  /* Style the text to look like the "Drop Story Here" text */
+  color: #888;
+  font-size: 13px;
+  font-weight: 500;
+}
+.empty-story-placeholder:hover {
+  border-color: #999;
+  background-color: #f5f5f5;
+}
+
+.empty-story-placeholder:hover .add-item-button-static {
+  color: #333;
+}
 /* The static "+ Add Story" button will reuse the style we already have for
-   .add-item-button-static, so no new styles are needed for the button itself. */
+    .add-item-button-static, so no new styles are needed for the button itself. */
+
+.empty-column-drop-zone span {
+  color: #ccc;
+  font-size: 12px;
+  font-weight: 500;
+  /* HIDDEN by default */
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.story-map-grid-container:has(.story-card.dragging) .empty-column-drop-zone {
+  /* ...make the drop zone VISIBLE. */
+  border-color: #ccc;
+}
+
+/* When a drag is active, also show the text inside the drop zone */
+.story-map-grid-container:has(.story-card.dragging)
+  .empty-column-drop-zone
+  span {
+  opacity: 1;
+}
