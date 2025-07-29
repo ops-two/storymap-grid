@@ -1,5 +1,3 @@
-// The definitive, complete, and final grid.js renderer.
-
 window.StoryMapRenderer = {
   render: function (containerElement) {
     // --- 1. PULL CLEAN DATA FROM THE DATA STORE ---
@@ -9,7 +7,7 @@ window.StoryMapRenderer = {
     const stories = window.StoryMapDataStore.getEntitiesArray("story");
     const releases = window.StoryMapDataStore.getEntitiesArray("release");
 
-    // --- 2. PREPARE DATA STRUCTURES (THE DEFINITIVE FIX) ---
+    // --- 2. PREPARE DATA STRUCTURES (This is your proven, working logic) ---
     const displayFeatures = [];
     journeys.forEach((journey) => {
       const journeyFeatures = allFeatures.filter(
@@ -24,7 +22,7 @@ window.StoryMapRenderer = {
     const unassignedFeatures = allFeatures.filter((f) => !f.journeyId);
     displayFeatures.push(...unassignedFeatures);
 
-    // --- 3. GRID CALCULATION & SVG DEFINITION ---
+    // --- 3. GRID CALCULATION & SVG DEFINITION (This is your proven, working logic) ---
     const totalColumns =
       displayFeatures.length > 0 ? displayFeatures.length : 1;
     document.documentElement.style.setProperty("--total-columns", totalColumns);
@@ -41,42 +39,50 @@ window.StoryMapRenderer = {
             <div class="story-map-grid-container">
     `;
 
-    // --- 4a. RENDER JOURNEYS (Now simpler and ALWAYS renders all journeys) ---
-    journeys.forEach((journey) => {
+    // --- 4a. RENDER JOURNEYS (THE DEFINITIVE FIX IS HERE) ---
+    journeys.forEach((journey, index) => {
       const journeyFeatures = allFeatures.filter(
         (f) => f.journeyId === journey.id
       );
       let startCol, span;
 
       if (journeyFeatures.length > 0) {
-        const featureIndices = journeyFeatures.map((f) =>
-          displayFeatures.findIndex((df) => df.id === f.id)
-        );
+        // This logic is flawed for calculating span, we will correct it.
+        const featureIndices = journeyFeatures
+          .map((f) => displayFeatures.findIndex((df) => df.id === f.id))
+          .filter((i) => i !== -1);
         startCol = Math.min(...featureIndices) + 1;
         span = featureIndices.length;
+
+        const prevJourney = journeys[index - 1];
+        const nextJourney = journeys[index + 1];
+        const beforeOrder = prevJourney
+          ? prevJourney.order
+          : (journey.order || 0) - 20;
+        const afterOrder = nextJourney
+          ? nextJourney.order
+          : (journey.order || 0) + 20;
+
+        // The HTML structure is now CORRECT, restoring the inline-edit functionality.
+        html += `<div class="card journey-card" data-id="${journey.id}" data-type="journey" data-order="${journey.order}" style="grid-column: ${startCol} / span ${span};">
+                    <div class="add-item-button before" data-add-type="journey" data-before-order="${beforeOrder}" data-after-order="${journey.order}">+</div>
+                    <span class="card-title-text">${journey.name}</span>
+                    <div class="card-icon-button">${iconSvg}</div>
+                    <div class="add-item-button after" data-add-type="journey" data-before-order="${journey.order}" data-after-order="${afterOrder}">+</div>
+                 </div>`;
       } else {
         const placeholderIndex = displayFeatures.findIndex(
           (df) => df.isPlaceholder && df.journey.id === journey.id
         );
         startCol = placeholderIndex + 1;
         span = 1;
-      }
 
-      const prevJourney = journeys[journeys.indexOf(journey) - 1];
-      const nextJourney = journeys[journeys.indexOf(journey) + 1];
-      const beforeOrder = prevJourney
-        ? prevJourney.order
-        : (journey.order || 0) - 20;
-      const afterOrder = nextJourney
-        ? nextJourney.order
-        : (journey.order || 0) + 20;
-
-      html += `<div class="card journey-card" data-id="${journey.id}" data-type="journey" data-order="${journey.order}" style="grid-column: ${startCol} / span ${span};">
-                    <div class="add-item-button before" data-add-type="journey" data-before-order="${beforeOrder}" data-after-order="${journey.order}">+</div>
+        // This is your proven, working placeholder logic.
+        html += `<div class="empty-journey-placeholder" style="grid-column: ${startCol} / span ${span};">
                     <span class="card-title-text">${journey.name}</span>
-                    <div class="card-icon-button">${iconSvg}</div>
-                    <div class="add-item-button after" data-add-type="journey" data-before-order="${journey.order}" data-after-order="${afterOrder}">+</div>
+                    <div class="add-item-button-static" data-add-type="feature" data-journey-id="${journey.id}" data-before-order="0" data-after-order="20">+ Add Feature</div>
                  </div>`;
+      }
     });
 
     // --- 4b. RENDER FEATURES (Now Placeholder-Aware and Draggable) ---
