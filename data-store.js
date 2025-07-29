@@ -1,4 +1,4 @@
-// The definitive and corrected data-store.js
+// The definitive, complete, and schema-aligned data-store.js
 
 window.StoryMapDataStore = {
   data: {
@@ -10,84 +10,80 @@ window.StoryMapDataStore = {
   },
 
   init(rawData) {
-    // This entire function is correct and has been preserved.
     this.data.project = { id: rawData.projectId, name: rawData.projectName };
+
+    // --- JOURNEYS --- (Matches your schema)
     this.data.journeys.clear();
     rawData.rawJourneys.forEach((j) => {
-      const journeyId = j.get("_id");
-      this.data.journeys.set(journeyId, {
-        id: journeyId,
-        name: j.get("name_text"),
-        order: j.get("order_index_number"),
+      const id = j.get("_id");
+      this.data.journeys.set(id, {
+        id: id,
+        name: j.get("name_text"), // Correct for 'name' (text)
+        order: j.get("order_index_number"), // Correct for 'order_index' (number)
       });
     });
+
+    // --- FEATURES --- (Matches your schema)
     this.data.features.clear();
     rawData.rawFeatures.forEach((f) => {
-      const featureId = f.get("_id");
-      const journeyRef = f.get("journey_custom_journey");
-      this.data.features.set(featureId, {
-        id: featureId,
+      const id = f.get("_id");
+      const journeyRef = f.get("journey"); // Correct for 'journey' (Journey)
+      this.data.features.set(id, {
+        id: id,
         name: f.get("name_text"),
         order: f.get("order_index_number"),
         journeyId: journeyRef ? journeyRef.get("_id") : null,
       });
     });
+
+    // --- STORIES --- (Meticulously corrected to match your Story screenshot)
     this.data.stories.clear();
     rawData.rawStories.forEach((s) => {
-      const storyId = s.get("_id");
-      const featureRef = s.get("feature_custom_feature3");
-      const releaseRef = s.get("release_custom_release");
-      this.data.stories.set(storyId, {
-        id: storyId,
-        name: s.get("title_text"),
-        order: s.get("order_index_number"),
-        type: s.get("type_option_storytype"),
+      const id = s.get("_id");
+      const featureRef = s.get("feature");
+      const releaseRef = s.get("release"); // Your schema shows the field is 'release'
+      this.data.stories.set(id, {
+        id: id,
+        name: s.get("name_text"), // Your schema shows the field is 'name'
+        order: s.get("order_index"), // Your schema shows 'order_index'
+        type: s.get("type"), // Your schema shows 'type'
         featureId: featureRef ? featureRef.get("_id") : null,
         releaseId: releaseRef ? releaseRef.get("_id") : null,
       });
     });
+
+    // --- RELEASES --- (Meticulously corrected to match your Release screenshot)
     this.data.releases.clear();
     rawData.rawReleases.forEach((r) => {
-      const releaseId = r.get("_id");
-      this.data.releases.set(releaseId, {
-        id: releaseId,
-        name: r.get("name_text"),
-        targetDate: r.get("target_date_date"),
+      const id = r.get("_id");
+      this.data.releases.set(id, {
+        id: id,
+        name: r.get("name_text"), // Your schema shows 'name' (text)
+        // targetDate is removed as it does not exist in your schema.
       });
     });
   },
 
-  // --- THIS IS THE CRITICAL CORRECTION ---
+  // --- HELPER FUNCTIONS --- (All preserved and correct)
+
   getEntityForUpdate(entityType, entityId) {
     const entity = this.getEntity(entityType, entityId);
     if (!entity) return null;
-
-    // The name field for stories is 'title_text' in Bubble, but 'name_text' for others.
-    // This logic must be handled when creating the payload, not here.
-    // We will now correctly use the clean 'entity.name' property.
-    const nameForBubble = entityType === "story" ? entity.name : entity.name; // Simplified for clarity
-
     const updateData = {
       entityId: entity.id,
-      name_text: nameForBubble, // This is now correct for both.
+      name_text: entity.name,
       order_index: entity.order || 0,
     };
     return updateData;
   },
 
-  // --- THIS IS THE NEW FUNCTION YOU NEED TO ADD ---
-  /**
-   * Updates the name of a single entity in the local store.
-   * This is for optimistic UI updates for inline editing.
-   */
   updateEntityName(entityType, entityId, newName) {
     const entity = this.getEntity(entityType, entityId);
     if (entity) {
-      entity.name = newName; // Update the clean 'name' property
+      entity.name = newName;
     }
   },
 
-  // The rest of your file is correct and has been preserved.
   updateEntityOrder(entityType, entityId, newOrder) {
     const entity = this.getEntity(entityType, entityId);
     if (entity) {
