@@ -67,11 +67,16 @@ window.StoryMapRenderer = {
         html += `<div class="card journey-card" data-id="${journey.id}" data-type="journey" data-order="${journey.order}" style="grid-column: ${startCol} / span ${span};">
                     <span class="card-title-text">${title}</span>
                     <div class="card-icon-button">${iconSvg}</div>
+                    <div class="card-add-button" data-add-type="journey" data-journey-id="${journey.id}">+</div>
                  </div>`;
       });
     });
 
     features.forEach((feature, index) => {
+      if (index > 0) {
+        const prevFeature = features[index - 1];
+        html += `<div class="add-item-placeholder horizontal" data-add-type="feature" data-journey-id="${feature.journeyId}" data-before-order="${prevFeature.order}" data-after-order="${feature.order}">+</div>`;
+      }
       html += `<div class="card feature-card" data-id="${
         feature.id
       }" data-type="feature" data-order="${
@@ -79,6 +84,9 @@ window.StoryMapRenderer = {
       }" style="grid-column: ${index + 1};">
                     <span class="card-title-text">${feature.name}</span>
                     <div class="card-icon-button">${iconSvg}</div>
+                    <div class="card-add-button" data-add-type="journey" data-journey-id="${
+                      journey.id
+                    }">+</div>
                  </div>`;
     });
 
@@ -93,6 +101,10 @@ window.StoryMapRenderer = {
           index + 1
         };" data-feature-id="${feature.id}" data-release-id="unassigned">`;
         storiesInColumn.forEach((story) => {
+          const prevStory = storiesInColumn[index - 1];
+          // Render the placeholder ABOVE the story
+          const beforeOrder = prevStory ? prevStory.order : story.order / 2; // Special case for the top
+          html += `<div class="add-item-placeholder vertical" data-add-type="story" data-feature-id="${feature.id}" data-release-id="${release.id}" data-before-order="${beforeOrder}" data-after-order="${story.order}">+</div>`;
           html += `<div class="card story-card ${
             story.type === "Tech-Req" ? "tech" : ""
           }" data-id="${story.id}" data-type="story" data-order="${
@@ -100,8 +112,15 @@ window.StoryMapRenderer = {
           }">
                         <span class="card-title-text">${story.name}</span>
                         <div class="card-icon-button">${iconSvg}</div>
+                        <div class="card-add-button" data-add-type="journey" data-journey-id="${
+                          journey.id
+                        }">+</div>
                      </div>`;
         });
+        const lastStory = storiesInColumn[storiesInColumn.length - 1];
+        html += `<div class="add-item-placeholder vertical" data-add-type="story" ... data-before-order="${
+          lastStory.order
+        }" data-after-order="${lastStory.order + 10}">+</div>`;
         html += `<div class="empty-column-drop-zone" data-feature-id="${feature.id}" data-release-id="unassigned"><span>Drop Story Here</span></div>`;
         html += `</div>`;
       });
@@ -128,6 +147,10 @@ window.StoryMapRenderer = {
           index + 1
         };" data-feature-id="${feature.id}" data-release-id="${release.id}">`;
         storiesInColumn.forEach((story) => {
+          const prevStory = storiesInColumn[index - 1];
+          // Render the placeholder ABOVE the story
+          const beforeOrder = prevStory ? prevStory.order : story.order / 2; // Special case for the top
+          html += `<div class="add-item-placeholder vertical" data-add-type="story" data-feature-id="${feature.id}" data-release-id="${release.id}" data-before-order="${beforeOrder}" data-after-order="${story.order}">+</div>`;
           html += `<div class="card story-card ${
             story.type === "Tech-Req" ? "tech" : ""
           }" data-id="${story.id}" data-type="story" data-order="${
@@ -137,8 +160,10 @@ window.StoryMapRenderer = {
                           <div class="card-icon-button">${iconSvg}</div>
                        </div>`;
         });
-        html += `<div class="empty-column-drop-zone" data-feature-id="${feature.id}" data-release-id="${release.id}"><span>Drop Story Here</span></div>`;
-        html += `</div>`;
+        const lastStory = storiesInColumn[storiesInColumn.length - 1];
+        html += `<div class="add-item-placeholder vertical" data-add-type="story" ... data-before-order="${
+          lastStory.order
+        }" data-after-order="${lastStory.order + 10}">+</div>`;
       });
     });
 
