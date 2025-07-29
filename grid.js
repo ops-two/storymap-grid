@@ -81,32 +81,26 @@ window.StoryMapRenderer = {
     });
 
     features.forEach((feature, index) => {
-      const featuresInSameJourney = features.filter(
-        (f) => f.journeyId === feature.journeyId
-      );
-      const ownIndexInJourney = featuresInSameJourney.findIndex(
-        (f) => f.id === feature.id
-      );
-      const prevFeature =
-        ownIndexInJourney > 0
-          ? featuresInSameJourney[ownIndexInJourney - 1]
-          : null;
+      // Use the simpler, more robust neighbor-finding logic.
+      const prevFeature = index > 0 ? features[index - 1] : null;
       const nextFeature =
-        ownIndexInJourney < featuresInSameJourney.length - 1
-          ? featuresInSameJourney[ownIndexInJourney + 1]
-          : null;
-      const orderLeft = prevFeature
-        ? prevFeature.order
-        : (feature.order || 0) - 20;
-      const orderRight = nextFeature
-        ? nextFeature.order
-        : (feature.order || 0) + 20;
+        index < features.length - 1 ? features[index + 1] : null;
+
+      // THE GUARANTEE: Only use the neighbor if it belongs to the same parent journey.
+      const beforeOrder =
+        prevFeature && prevFeature.journeyId === feature.journeyId
+          ? prevFeature.order
+          : (feature.order || 0) - 20;
+      const afterOrder =
+        nextFeature && nextFeature.journeyId === feature.journeyId
+          ? nextFeature.order
+          : (feature.order || 0) + 20;
 
       html += `<div class="card feature-card" ...>
-                  <div class="add-item-button before" data-add-type="feature" data-journey-id="${feature.journeyId}" data-order-left="${orderLeft}" data-order-right="${feature.order}">+</div>
+                  <div class="add-item-button before" data-add-type="feature" data-journey-id="${feature.journeyId}" data-before-order="${beforeOrder}" data-after-order="${feature.order}">+</div>
                   <span class="card-title-text">${feature.name}</span>
                   <div class="card-icon-button">${iconSvg}</div>
-                  <div class="add-item-button after" data-add-type="feature" data-journey-id="${feature.journeyId}" data-order-left="${feature.order}" data-order-right="${orderRight}">+</div>
+                  <div class="add-item-button after" data-add-type="feature" data-journey-id="${feature.journeyId}" data-before-order="${feature.order}" data-after-order="${afterOrder}">+</div>
                </div>`;
     });
 

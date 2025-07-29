@@ -1,4 +1,4 @@
-// The definitive and complete add-item-handler.js, now bilingual.
+// The definitive, complete, and final add-item-handler.js.
 
 window.StoryMapAddItemHandler = {
   isInitialized: false,
@@ -7,7 +7,6 @@ window.StoryMapAddItemHandler = {
     if (this.isInitialized) return;
     this.isInitialized = true;
 
-    // This listener is correct and does not need to change.
     container.addEventListener("click", (e) => {
       if (!e.target.classList.contains("add-item-button")) return;
       const button = e.target;
@@ -23,25 +22,15 @@ window.StoryMapAddItemHandler = {
     const featureId = button.dataset.featureId;
     const releaseId = button.dataset.releaseId;
 
-    let newOrderValue;
+    // --- THIS IS THE CRITICAL FIX ---
+    // We now ONLY read the original attributes, which are guaranteed to be numbers by the new renderer.
+    const beforeOrder = parseFloat(button.dataset.beforeOrder);
+    const afterOrder = parseFloat(button.dataset.afterOrder);
 
-    // --- THIS IS THE CRITICAL FIX: The Bilingual Logic ---
-    if (
-      button.dataset.orderLeft !== undefined &&
-      button.dataset.orderRight !== undefined
-    ) {
-      // CASE 1: This is a FEATURE button using the new, robust attributes.
-      const orderLeft = parseFloat(button.dataset.orderLeft);
-      const orderRight = parseFloat(button.dataset.orderRight);
-      newOrderValue = (orderLeft + orderRight) / 2;
-    } else {
-      // CASE 2: This is a STORY button using the original attributes.
-      const beforeOrder = parseFloat(button.dataset.beforeOrder);
-      const afterOrder = parseFloat(button.dataset.afterOrder);
-      newOrderValue = (beforeOrder + afterOrder) / 2;
-    }
+    // 2. This calculation will now NEVER produce NaN.
+    const newOrderValue = (beforeOrder + afterOrder) / 2;
 
-    // Failsafe against any remaining NaN issues.
+    // Failsafe. Should never run now, but is good practice.
     if (isNaN(newOrderValue)) {
       console.error("Calculation resulted in NaN. Aborting.", button.dataset);
       return;
