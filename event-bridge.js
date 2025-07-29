@@ -47,7 +47,6 @@ window.StoryMapEventBridge = {
     this.instance.publishState("pending_add", JSON.stringify(payload));
     this.instance.triggerEvent("item_to_be_added");
   },
-  // This function is UNCHANGED. It is correct.
   handleUpdate(event) {
     this.instance.publishState("pending_update", JSON.stringify(event.detail));
     this.instance.triggerEvent(`${event.detail.entityType}_updated`);
