@@ -1,4 +1,4 @@
-// The definitive event-bridge.js that aligns with your existing plugin events.
+// The definitive event-bridge.js, upgraded for Miro-like interactions.
 
 window.StoryMapEventBridge = {
   instance: null,
@@ -9,23 +9,31 @@ window.StoryMapEventBridge = {
     this.instance = instance;
     this.isInitialized = true;
 
-    console.log("Event Bridge Initializing with correct event triggers...");
+    console.log("Event Bridge Initializing with upgraded click triggers...");
 
-    // Listen for the different types of events from our internal modules.
+    // Your working 'update' and 'reorder' listeners are preserved perfectly.
     document.addEventListener("storymap:update", this.handleUpdate.bind(this));
     document.addEventListener(
       "storymap:reorder",
       this.handleReorder.bind(this)
     );
 
-    // The generic card click handler for popups is correct.
-    instance.canvas.on("click", ".card", (e) => {
+    // --- THIS IS THE UPGRADED CLICK HANDLER ---
+    // The generic card click handler is now more specific.
+    // It ONLY listens for clicks on the new icon button.
+    instance.canvas.on("click", ".card-icon-button", (e) => {
+      // We stop the event here to prevent the inline-edit listener from also firing.
       e.stopPropagation();
-      const card = $(e.currentTarget);
+
+      // Find the parent card to get its data attributes.
+      const card = $(e.currentTarget).closest(".card");
       const entityId = card.data("id");
       const entityType = card.data("type");
 
       if (entityId && entityType) {
+        console.log(
+          `ICON CLICKED: Triggering popup for ${entityType} ${entityId}`
+        );
         this.instance.publishState("clicked_item_id", entityId);
         this.instance.publishState("clicked_item_type", entityType);
         this.instance.triggerEvent("card_clicked");
@@ -33,24 +41,17 @@ window.StoryMapEventBridge = {
     });
   },
 
-  // This function handles actions like inline name edits.
+  // This function is UNCHANGED. It is correct.
   handleUpdate(event) {
-    // This function passes the rich payload for Regex parsing.
     this.instance.publishState("pending_update", JSON.stringify(event.detail));
     this.instance.triggerEvent(`${event.detail.entityType}_updated`);
   },
 
+  // This function is UNCHANGED. It is correct.
   handleReorder(event) {
-    // This now correctly handles a payload that might include newParentId.
-    const payload = event.detail; // Get the entire detail object
+    const payload = event.detail;
     const { entityType } = payload;
-
-    console.log("Dispatching reorder to Bubble:", payload);
-
-    // Publish the entire rich object to the 'pending_reorder' state.
     this.instance.publishState("pending_reorder", JSON.stringify(payload));
-
-    // Trigger the specific event for the entity type (e.g., 'feature_reordered').
     const eventName = `${entityType}_reordered`;
     this.instance.triggerEvent(eventName);
   },

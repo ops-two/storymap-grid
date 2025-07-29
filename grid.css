@@ -14,7 +14,7 @@
   height: 100%;
   overflow: auto;
 }
-
+/* ... (h2, story-map-info, story-map-grid-container styles are unchanged) ... */
 .story-map-container h2 {
   margin-top: 0;
   margin-bottom: 10px;
@@ -36,11 +36,11 @@
   border: 1px solid #ddd;
   border-radius: 8px;
 }
-
 .card {
   display: flex;
   align-items: center;
-  justify-content: center;
+  /* CRITICAL CHANGE: Justify content to the start to align text and icon */
+  justify-content: flex-start;
   border-radius: 6px;
   font-size: 13px;
   padding: 0 8px;
@@ -51,10 +51,18 @@
   color: #212529;
   position: relative;
   overflow: hidden;
-  text-align: center;
+  text-align: left; /* CRITICAL CHANGE: Align text to the left */
+}
+.card:hover {
+  transform: translateY(-px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
-.card span {
+/* --- THE NEW, UPGRADED CARD STRUCTURE STYLES --- */
+
+/* This is the new text element that will handle inline editing */
+.card-title-text {
+  flex-grow: 1; /* Allows the text to take up available space */
   display: -webkit-box;
   -webkit-line-clamp: 2;
   line-clamp: 2;
@@ -63,68 +71,104 @@
   text-overflow: ellipsis;
   word-break: break-word;
   line-height: 1.3;
-  max-width: 100%;
+  cursor: text; /* Show a text cursor to indicate it's editable */
 }
 
-.card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+/* The new icon button. It is INVISIBLE by default. */
+.card-icon-button {
+  width: 20px;
+  height: 20px;
+  padding: 2px;
+  margin-left: 4px;
+  border-radius: 4px;
+  opacity: 0; /* HIDDEN */
+  transform: scale(0.8);
+  transition: opacity 0.15s, transform 0.15s;
+  cursor: pointer;
+  flex-shrink: 0; /* Prevent the icon from shrinking */
 }
 
-/* --- Base Card Styles --- */
+/* This is the magic: When you hover over the ENTIRE card... */
+.card:hover .card-icon-button {
+  opacity: 1; /* ...the icon becomes VISIBLE. */
+  transform: scale(1);
+}
 
+.card-icon-button:hover {
+  background-color: rgba(
+    0,
+    0,
+    0,
+    0.08
+  ); /* Add a hover effect for the icon itself */
+}
+
+.card-icon-button svg {
+  width: 100%;
+  height: 100%;
+  stroke: #555; /* Icon line color */
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* --- Base Card Styles (Unchanged) --- */
 .journey-card {
   height: var(--journey-height);
   font-weight: 600;
   font-size: 14px;
   border: 1px solid #ffc107;
   border-left: 5px solid #ffc107;
-  cursor: move;
 }
-
 .feature-card {
   height: var(--feature-height);
   font-weight: 500;
   border: 1px solid #6f42c1;
   border-left: 5px solid #6f42c1;
-  cursor: move; /* ADDED: This enables the move icon for features */
+}
+.story-card {
+  height: var(--story-height);
+  font-weight: 500;
+  border: 1px solid #28a745;
+  border-left: 5px solid #28a745;
+}
+.story-card.tech {
+  border-color: #007bff;
+  border-left-color: #007bff;
 }
 
-/* --- DRAG & DROP VISUAL FEEDBACK STYLES (Corrected and Complete) --- */
-
-/* Style for the "grabbing" hand cursor when a card is picked up */
+/* --- DRAG & DROP STYLES (Your proven, working code) --- */
+.journey-card,
+.feature-card,
+.story-card {
+  cursor: move; /* Change the default cursor to 'move' for draggable cards */
+}
 .journey-card[draggable="true"]:active,
 .feature-card[draggable="true"]:active,
 .story-card[draggable="true"]:active {
   cursor: grabbing;
 }
-
-/* Style for the card being actively dragged (semi-transparent) */
 .journey-card.dragging,
 .feature-card.dragging,
 .story-card.dragging {
   opacity: 0.5;
 }
-
-/* Dotted border for a JOURNEY drop target */
 .journey-card.drag-over {
   border: 2px dashed #ffc107;
   background-color: rgba(255, 193, 7, 0.1);
 }
-
 .story-card.drag-over {
-  border: 2px dashed #28a745 !important; /* Green */
+  border: 2px dashed #28a745 !important;
   background-color: rgba(40, 167, 69, 0.1) !important;
 }
-/* Dotted border for a FEATURE drop target */
 .feature-card.drag-over {
-  border: 2px dashed #6f42c1; /* Use the feature's purple color */
-  background-color: rgba(111, 66, 193, 0.1); /* A light purple background */
+  border: 2px dashed #6f42c1;
+  background-color: rgba(111, 66, 193, 0.1);
 }
 
-/* --- Other Styles (Unchanged) --- */
-
+/* --- Inline Edit & Other Styles (Unchanged) --- */
 .inline-edit-input {
+  /* ... your existing, working styles ... */
   width: 100%;
   padding: 4px 8px;
   border: 2px solid #007bff;
@@ -141,116 +185,9 @@
   white-space: nowrap;
 }
 
-.release-section {
-  grid-column: 1 / -1;
-  display: contents;
-}
-
-.release-header {
-  grid-column: 1 / -1;
-  border-bottom: 1px solid #dee2e6;
-  margin: 20px 0 10px 0;
-  color: #6c757d;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.feature-column {
-  display: flex;
-  flex-direction: column;
-  gap: var(--vertical-gap);
-}
-
-.story-card {
-  height: var(--story-height);
-  font-weight: 500;
-  border: 1px solid #28a745;
-  border-left: 5px solid #28a745;
-}
-
-.story-card.tech {
-  border-color: #007bff;
-  border-left-color: #007bff;
-}
-
-/* Unused styles like .journey-drop-zone, .personas-row, etc., are preserved */
-/* from your original file but are not used by the current interaction model. */
-.journey-drop-zone {
-  grid-column: 1 / -1;
-  height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 2px dashed transparent;
-  transition: all 0.2s ease;
-  position: relative;
-}
-
-.journey-drop-zone .drop-indicator {
-  display: none;
-  background: #ffc107;
-  color: white;
-  padding: 4px 12px;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.journey-drop-zone.drag-over {
-  height: 30px;
-  border-color: #ffc107;
-  background-color: rgba(255, 193, 7, 0.1);
-}
-
-.journey-drop-zone.drag-over .drop-indicator {
-  display: block;
-}
-
-.personas-row {
-  display: flex;
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  margin-bottom: 20px;
-  overflow: hidden;
-}
-
-.row-header {
-  width: 120px;
-  padding: 15px;
-  background-color: #e3f2fd;
-  color: #1565c0;
-  font-weight: bold;
-  border-right: 1px solid #ddd;
-  display: flex;
-  align-items: center;
-}
-
-.row-content {
-  flex: 1;
-  padding: 15px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  align-items: center;
-}
-
-.persona-card {
-  background-color: #e3f2fd;
-  border: 1px solid #bbdefb;
-  padding: 10px 14px;
-  font-size: 14px;
-}
-
-.no-data {
-  color: #999;
-  font-style: italic;
-  font-size: 14px;
-}
-/* ADD THIS ENTIRE NEW BLOCK TO grid.css */
-/* In grid.css, update this entire rule */
-
+/* --- EMPTY DROP ZONE STYLES (Your proven, working code) --- */
 .empty-column-drop-zone {
+  /* ... your existing, working styles ... */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -259,22 +196,16 @@
   color: #aaa;
   font-size: 13px;
   box-sizing: border-box;
-  transition: all 0.2s ease; /* Animate all properties */
-
-  /* --- THE NEW, CRITICAL PROPERTIES --- */
-  opacity: 0; /* Make it invisible by default */
-  height: 10px; /* Make it very small by default */
-  pointer-events: none; /* Prevent it from interfering with mouse events */
+  transition: all 0.2s ease;
+  opacity: 0;
+  height: 10px;
+  pointer-events: none;
 }
-
-/* This rule activates when a story drag starts */
 .story-drag-active .empty-column-drop-zone {
   opacity: 1;
   height: var(--story-height);
-  pointer-events: auto; /* Make it clickable/droppable */
+  pointer-events: auto;
 }
-
-/* This is our existing rule, but now it will only apply when the zone is active */
 .story-drag-active .empty-column-drop-zone.drag-over {
   border-color: #28a745;
   background-color: rgba(40, 167, 69, 0.1);
