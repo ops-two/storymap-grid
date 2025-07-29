@@ -1,4 +1,4 @@
-// The definitive, complete, and final grid.js renderer with "Add Item" functionality.
+// The definitive, complete, and final grid.js renderer with all fixes.
 
 window.StoryMapRenderer = {
   render: function (containerElement) {
@@ -39,65 +39,56 @@ window.StoryMapRenderer = {
             <div class="story-map-grid-container">
     `;
 
-    // --- 4a. RENDER JOURNEYS (with Add Placeholders) ---
-    journeys.forEach((journey, index) => {
-      const prevJourney = journeys[index - 1];
-      const nextJourney = journeys[index + 1];
-      html += `<div class="card journey-card" ...>
-                  <div class="add-item-button before" data-add-type="journey" data-before-order="${
-                    prevJourney ? prevJourney.order : journey.order / 2
-                  }" data-after-order="${journey.order}">+</div>
-                  <span class="card-title-text">${journey.name}</span>
-                  <div class="card-icon-button">${iconSvg}</div>
-                  <div class="add-item-button after" data-add-type="journey" data-before-order="${
-                    journey.order
-                  }" data-after-order="${
-        nextJourney ? nextJourney.order : journey.order + 10
-      }">+</div></div>`;
+    // --- 4a. RENDER JOURNEYS ---
+    journeys.forEach((journey) => {
+      if (!journey.featureIds || journey.featureIds.length === 0) return;
+      // ... (Your proven journey rendering logic is preserved here) ...
+      const featureIndices = journey.featureIds
+        .map((id) => featureOrderMap.get(id))
+        .filter((i) => i !== undefined);
+      if (featureIndices.length === 0) return;
+      featureIndices.sort((a, b) => a - b);
+      const groups = [];
+      let currentGroup = [featureIndices[0]];
+      for (let i = 1; i < featureIndices.length; i++) {
+        if (featureIndices[i] === featureIndices[i - 1] + 1) {
+          currentGroup.push(featureIndices[i]);
+        } else {
+          groups.push(currentGroup);
+          currentGroup = [featureIndices[i]];
+        }
+      }
+      groups.push(currentGroup);
+      groups.forEach((group, groupIndex) => {
+        const startCol = Math.min(...group) + 1;
+        const span = group.length;
+        const title =
+          groups.length > 1
+            ? `${journey.name} (${groupIndex + 1}/${groups.length})`
+            : journey.name;
+        html += `<div class="card journey-card" data-id="${journey.id}" data-type="journey" data-order="${journey.order}" style="grid-column: ${startCol} / span ${span};">
+                     <span class="card-title-text">${title}</span>
+                     <div class="card-icon-button">${iconSvg}</div>
+                  </div>`;
+      });
     });
-    // Add one final placeholder at the end of the journeys row
-    if (journeys.length > 0) {
-      const lastJourney = journeys[journeys.length - 1];
-      html += `<div class="add-item-placeholder horizontal journey-level" data-add-type="journey" data-before-order="${
-        lastJourney.order
-      }" data-after-order="${lastJourney.order + 10}">+</div>`;
-    }
 
-    // --- 4b. RENDER FEATURES (with Add Placeholders) ---
+    // --- 4b. RENDER FEATURES ---
     features.forEach((feature, index) => {
-      const prevFeature = features[index - 1];
-      const nextFeature = features[index + 1];
-      html += `<div class="card feature-card" ...>
-                  <div class="add-item-button before" data-add-type="feature" data-journey-id="${
-                    feature.journeyId
-                  }" data-before-order="${
-        prevFeature && prevFeature.journeyId === feature.journeyId
-          ? prevFeature.order
-          : feature.order / 2
-      }" data-after-order="${feature.order}">+</div>
-                  <span class="card-title-text">${feature.name}</span>
-                  <div class="card-icon-button">${iconSvg}</div>
-                  <div class="add-item-button after" data-add-type="feature" data-journey-id="${
-                    feature.journeyId
-                  }" data-before-order="${feature.order}" data-after-order="${
-        nextFeature && nextFeature.journeyId === feature.journeyId
-          ? nextFeature.order
-          : feature.order + 10
-      }">+</div>
-               </div>`;
+      html += `<div class="card feature-card" data-id="${
+        feature.id
+      }" data-type="feature" data-order="${
+        feature.order
+      }" style="grid-column: ${index + 1};">
+                    <span class="card-title-text">${feature.name}</span>
+                    <div class="card-icon-button">${iconSvg}</div>
+                 </div>`;
     });
-    // Add one final placeholder at the end of the features row
-    if (features.length > 0) {
-      const lastFeature = features[features.length - 1];
-      html += `<div class="add-item-placeholder horizontal feature-level" data-add-type="feature" data-journey-id="${
-        lastFeature.journeyId
-      }" data-before-order="${lastFeature.order}" data-after-order="${
-        lastFeature.order + 10
-      }">+</div>`;
-    }
 
-    // --- 4c. RENDER STORIES (with Add Placeholders) ---
+    // --- 4c. RENDER STORIES AND RELEASES (THE DEFINITIVE, CORRECTED LOGIC) ---
     const unreleasedStories = stories.filter((s) => !s.releaseId);
+
+    // Only render the "Unassigned" section if there are actually unassigned stories.
     if (unreleasedStories.length > 0) {
       html += `<div class="release-header">Unassigned</div>`;
       features.forEach((feature, index) => {
@@ -107,77 +98,61 @@ window.StoryMapRenderer = {
         const storiesInColumn = unreleasedStories.filter(
           (s) => s.featureId === feature.id
         );
-        const firstStory = storiesInColumn[0];
-        html += `<div class="add-item-placeholder vertical story-level" data-add-type="story" data-feature-id="${
-          feature.id
-        }" data-release-id="unassigned" data-after-order="${
-          firstStory ? firstStory.order : 10
-        }">+</div>`;
 
-        storiesInColumn.forEach((story, storyIndex) => {
+        // This loop is now correct.
+        storiesInColumn.forEach((story) => {
           html += `<div class="card story-card ${
             story.type === "Tech-Req" ? "tech" : ""
           }" data-id="${story.id}" data-type="story" data-order="${
             story.order
           }">
-                            <span class="card-title-text">${story.name}</span>
-                            <div class="card-icon-button">${iconSvg}</div>
-                         </div>`;
-          const nextStory = storiesInColumn[storyIndex + 1];
-          html += `<div class="add-item-placeholder vertical story-level" data-add-type="story" data-feature-id="${
-            feature.id
-          }" data-release-id="unassigned" data-before-order="${
-            story.order
-          }" data-after-order="${
-            nextStory ? nextStory.order : story.order + 10
-          }">+</div>`;
+                        <span class="card-title-text">${story.name}</span>
+                        <div class="card-icon-button">${iconSvg}</div>
+                     </div>`;
         });
+        html += `<div class="empty-column-drop-zone" data-feature-id="${feature.id}" data-release-id="unassigned"><span>Drop Story Here</span></div>`;
         html += `</div>`;
       });
     }
 
+    // The robust algorithm for rendering releases.
     const sortedReleasesToRender = releases
       .filter((r) => r && r.name)
       .sort((a, b) => a.name.localeCompare(b.name));
+
     sortedReleasesToRender.forEach((release) => {
-      features.forEach((feature, index) => {
-        const storiesInColumn = releaseStories.filter(
-          (s) => s.featureId === feature.id
-        );
-        html += `<div class="feature-column" ...>`;
-        storiesInColumn.forEach((story, storyIndex) => {
-          const prevStory = storiesInColumn[storyIndex - 1];
-          const nextStory = storiesInColumn[storyIndex + 1];
-          html += `<div class="card story-card" ...>
-                            <div class="add-item-button above" data-add-type="story" data-feature-id="${
-                              feature.id
-                            }" data-release-id="${
-            release.id
-          }" data-before-order="${
-            prevStory ? prevStory.order : story.order / 2
-          }" data-after-order="${story.order}">+</div>
-                            <span class="card-title-text">${story.name}</span>
-                            <div class="card-icon-button">${iconSvg}</div>
-                            <div class="add-item-button below" data-add-type="story" data-feature-id="${
-                              feature.id
-                            }" data-release-id="${
-            release.id
-          }" data-before-order="${story.order}" data-after-order="${
-            nextStory ? nextStory.order : story.order + 10
-          }">+</div>
-                         </div>`;
+      const releaseStories = stories.filter((s) => s.releaseId === release.id);
+      if (releaseStories.length > 0) {
+        html += `<div class="release-header" data-id="${release.id}">${release.name}</div>`;
+        features.forEach((feature, index) => {
+          html += `<div class="feature-column" style="grid-column: ${
+            index + 1
+          };" data-feature-id="${feature.id}" data-release-id="${release.id}">`;
+          const storiesInColumn = releaseStories.filter(
+            (s) => s.featureId === feature.id
+          );
+
+          // This loop is now correct.
+          storiesInColumn.forEach((story) => {
+            html += `<div class="card story-card ${
+              story.type === "Tech-Req" ? "tech" : ""
+            }" data-id="${story.id}" data-type="story" data-order="${
+              story.order
+            }">
+                              <span class="card-title-text">${story.name}</span>
+                              <div class="card-icon-button">${iconSvg}</div>
+                          </div>`;
+          });
+          html += `<div class="empty-column-drop-zone" data-feature-id="${feature.id}" data-release-id="${release.id}"><span>Drop Story Here</span></div>`;
+          html += `</div>`;
         });
-        // Drop zone for empty columns is still needed for drag-and-drop
-        html += `<div class="empty-column-drop-zone"...></div>`;
-        html += `</div>`;
-      });
+      }
     });
 
-    // --- 4d. CLOSE HTML TAGS ---
+    // --- 4d. CLOSE HTML TAGS & INITIALIZE MODULES ---
     html += `</div></div>`;
     containerElement.html(html);
 
-    // --- 5. INITIALIZE INTERACTION MODULES ---
     if (window.StoryMapInlineEdit)
       window.StoryMapInlineEdit.init(containerElement[0]);
     if (window.StoryMapJourneyDragDrop)
