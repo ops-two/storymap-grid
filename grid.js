@@ -92,6 +92,7 @@ window.StoryMapRenderer = {
     // --- 4c. RENDER STORIES AND RELEASES (THE DEFINITIVE, CORRECTED LOGIC) ---
     const unreleasedStories = stories.filter((s) => !s.releaseId);
 
+    // REPLACE WITH THIS SECTION
     if (unreleasedStories.length > 0) {
       html += `<div class="release-header">Unassigned</div>`;
       features.forEach((feature, index) => {
@@ -100,11 +101,19 @@ window.StoryMapRenderer = {
         );
         html += `<div class="feature-column" style="grid-column: ${
           index + 1
-        };" data-feature-id="${feature.id}">`;
+        };" data-feature-id="${feature.id}" data-release-id="unassigned">`;
+
+        // THIS IS THE CRITICAL FIX: The story rendering logic is now present.
         storiesInColumn.forEach((story) => {
-          // ... render story card ...
+          html += `<div class="card story-card ${
+            story.type === "Tech-Req" ? "tech" : ""
+          }" data-id="${story.id}" data-type="story" data-order="${
+            story.order
+          }"><span class="card-title">${story.name}</span></div>`;
         });
-        // The drop zone logic is now handled by the drag-active class, so we don't need it here.
+
+        // We also ensure the drop zone is rendered correctly for this section.
+        html += `<div class="empty-column-drop-zone" data-feature-id="${feature.id}" data-release-id="unassigned"><span>Drop Story Here</span></div>`;
         html += `</div>`;
       });
     }
