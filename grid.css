@@ -325,3 +325,18 @@
   height: var(--feature-height);
   box-sizing: border-box;
 }
+.empty-feature-drop-zone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--feature-height);
+  border-radius: 6px;
+  border: 2px dashed #ccc; /* Dotted border like the story drop zone */
+  box-sizing: border-box;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.empty-feature-drop-zone.drag-over {
+  border-color: #6f42c1; /* Purple, like other features */
+  background-color: rgba(111, 66, 193, 0.1);
+}

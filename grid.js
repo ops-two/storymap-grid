@@ -79,17 +79,25 @@ window.StoryMapRenderer = {
                  </div>`;
     });
 
-    // --- 4b. RENDER FEATURES (Now Placeholder-Aware) ---
+    // --- 4b. RENDER FEATURES (Now Placeholder-Aware and Draggable) ---
     displayFeatures.forEach((feature, index) => {
+      // CRITICAL FIX: Check if this item is a placeholder.
       if (feature.isPlaceholder) {
-        html += `<div class="empty-feature-placeholder" style="grid-column: ${
+        // If it's a placeholder, render the new, intelligent drop zone.
+        // It is a drop target for FEATURES and contains the ADD button.
+        html += `<div class="feature-column empty" style="grid-column: ${
           index + 1
-        };">
+        };" data-journey-id="${feature.journey.id}">
+                <div class="empty-feature-drop-zone" data-journey-id="${
+                  feature.journey.id
+                }">
                     <div class="add-item-button-static" data-add-type="feature" data-journey-id="${
                       feature.journey.id
                     }" data-before-order="0" data-after-order="20">+ Add Feature</div>
-                 </div>`;
+                </div>
+             </div>`;
       } else {
+        // If it's a real feature, render it using the proven logic.
         const featuresInSameJourney = allFeatures.filter(
           (f) => f.journeyId === feature.journeyId
         );
@@ -116,19 +124,19 @@ window.StoryMapRenderer = {
         }" data-type="feature" data-order="${
           feature.order
         }" style="grid-column: ${index + 1};">
-                    <div class="add-item-button before" data-add-type="feature" data-journey-id="${
-                      feature.journeyId
-                    }" data-before-order="${beforeOrder}" data-after-order="${
+                <div class="add-item-button before" data-add-type="feature" data-journey-id="${
+                  feature.journeyId
+                }" data-before-order="${beforeOrder}" data-after-order="${
           feature.order
         }">+</div>
-                    <span class="card-title-text">${feature.name}</span>
-                    <div class="card-icon-button">${iconSvg}</div>
-                    <div class="add-item-button after" data-add-type="feature" data-journey-id="${
-                      feature.journeyId
-                    }" data-before-order="${
+                <span class="card-title-text">${feature.name}</span>
+                <div class="card-icon-button">${iconSvg}</div>
+                <div class="add-item-button after" data-add-type="feature" data-journey-id="${
+                  feature.journeyId
+                }" data-before-order="${
           feature.order
         }" data-after-order="${afterOrder}">+</div>
-                 </div>`;
+             </div>`;
       }
     });
 
