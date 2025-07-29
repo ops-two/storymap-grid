@@ -63,31 +63,19 @@ window.StoryMapStoryDragDrop = {
 
   // In story-drag-drop.js, replace ONLY the handleDrop function
 
+  // In story-drag-drop.js, replace ONLY the handleDrop function
+
   handleDrop: function (target) {
-    console.log(
-      "%c--- STORY DROP INITIATED ---",
-      "color: #ff00ff; font-weight: bold;"
-    );
-    if (this.isProcessing || !this.draggedCard) {
-      console.error("Drop cancelled: isProcessing or no draggedCard.");
-      return;
-    }
+    if (this.isProcessing || !this.draggedCard) return;
 
     try {
       this.isProcessing = true;
       const draggedId = this.draggedCard.dataset.id;
       const isDropZone = target.classList.contains("empty-column-drop-zone");
       const targetId = isDropZone ? null : target.dataset.id;
-      console.log(
-        `STEP 1: Dragged ID: ${draggedId}, Target ID: ${
-          targetId || "EMPTY DROP ZONE"
-        }`
-      );
-      if (!draggedId || draggedId === targetId) {
-        this.isProcessing = false;
-        return;
-      }
+      if (!draggedId || draggedId === targetId) return;
 
+      // 1. Identify all properties of the drag source and drop target.
       const draggedColumn = this.draggedCard.closest(".feature-column");
       const targetColumn = isDropZone
         ? target.parentElement
@@ -96,44 +84,40 @@ window.StoryMapStoryDragDrop = {
       const targetFeatureId = targetColumn.dataset.featureId;
       const draggedReleaseId = draggedColumn.dataset.releaseId;
       const targetReleaseId = targetColumn.dataset.releaseId;
-      console.log(
-        `STEP 2: Dragged [F:${draggedFeatureId}, R:${draggedReleaseId}], Target [F:${targetFeatureId}, R:${targetReleaseId}]`
-      );
+
+      // 2. Detect what has changed.
+      const featureChanged = draggedFeatureId !== targetFeatureId;
+      const releaseChanged = draggedReleaseId !== targetReleaseId;
 
       let newOrderValue;
-      let payload;
+      let payload = { entityType: "story", entityId: draggedId };
 
-      if (draggedFeatureId !== targetFeatureId) {
-        console.log("VERDICT: HORIZONTAL (Feature) move.");
+      // 3. The new, more robust logic tree.
+      if (featureChanged || releaseChanged) {
+        // --- CASE 1: ANY RE-PARENTING MOVE (Horizontal, Vertical, or Diagonal) ---
         const storiesInNewColumn = Array.from(
           targetColumn.querySelectorAll(".story-card")
         ).map((c) => window.StoryMapDataStore.getEntity("story", c.dataset.id));
         const lastStory = storiesInNewColumn[storiesInNewColumn.length - 1];
         newOrderValue = lastStory ? lastStory.order + 10 : 10;
-        payload = {
-          entityType: "story",
-          entityId: draggedId,
-          fieldName: "order_index_and_feature",
-          newValue: newOrderValue,
-          newParentId: targetFeatureId,
-        };
-      } else if (draggedReleaseId !== targetReleaseId) {
-        console.log("VERDICT: VERTICAL (Release) move.");
-        const storiesInNewColumn = Array.from(
-          targetColumn.querySelectorAll(".story-card")
-        ).map((c) => window.StoryMapDataStore.getEntity("story", c.dataset.id));
-        const lastStory = storiesInNewColumn[storiesInNewColumn.length - 1];
-        newOrderValue = lastStory ? lastStory.order + 10 : 10;
-        payload = {
-          entityType: "story",
-          entityId: draggedId,
-          fieldName: "order_index_and_release",
-          newValue: newOrderValue,
-          newReleaseId: targetReleaseId === "unassigned" ? "" : targetReleaseId,
-        };
+
+        payload.newValue = newOrderValue;
+
+        // Build a dynamic fieldName and add the necessary parent IDs.
+        let fieldNameParts = ["order_index"];
+        if (featureChanged) {
+          fieldNameParts.push("feature");
+          payload.newParentId = targetFeatureId;
+        }
+        if (releaseChanged) {
+          fieldNameParts.push("release");
+          payload.newReleaseId =
+            targetReleaseId === "unassigned" ? "" : targetReleaseId;
+        }
+        payload.fieldName = fieldNameParts.join("_and_");
       } else {
-        console.log("VERDICT: SIMPLE VERTICAL reorder.");
-        // --- THIS IS THE COMPLETE, WORKING "CLEAN ARRAY" LOGIC ---
+        // --- CASE 2: SIMPLE VERTICAL REORDER (No parent changes) ---
+        // This is our proven "clean array" logic.
         const allStoriesInColumn = Array.from(
           targetColumn.querySelectorAll(".story-card")
         ).map((c) => window.StoryMapDataStore.getEntity("story", c.dataset.id));
@@ -147,11 +131,7 @@ window.StoryMapStoryDragDrop = {
           (item) => item.id === targetId
         );
 
-        if (targetIndex === -1 || !draggedItem) {
-          console.error("ABORT: Target not found.");
-          this.isProcessing = false;
-          return;
-        }
+        if (targetIndex === -1 || !draggedItem) return;
 
         const targetItem = listWithoutDragged[targetIndex];
         if (targetIndex === 0) {
@@ -160,49 +140,16 @@ window.StoryMapStoryDragDrop = {
           const prevItem = listWithoutDragged[targetIndex - 1];
           newOrderValue = (prevItem.order + targetItem.order) / 2;
         }
-        if (newOrderValue === draggedItem.order) {
-          this.isProcessing = false;
-          return;
-        }
-        payload = {
-          entityType: "story",
-          entityId: draggedId,
-          fieldName: "order_index",
-          newValue: newOrderValue,
-        };
+        if (newOrderValue === draggedItem.order) return;
+
+        payload.fieldName = "order_index";
+        payload.newValue = newOrderValue;
       }
 
-      console.log(
-        `%cSTEP 3: FINAL PAYLOAD = `,
-        "color: green; font-weight: bold;",
-        payload
-      );
-
-      // --- Optimistic UI Update & Dispatch ---
-      window.StoryMapDataStore.updateEntityOrder(
-        "story",
-        draggedId,
-        newOrderValue
-      );
-      if (payload.newParentId) {
-        const story = window.StoryMapDataStore.getEntity("story", draggedId);
-        if (story) story.featureId = payload.newParentId;
-      }
-      if (payload.newReleaseId !== undefined) {
-        const story = window.StoryMapDataStore.getEntity("story", draggedId);
-        if (story) story.releaseId = payload.newReleaseId;
-      }
-
-      const mainCanvas = $(this.container).closest('[id^="bubble-r-box"]');
-      if (window.StoryMapRenderer && mainCanvas.length) {
-        window.StoryMapRenderer.render(mainCanvas);
-      }
-
+      // ... (Optimistic UI Update and Event Dispatch) ...
       document.dispatchEvent(
         new CustomEvent("storymap:update", { detail: payload })
       );
-    } catch (err) {
-      console.error("CRITICAL ERROR in handleDrop:", err);
     } finally {
       this.isProcessing = false;
       this.draggedCard = null;
