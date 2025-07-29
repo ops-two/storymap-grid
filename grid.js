@@ -75,7 +75,6 @@ window.StoryMapRenderer = {
                  </div>`;
     });
 
-    // --- 4b. RENDER FEATURES ---
     displayItems.forEach((item, index) => {
       if (item.isPlaceholder) {
         html += `<div class="feature-column empty empty-feature-placeholder" style="grid-column: ${
