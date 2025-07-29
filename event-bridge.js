@@ -17,6 +17,7 @@ window.StoryMapEventBridge = {
       "storymap:reorder",
       this.handleReorder.bind(this)
     );
+    document.addEventListener("storymap:add", this.handleAdd.bind(this));
 
     // --- THIS IS THE UPGRADED CLICK HANDLER ---
     // The generic card click handler is now more specific.
@@ -40,7 +41,12 @@ window.StoryMapEventBridge = {
       }
     });
   },
-
+  handleAdd(event) {
+    const payload = event.detail; // The "recipe" for the new item
+    console.log("Dispatching add request to Bubble:", payload);
+    this.instance.publishState("pending_add", JSON.stringify(payload));
+    this.instance.triggerEvent("item_to_be_added");
+  },
   // This function is UNCHANGED. It is correct.
   handleUpdate(event) {
     this.instance.publishState("pending_update", JSON.stringify(event.detail));

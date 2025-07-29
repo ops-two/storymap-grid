@@ -1,34 +1,34 @@
-// The definitive, complete, and final grid.js renderer with the Miro-like UI
+// The definitive, complete, and final grid.js renderer with "Add Item" functionality.
 
 window.StoryMapRenderer = {
   render: function (containerElement) {
+    // --- 1. PULL CLEAN DATA FROM THE DATA STORE ---
     const project = window.StoryMapDataStore.data.project;
     const journeys = window.StoryMapDataStore.getEntitiesArray("journey");
     const allFeatures = window.StoryMapDataStore.getEntitiesArray("feature");
     const stories = window.StoryMapDataStore.getEntitiesArray("story");
     const releases = window.StoryMapDataStore.getEntitiesArray("release");
 
+    // --- 2. PREPARE DATA STRUCTURES FOR RENDERING ---
     const features = [];
-    journeys.forEach((journey) => {
-      const journeyFeatures = allFeatures.filter(
-        (f) => f.journeyId === journey.id
-      );
-      features.push(...journeyFeatures);
-    });
-    const unassignedFeatures = allFeatures.filter((f) => !f.journeyId);
-    features.push(...unassignedFeatures);
-
-    journeys.forEach((journey) => {
-      const journeyFeatures = features.filter(
-        (f) => f.journeyId === journey.id
-      );
-      journey.featureIds = journeyFeatures.map((f) => f.id);
-    });
+    journeys.forEach((j) =>
+      features.push(...allFeatures.filter((f) => f.journeyId === j.id))
+    );
+    features.push(...allFeatures.filter((f) => !f.journeyId));
+    journeys.forEach(
+      (j) =>
+        (j.featureIds = features
+          .filter((f) => f.journeyId === j.id)
+          .map((f) => f.id))
+    );
     const featureOrderMap = new Map(features.map((f, i) => [f.id, i]));
+
+    // --- 3. GRID CALCULATION & SVG DEFINITION ---
     const totalColumns = features.length > 0 ? features.length : 1;
     document.documentElement.style.setProperty("--total-columns", totalColumns);
     const iconSvg = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 2V8H20" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 13H8" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 17H8" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 9H8" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
+    // --- 4. HTML GENERATION ---
     const projectTitle = project ? project.name : "Unnamed Project";
     let html = `
         <div class="story-map-container">
@@ -39,7 +39,14 @@ window.StoryMapRenderer = {
             <div class="story-map-grid-container">
     `;
 
-    journeys.forEach((journey) => {
+    // --- 4a. RENDER JOURNEYS (with Add Placeholders) ---
+    journeys.forEach((journey, index) => {
+      // Add placeholder BEFORE the journey card
+      if (index > 0) {
+        const prevJourney = journeys[index - 1];
+        html += `<div class="add-item-placeholder horizontal journey-level" data-add-type="journey" data-before-order="${prevJourney.order}" data-after-order="${journey.order}">+</div>`;
+      }
+      // Your proven journey rendering logic
       if (!journey.featureIds || journey.featureIds.length === 0) return;
       const featureIndices = journey.featureIds
         .map((id) => featureOrderMap.get(id))
@@ -67,16 +74,28 @@ window.StoryMapRenderer = {
         html += `<div class="card journey-card" data-id="${journey.id}" data-type="journey" data-order="${journey.order}" style="grid-column: ${startCol} / span ${span};">
                     <span class="card-title-text">${title}</span>
                     <div class="card-icon-button">${iconSvg}</div>
-                    <div class="card-add-button" data-add-type="journey" data-journey-id="${journey.id}">+</div>
                  </div>`;
       });
     });
+    // Add one final placeholder at the end of the journeys row
+    if (journeys.length > 0) {
+      const lastJourney = journeys[journeys.length - 1];
+      html += `<div class="add-item-placeholder horizontal journey-level" data-add-type="journey" data-before-order="${
+        lastJourney.order
+      }" data-after-order="${lastJourney.order + 10}">+</div>`;
+    }
 
+    // --- 4b. RENDER FEATURES (with Add Placeholders) ---
     features.forEach((feature, index) => {
+      // Add placeholder BEFORE the feature card
       if (index > 0) {
         const prevFeature = features[index - 1];
-        html += `<div class="add-item-placeholder horizontal" data-add-type="feature" data-journey-id="${feature.journeyId}" data-before-order="${prevFeature.order}" data-after-order="${feature.order}">+</div>`;
+        // Only add a placeholder if the journey is the same, to prevent adding between journeys
+        if (prevFeature.journeyId === feature.journeyId) {
+          html += `<div class="add-item-placeholder horizontal feature-level" data-add-type="feature" data-journey-id="${feature.journeyId}" data-before-order="${prevFeature.order}" data-after-order="${feature.order}">+</div>`;
+        }
       }
+      // Render the feature card
       html += `<div class="card feature-card" data-id="${
         feature.id
       }" data-type="feature" data-order="${
@@ -84,92 +103,109 @@ window.StoryMapRenderer = {
       }" style="grid-column: ${index + 1};">
                     <span class="card-title-text">${feature.name}</span>
                     <div class="card-icon-button">${iconSvg}</div>
-                    <div class="card-add-button" data-add-type="journey" data-journey-id="${
-                      journey.id
-                    }">+</div>
                  </div>`;
     });
+    // Add one final placeholder at the end of the features row
+    if (features.length > 0) {
+      const lastFeature = features[features.length - 1];
+      html += `<div class="add-item-placeholder horizontal feature-level" data-add-type="feature" data-journey-id="${
+        lastFeature.journeyId
+      }" data-before-order="${lastFeature.order}" data-after-order="${
+        lastFeature.order + 10
+      }">+</div>`;
+    }
 
+    // --- 4c. RENDER STORIES (with Add Placeholders) ---
     const unreleasedStories = stories.filter((s) => !s.releaseId);
     if (unreleasedStories.length > 0) {
       html += `<div class="release-header">Unassigned</div>`;
       features.forEach((feature, index) => {
-        const storiesInColumn = unreleasedStories.filter(
-          (s) => s.featureId === feature.id
-        );
         html += `<div class="feature-column" style="grid-column: ${
           index + 1
         };" data-feature-id="${feature.id}" data-release-id="unassigned">`;
-        storiesInColumn.forEach((story) => {
-          const prevStory = storiesInColumn[index - 1];
-          // Render the placeholder ABOVE the story
-          const beforeOrder = prevStory ? prevStory.order : story.order / 2; // Special case for the top
-          html += `<div class="add-item-placeholder vertical" data-add-type="story" data-feature-id="${feature.id}" data-release-id="${release.id}" data-before-order="${beforeOrder}" data-after-order="${story.order}">+</div>`;
+        const storiesInColumn = unreleasedStories.filter(
+          (s) => s.featureId === feature.id
+        );
+        const firstStory = storiesInColumn[0];
+        html += `<div class="add-item-placeholder vertical story-level" data-add-type="story" data-feature-id="${
+          feature.id
+        }" data-release-id="unassigned" data-after-order="${
+          firstStory ? firstStory.order : 10
+        }">+</div>`;
+
+        storiesInColumn.forEach((story, storyIndex) => {
           html += `<div class="card story-card ${
             story.type === "Tech-Req" ? "tech" : ""
           }" data-id="${story.id}" data-type="story" data-order="${
             story.order
           }">
-                        <span class="card-title-text">${story.name}</span>
-                        <div class="card-icon-button">${iconSvg}</div>
-                        <div class="card-add-button" data-add-type="journey" data-journey-id="${
-                          journey.id
-                        }">+</div>
-                     </div>`;
+                            <span class="card-title-text">${story.name}</span>
+                            <div class="card-icon-button">${iconSvg}</div>
+                         </div>`;
+          const nextStory = storiesInColumn[storyIndex + 1];
+          html += `<div class="add-item-placeholder vertical story-level" data-add-type="story" data-feature-id="${
+            feature.id
+          }" data-release-id="unassigned" data-before-order="${
+            story.order
+          }" data-after-order="${
+            nextStory ? nextStory.order : story.order + 10
+          }">+</div>`;
         });
-        const lastStory = storiesInColumn[storiesInColumn.length - 1];
-        html += `<div class="add-item-placeholder vertical" data-add-type="story" ... data-before-order="${
-          lastStory.order
-        }" data-after-order="${lastStory.order + 10}">+</div>`;
-        html += `<div class="empty-column-drop-zone" data-feature-id="${feature.id}" data-release-id="unassigned"><span>Drop Story Here</span></div>`;
         html += `</div>`;
       });
     }
-    // Working Now Initially
 
-    const storiesWithReleases = stories.filter((s) => s.releaseId);
-    const uniqueReleaseIds = [
-      ...new Set(storiesWithReleases.map((s) => s.releaseId)),
-    ];
-    // REPLACE WITH THIS SECTION
-    const sortedReleasesToRender = uniqueReleaseIds
-      .map((id) => window.StoryMapDataStore.getEntity("release", id))
+    const sortedReleasesToRender = releases
       .filter((r) => r && r.name)
       .sort((a, b) => a.name.localeCompare(b.name));
-
     sortedReleasesToRender.forEach((release) => {
-      html += `<div class="release-header" data-id="${release.id}">${release.name}</div>`;
-      features.forEach((feature, index) => {
-        const storiesInColumn = stories.filter(
-          (s) => s.releaseId === release.id && s.featureId === feature.id
-        );
-        html += `<div class="feature-column" style="grid-column: ${
-          index + 1
-        };" data-feature-id="${feature.id}" data-release-id="${release.id}">`;
-        storiesInColumn.forEach((story) => {
-          const prevStory = storiesInColumn[index - 1];
-          // Render the placeholder ABOVE the story
-          const beforeOrder = prevStory ? prevStory.order : story.order / 2; // Special case for the top
-          html += `<div class="add-item-placeholder vertical" data-add-type="story" data-feature-id="${feature.id}" data-release-id="${release.id}" data-before-order="${beforeOrder}" data-after-order="${story.order}">+</div>`;
-          html += `<div class="card story-card ${
-            story.type === "Tech-Req" ? "tech" : ""
-          }" data-id="${story.id}" data-type="story" data-order="${
-            story.order
-          }">
-                          <span class="card-title-text">${story.name}</span>
-                          <div class="card-icon-button">${iconSvg}</div>
-                       </div>`;
+      const releaseStories = stories.filter((s) => s.releaseId === release.id);
+      if (releaseStories.length > 0) {
+        html += `<div class="release-header" data-id="${release.id}">${release.name}</div>`;
+        features.forEach((feature, index) => {
+          html += `<div class="feature-column" style="grid-column: ${
+            index + 1
+          };" data-feature-id="${feature.id}" data-release-id="${release.id}">`;
+          const storiesInColumn = releaseStories.filter(
+            (s) => s.featureId === feature.id
+          );
+          const firstStory = storiesInColumn[0];
+          html += `<div class="add-item-placeholder vertical story-level" data-add-type="story" data-feature-id="${
+            feature.id
+          }" data-release-id="${release.id}" data-after-order="${
+            firstStory ? firstStory.order : 10
+          }">+</div>`;
+
+          storiesInColumn.forEach((story, storyIndex) => {
+            html += `<div class="card story-card ${
+              story.type === "Tech-Req" ? "tech" : ""
+            }" data-id="${story.id}" data-type="story" data-order="${
+              story.order
+            }">
+                                <span class="card-title-text">${
+                                  story.name
+                                }</span>
+                                <div class="card-icon-button">${iconSvg}</div>
+                            </div>`;
+            const nextStory = storiesInColumn[storyIndex + 1];
+            html += `<div class="add-item-placeholder vertical story-level" data-add-type="story" data-feature-id="${
+              feature.id
+            }" data-release-id="${release.id}" data-before-order="${
+              story.order
+            }" data-after-order="${
+              nextStory ? nextStory.order : story.order + 10
+            }">+</div>`;
+          });
+          html += `</div>`;
         });
-        const lastStory = storiesInColumn[storiesInColumn.length - 1];
-        html += `<div class="add-item-placeholder vertical" data-add-type="story" ... data-before-order="${
-          lastStory.order
-        }" data-after-order="${lastStory.order + 10}">+</div>`;
-      });
+      }
     });
 
+    // --- 4d. CLOSE HTML TAGS ---
     html += `</div></div>`;
     containerElement.html(html);
 
+    // --- 5. INITIALIZE INTERACTION MODULES ---
     if (window.StoryMapInlineEdit)
       window.StoryMapInlineEdit.init(containerElement[0]);
     if (window.StoryMapJourneyDragDrop)
