@@ -1,5 +1,4 @@
-// The definitive, stable, and schema-aligned data-store.js
-
+// in data-store.js
 window.StoryMapDataStore = {
   data: {
     project: null,
@@ -10,38 +9,41 @@ window.StoryMapDataStore = {
   },
 
   init(rawData) {
-    this.data.project = { id: rawData.projectId, name: rawData.projectName };
+    this.data.project = {
+      id: rawData.projectId,
+      name: rawData.projectName,
+    };
 
     this.data.journeys.clear();
-    rawData.rawJourneys.forEach((j) => {
-      const id = j.get("_id");
-      this.data.journeys.set(id, {
-        id: id,
-        name: j.get("name_text"),
+    rawData.rawJourneys.forEach((j, index) => {
+      const journeyId = j.get("_id");
+      this.data.journeys.set(journeyId, {
+        id: journeyId,
+        name: j.get("name_text") || `Journey ${index + 1}`,
         order: j.get("order_index_number"),
       });
     });
 
     this.data.features.clear();
-    rawData.rawFeatures.forEach((f) => {
-      const id = f.get("_id");
+    rawData.rawFeatures.forEach((f, index) => {
+      const featureId = f.get("_id");
       const journeyRef = f.get("journey_custom_journey");
-      this.data.features.set(id, {
-        id: id,
-        name: f.get("name_text"),
+      this.data.features.set(featureId, {
+        id: featureId,
+        name: f.get("name_text") || `Feature ${index + 1}`,
         order: f.get("order_index_number"),
         journeyId: journeyRef ? journeyRef.get("_id") : null,
       });
     });
 
     this.data.stories.clear();
-    rawData.rawStories.forEach((s) => {
-      const id = s.get("_id");
+    rawData.rawStories.forEach((s, index) => {
+      const storyId = s.get("_id");
       const featureRef = s.get("feature_custom_feature3");
       const releaseRef = s.get("release_custom_release");
-      this.data.stories.set(id, {
-        id: id,
-        name: s.get("title_text"),
+      this.data.stories.set(storyId, {
+        id: storyId,
+        name: s.get("title_text") || `Story ${index + 1}`,
         order: s.get("order_index_number"),
         type: s.get("type_option_storytype"),
         featureId: featureRef ? featureRef.get("_id") : null,
@@ -50,40 +52,51 @@ window.StoryMapDataStore = {
     });
 
     this.data.releases.clear();
-    rawData.rawReleases.forEach((r) => {
-      const id = r.get("_id");
-      this.data.releases.set(id, {
-        id: id,
-        name: r.get("name_text"),
+    rawData.rawReleases.forEach((r, index) => {
+      const releaseId = r.get("_id");
+      this.data.releases.set(releaseId, {
+        id: releaseId,
+        name: r.get("name_text") || `Release ${index + 1}`,
+        targetDate: r.get("target_date_date"),
       });
     });
   },
 
+  /**
+   * Gets a formatted object ready for Bubble workflows, based on the original pattern.
+   */
   getEntityForUpdate(entityType, entityId) {
     const entity = this.getEntity(entityType, entityId);
     if (!entity) return null;
+
+    // This object structure matches what your original workflow expects.
     const updateData = {
       entityId: entity.id,
+      // Use the clean 'name' property
       name_text: entity.name,
+      // Use the clean 'order' property
       order_index: entity.order || 0,
     };
+
+    // For stories, the name field is different in the original Bubble DB
+    if (entityType === "story") {
+      updateData.name_text = entity.name; // In our clean store, it's always 'name'
+    }
+
     return updateData;
   },
+  // Add this function to data-store.js
 
-  updateEntityName(entityType, entityId, newName) {
-    const entity = this.getEntity(entityType, entityId);
-    if (entity) {
-      entity.name = newName;
-    }
-  },
-
+  /**
+   * Updates the order of a single entity in the local store.
+   * This is for optimistic UI updates.
+   */
   updateEntityOrder(entityType, entityId, newOrder) {
     const entity = this.getEntity(entityType, entityId);
     if (entity) {
       entity.order = newOrder;
     }
   },
-
   getEntity(entityType, entityId) {
     const map = this.getEntityMap(entityType);
     return map ? map.get(entityId) : null;
