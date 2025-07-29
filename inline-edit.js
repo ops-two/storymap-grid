@@ -98,48 +98,38 @@ window.StoryMapInlineEdit = {
   saveEdit() {
     if (!this.activeEdit) return;
 
-    const { input, entityType, entityId, originalText, fieldName, card } =
-      this.activeEdit;
+    const { input, entityType, entityId, originalText, card } = this.activeEdit;
     const newValue = input.value.trim();
 
-    // Only save if value changed
     if (newValue !== originalText && newValue !== "") {
-      // Show saving state
       input.disabled = true;
       input.style.opacity = "0.6";
 
-      // Update entity in data store and get full data
-      let fullEntityData = null;
-      if (window.StoryMapDataStore) {
-        // Update the specific field in data store
-        const changes = {};
-        changes[fieldName] = newValue;
-        window.StoryMapDataStore.updateEntity(entityType, entityId, changes);
+      // --- THE CRITICAL FIX IS HERE ---
 
-        // Get full entity data for update
-        fullEntityData = window.StoryMapDataStore.getEntityForUpdate(
-          entityType,
-          entityId
-        );
-      }
+      // 1. Update the name in our local Data Store for the optimistic UI update.
+      // We will add a new, dedicated function for this.
+      window.StoryMapDataStore.updateEntityName(entityType, entityId, newValue);
 
-      // If no data store, fall back to gathered data
-      if (!fullEntityData) {
-        fullEntityData = this.gatherEntityData(card, entityType, newValue);
-      }
+      // 2. Get the full, correctly formatted data payload that our Bubble workflow expects.
+      const fullEntityData = window.StoryMapDataStore.getEntityForUpdate(
+        entityType,
+        entityId
+      );
+      // Manually update the name in the payload just before sending.
+      if (fullEntityData) fullEntityData.name_text = newValue;
 
-      // Critical log for debugging updates
       console.log(
-        `Inline edit: ${entityType} ${entityId} - ${fieldName} changed`
+        `Inline edit: Dispatching update for ${entityType} ${entityId}`
       );
 
-      // Emit update event for Bubble with all data
+      // 3. Emit the proven 'storymap:update' event.
       document.dispatchEvent(
         new CustomEvent("storymap:update", {
           detail: {
             entityType,
             entityId,
-            fieldName,
+            fieldName: this.getFieldNameForBubble(entityType), // Use the correct Bubble field name
             newValue,
             oldValue: originalText,
             allData: fullEntityData,
@@ -147,33 +137,23 @@ window.StoryMapInlineEdit = {
         })
       );
 
-      // After a brief delay, update the UI to show success
-      setTimeout(() => {
-        if (this.activeEdit && this.activeEdit.entityId === entityId) {
-          // Update the text element with new value
-          const { textElement } = this.activeEdit;
-          textElement.textContent = newValue;
-          textElement.style.display = "";
-          input.remove();
-          this.activeEdit = null;
-        }
-      }, 500);
+      // The optimistic UI update now happens because Bubble will trigger a re-render.
+      // We can simplify this part.
+      this.cancelEdit(); // Simply close the input box.
     } else {
-      // No change or empty, just cancel
       this.cancelEdit();
     }
   },
 
   cancelEdit() {
     if (!this.activeEdit) return;
-
     const { textElement, input } = this.activeEdit;
-
-    // Restore original text
     textElement.style.display = "";
     input.remove();
-
     this.activeEdit = null;
+  },
+  getFieldNameForBubble(entityType) {
+    return entityType === "story" ? "title_text" : "name_text";
   },
 
   gatherEntityData(card, entityType, newValue) {
