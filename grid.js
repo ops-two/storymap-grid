@@ -217,5 +217,7 @@ window.StoryMapRenderer = {
       window.StoryMapFeatureDragDrop.init(containerElement[0]);
     if (window.StoryMapStoryDragDrop)
       window.StoryMapStoryDragDrop.init(containerElement[0]);
+    if (window.StoryMapAddItemHandler)
+      window.StoryMapAddItemHandler.init(containerElement[0]);
   },
 };
