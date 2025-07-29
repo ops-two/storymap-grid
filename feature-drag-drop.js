@@ -1,4 +1,4 @@
-// The definitive feature-drag-drop.js, built from your proven working code.
+// The definitive, complete, and final feature-drag-drop.js file.
 
 window.StoryMapFeatureDragDrop = {
   draggedCard: null,
@@ -28,7 +28,6 @@ window.StoryMapFeatureDragDrop = {
       });
     });
 
-    // --- THE CRITICAL UPGRADE ---
     // Listen for drops on ALL potential targets: existing cards AND the new empty drop zones.
     const dropTargets = this.container.querySelectorAll(
       ".feature-card, .empty-feature-drop-zone"
@@ -53,72 +52,112 @@ window.StoryMapFeatureDragDrop = {
     });
   },
 
-  // In feature-drag-drop.js, replace ONLY the handleDrop function
-
   handleDrop: function (target) {
-    console.log(
-      "%c--- FEATURE DROP INITIATED ---",
-      "color: #ff00ff; font-weight: bold;"
-    );
-    if (this.isProcessing || !this.draggedCard) {
-      console.error("Drop cancelled: isProcessing or no draggedCard.");
-      return;
-    }
-
+    if (this.isProcessing || !this.draggedCard) return;
     try {
       this.isProcessing = true;
       const draggedId = this.draggedCard.dataset.id;
       const isDropZone = target.classList.contains("empty-feature-drop-zone");
       const targetId = isDropZone ? null : target.dataset.id;
-      console.log(
-        `STEP 1: IDENTIFY CARDS. Dragged ID: ${draggedId}, Target ID: ${
-          targetId || "EMPTY DROP ZONE"
-        }`
-      );
       if (!draggedId || draggedId === targetId) {
         this.isProcessing = false;
         return;
       }
 
-      // --- THE CRITICAL DIAGNOSTIC ---
       const allFeatures = window.StoryMapDataStore.getEntitiesArray("feature");
       const draggedFeature = allFeatures.find((f) => f.id === draggedId);
 
-      // We get the dragged feature's parent from the RELIABLE Data Store.
-      const draggedJourneyId = draggedFeature.journeyId;
-
-      // We get the target's parent from the HTML ATTRIBUTE, which is the likely point of failure.
-      const targetJourneyId = target.dataset.journeyId;
-
-      console.log(
-        `STEP 2: IDENTIFY PARENTS. Dragged Journey ID (from Data Store): "${draggedJourneyId}", Target Journey ID (from HTML attribute): "${targetJourneyId}"`
-      );
-
-      // This is the check that is likely failing.
-      if (draggedJourneyId === targetJourneyId) {
-        console.log(
-          "%cVERDICT: SIMPLE REORDER. (This block is likely not running)",
-          "color: green;"
-        );
+      // --- THE DEFINITIVE FIX FOR FINDING THE TARGET JOURNEY ---
+      let targetJourneyId;
+      if (isDropZone) {
+        // If dropping on an empty zone, the journey ID is directly on the target.
+        targetJourneyId = target.dataset.journeyId;
       } else {
-        console.error(
-          "%cVERDICT: RE-PARENTING. (The code incorrectly entered this block because the Target Journey ID was wrong)",
-          "color: red;"
-        );
+        // If dropping on a card, find the card in the Data Store to get its journey ID.
+        const targetFeature = allFeatures.find((f) => f.id === targetId);
+        targetJourneyId = targetFeature ? targetFeature.journeyId : null;
+      }
+      if (!targetJourneyId) {
+        console.error("Could not determine target journey ID.");
+        this.isProcessing = false;
+        return;
       }
 
-      // For safety, we will stop the code here. We just want the logs.
-      console.log("--- DEBUGGING COMPLETE. NO EVENT FIRED. ---");
-    } catch (err) {
-      console.error("CRITICAL ERROR in handleDrop:", err);
-    } finally {
-      this.isProcessing = false;
-      this.draggedCard = null;
-      // Re-render to put the card back for the next test.
+      let newOrderValue;
+      let payload;
+
+      if (draggedFeature.journeyId === targetJourneyId) {
+        // --- CASE 1: SIMPLE REORDERING (This is your proven, working logic) ---
+        const targetFeature = allFeatures.find((f) => f.id === targetId);
+        const sortedList = allFeatures.filter(
+          (f) => f.journeyId === draggedFeature.journeyId
+        );
+        const draggedIndex = sortedList.findIndex(
+          (item) => item.id === draggedId
+        );
+        const targetIndex = sortedList.findIndex(
+          (item) => item.id === targetId
+        );
+        if (draggedIndex > targetIndex) {
+          if (targetIndex === 0) {
+            newOrderValue = targetFeature.order / 2;
+          } else {
+            const prevItem = sortedList[targetIndex - 1];
+            newOrderValue = (prevItem.order + targetFeature.order) / 2;
+          }
+        } else {
+          const nextItem = sortedList[targetIndex + 1];
+          if (nextItem) {
+            newOrderValue = (targetFeature.order + nextItem.order) / 2;
+          } else {
+            newOrderValue = targetFeature.order + 10;
+          }
+        }
+        payload = {
+          entityType: "feature",
+          entityId: draggedId,
+          newValue: newOrderValue,
+        };
+      } else {
+        // --- CASE 2: RE-PARENTING (including to an empty journey) ---
+        const featuresInNewJourney = allFeatures.filter(
+          (f) => f.journeyId === targetJourneyId
+        );
+        const lastFeature =
+          featuresInNewJourney[featuresInNewJourney.length - 1];
+        newOrderValue = lastFeature ? lastFeature.order + 10 : 10;
+        payload = {
+          entityType: "feature",
+          entityId: draggedId,
+          newValue: newOrderValue,
+          newParentId: targetJourneyId,
+        };
+      }
+
+      // --- Your proven Optimistic UI Update and Event Dispatch logic ---
+      window.StoryMapDataStore.updateEntityOrder(
+        "feature",
+        draggedId,
+        newOrderValue
+      );
+      if (payload.newParentId) {
+        const feature = window.StoryMapDataStore.getEntity(
+          "feature",
+          draggedId
+        );
+        if (feature) feature.journeyId = payload.newParentId;
+      }
       const mainCanvas = $(this.container).closest('[id^="bubble-r-box"]');
       if (window.StoryMapRenderer && mainCanvas.length) {
         window.StoryMapRenderer.render(mainCanvas);
       }
+
+      document.dispatchEvent(
+        new CustomEvent("storymap:reorder", { detail: payload })
+      );
+    } finally {
+      this.isProcessing = false;
+      this.draggedCard = null;
     }
   },
 };
