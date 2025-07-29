@@ -9,52 +9,52 @@ window.StoryMapRenderer = {
     const stories = window.StoryMapDataStore.getEntitiesArray("story");
     const releases = window.StoryMapDataStore.getEntitiesArray("release");
 
-    // --- 2. PREPARE DATA STRUCTURES ---
-    const displayItems = [];
-    journeys.forEach((journey) => {
-      const journeyFeatures = allFeatures.filter(
-        (f) => f.journeyId === journey.id
-      );
-      if (journeyFeatures.length > 0) {
-        displayItems.push(...journeyFeatures);
-      } else {
-        displayItems.push({ isPlaceholder: true, journey: journey });
-      }
-    });
-    const unassignedFeatures = allFeatures.filter((f) => !f.journeyId);
-    displayItems.push(...unassignedFeatures);
-
-    // --- 3. GRID CALCULATION & SVG DEFINITION ---
-    const totalColumns = displayItems.length > 0 ? displayItems.length : 1;
-    document.documentElement.style.setProperty("--total-columns", totalColumns);
-    const iconSvg = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 2V8H20" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 13H8" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 17H8" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 9H8" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-
-    // --- 4. HTML GENERATION ---
     // --- 4. HTML GENERATION ---
     const projectTitle = project ? project.name : "Unnamed Project";
     let html = `
-    <div class="story-map-container">
-        <h2>${projectTitle}</h2>
-`;
+        <div class="story-map-container">
+            <h2>${projectTitle}</h2>
+    `;
 
     // --- THIS IS THE CRITICAL UPGRADE ---
-    // If there are no journeys, render a special placeholder.
     if (journeys.length === 0) {
+      // If there are no journeys, render a special placeholder.
       html += `
-    <div class="empty-project-placeholder">
-        <div class="add-item-button-static large" data-add-type="journey" data-before-order="0" data-after-order="20">+ Add Your First Journey</div>
-    </div>
-  `;
+        <div class="empty-project-placeholder">
+            <div class="add-item-button-static large" data-add-type="journey" data-before-order="0" data-after-order="20">+ Add Your First Journey</div>
+        </div>
+      `;
     } else {
       // If journeys DO exist, run all of our proven, existing rendering logic.
-      html += `
-    <div class="story-map-info">
-        <small>Journeys: ${journeys.length} | Features: ${allFeatures.length} | Stories: ${stories.length} | Releases: ${releases.length}</small>
-    </div>
-    <div class="story-map-grid-container">
-  `;
+      // --- (The following is your complete, working code, preserved perfectly) ---
 
-      // --- 4a. RENDER JOURNEYS ---
+      const displayItems = [];
+      journeys.forEach((journey) => {
+        const journeyFeatures = allFeatures.filter(
+          (f) => f.journeyId === journey.id
+        );
+        if (journeyFeatures.length > 0) {
+          displayItems.push(...journeyFeatures);
+        } else {
+          displayItems.push({ isPlaceholder: true, journey: journey });
+        }
+      });
+      const unassignedFeatures = allFeatures.filter((f) => !f.journeyId);
+      displayItems.push(...unassignedFeatures);
+
+      const totalColumns = displayItems.length > 0 ? displayItems.length : 1;
+      document.documentElement.style.setProperty(
+        "--total-columns",
+        totalColumns
+      );
+      const iconSvg = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 2V8H20" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 13H8" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 17H8" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 9H8" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+      html += `
+          <div class="story-map-info">
+              <small>Journeys: ${journeys.length} | Features: ${allFeatures.length} | Stories: ${stories.length} | Releases: ${releases.length}</small>
+          </div>
+          <div class="story-map-grid-container">
+      `;
       journeys.forEach((journey, index) => {
         const journeyFeatures = allFeatures.filter(
           (f) => f.journeyId === journey.id
@@ -82,26 +82,25 @@ window.StoryMapRenderer = {
           ? nextJourney.order
           : (journey.order || 0) + 20;
         html += `<div class="card journey-card" data-id="${journey.id}" data-type="journey" data-order="${journey.order}" style="grid-column: ${startCol} / span ${span};">
-                    <div class="add-item-button before" data-add-type="journey" data-before-order="${beforeOrder}" data-after-order="${journey.order}">+</div>
-                    <span class="card-title-text">${journey.name}</span>
-                    <div class="card-icon-button">${iconSvg}</div>
-                    <div class="add-item-button after" data-add-type="journey" data-before-order="${journey.order}" data-after-order="${afterOrder}">+</div>
-                 </div>`;
+                      <div class="add-item-button before" data-add-type="journey" data-before-order="${beforeOrder}" data-after-order="${journey.order}">+</div>
+                      <span class="card-title-text">${journey.name}</span>
+                      <div class="card-icon-button">${iconSvg}</div>
+                      <div class="add-item-button after" data-add-type="journey" data-before-order="${journey.order}" data-after-order="${afterOrder}">+</div>
+                   </div>`;
       });
-
       displayItems.forEach((item, index) => {
         if (item.isPlaceholder) {
           html += `<div class="feature-column empty empty-feature-placeholder" style="grid-column: ${
             index + 1
           };">
-                    <div class="empty-feature-drop-zone" data-journey-id="${
-                      item.journey.id
-                    }">
-                        <div class="add-item-button-static" data-add-type="feature" data-journey-id="${
-                          item.journey.id
-                        }" data-before-order="0" data-after-order="20">+ Add Feature</div>
-                    </div>
-                 </div>`;
+                      <div class="empty-feature-drop-zone" data-journey-id="${
+                        item.journey.id
+                      }">
+                          <div class="add-item-button-static" data-add-type="feature" data-journey-id="${
+                            item.journey.id
+                          }" data-before-order="0" data-after-order="20">+ Add Feature</div>
+                      </div>
+                   </div>`;
         } else {
           const feature = item;
           const featuresInSameJourney = allFeatures.filter(
@@ -129,23 +128,21 @@ window.StoryMapRenderer = {
           }" data-type="feature" data-order="${
             feature.order
           }" style="grid-column: ${index + 1};">
-                    <div class="add-item-button before" data-add-type="feature" data-journey-id="${
-                      feature.journeyId
-                    }" data-before-order="${beforeOrder}" data-after-order="${
+                      <div class="add-item-button before" data-add-type="feature" data-journey-id="${
+                        feature.journeyId
+                      }" data-before-order="${beforeOrder}" data-after-order="${
             feature.order
           }">+</div>
-                    <span class="card-title-text">${feature.name}</span>
-                    <div class="card-icon-button">${iconSvg}</div>
-                    <div class="add-item-button after" data-add-type="feature" data-journey-id="${
-                      feature.journeyId
-                    }" data-before-order="${
+                      <span class="card-title-text">${feature.name}</span>
+                      <div class="card-icon-button">${iconSvg}</div>
+                      <div class="add-item-button after" data-add-type="feature" data-journey-id="${
+                        feature.journeyId
+                      }" data-before-order="${
             feature.order
           }" data-after-order="${afterOrder}">+</div>
-                 </div>`;
+                   </div>`;
         }
       });
-
-      // --- 4c. RENDER STORIES AND RELEASES ---
       const sortedReleasesToRender = releases
         .filter((r) => r && r.name)
         .sort((a, b) => a.name.localeCompare(b.name));
@@ -185,25 +182,24 @@ window.StoryMapRenderer = {
                 }" data-id="${story.id}" data-type="story" data-order="${
                   story.order
                 }">
-                        <div class="add-item-button above" data-add-type="story" data-feature-id="${
-                          feature.id
-                        }" data-release-id="unassigned" data-before-order="${beforeOrder}" data-after-order="${
+                          <div class="add-item-button above" data-add-type="story" data-feature-id="${
+                            feature.id
+                          }" data-release-id="unassigned" data-before-order="${beforeOrder}" data-after-order="${
                   story.order
                 }">+</div>
-                        <span class="card-title-text">${story.name}</span>
-                        <div class="card-icon-button">${iconSvg}</div>
-                        <div class="add-item-button below" data-add-type="story" data-feature-id="${
-                          feature.id
-                        }" data-release-id="unassigned" data-before-order="${
+                          <span class="card-title-text">${story.name}</span>
+                          <div class="card-icon-button">${iconSvg}</div>
+                          <div class="add-item-button below" data-add-type="story" data-feature-id="${
+                            feature.id
+                          }" data-release-id="unassigned" data-before-order="${
                   story.order
                 }" data-after-order="${afterOrder}">+</div>
-                     </div>`;
+                       </div>`;
               });
             } else {
-              // THE CRITICAL FIX IS HERE
               html += `<div class="empty-story-placeholder" data-feature-id="${feature.id}" data-release-id="unassigned">
-                        <div class="add-item-button-static" data-add-type="story" data-feature-id="${feature.id}" data-release-id="unassigned" data-before-order="0" data-after-order="20">+ Add Story</div>
-                     </div>`;
+                          <div class="add-item-button-static" data-add-type="story" data-feature-id="${feature.id}" data-release-id="unassigned" data-before-order="0" data-after-order="20">+ Add Story</div>
+                       </div>`;
             }
             html += `<div class="empty-column-drop-zone" data-feature-id="${feature.id}" data-release-id="unassigned"><span>Drop Story Here</span></div>`;
           }
@@ -246,31 +242,28 @@ window.StoryMapRenderer = {
                   }" data-id="${story.id}" data-type="story" data-order="${
                     story.order
                   }">
-                                    <div class="add-item-button above" data-add-type="story" data-feature-id="${
-                                      feature.id
-                                    }" data-release-id="${
+                              <div class="add-item-button above" data-add-type="story" data-feature-id="${
+                                feature.id
+                              }" data-release-id="${
                     release.id
                   }" data-before-order="${beforeOrder}" data-after-order="${
                     story.order
                   }">+</div>
-                                    <span class="card-title-text">${
-                                      story.name
-                                    }</span>
-                                    <div class="card-icon-button">${iconSvg}</div>
-                                    <div class="add-item-button below" data-add-type="story" data-feature-id="${
-                                      feature.id
-                                    }" data-release-id="${
+                              <span class="card-title-text">${story.name}</span>
+                              <div class="card-icon-button">${iconSvg}</div>
+                              <div class="add-item-button below" data-add-type="story" data-feature-id="${
+                                feature.id
+                              }" data-release-id="${
                     release.id
                   }" data-before-order="${
                     story.order
                   }" data-after-order="${afterOrder}">+</div>
-                                 </div>`;
+                           </div>`;
                 });
               } else {
-                // THE CRITICAL FIX IS HERE
                 html += `<div class="empty-story-placeholder" data-feature-id="${feature.id}" data-release-id="${release.id}">
-                            <div class="add-item-button-static" data-add-type="story" data-feature-id="${feature.id}" data-release-id="${release.id}" data-before-order="0" data-after-order="20">+ Add Story</div>
-                         </div>`;
+                              <div class="add-item-button-static" data-add-type="story" data-feature-id="${feature.id}" data-release-id="${release.id}" data-before-order="0" data-after-order="20">+ Add Story</div>
+                           </div>`;
               }
               html += `<div class="empty-column-drop-zone" data-feature-id="${feature.id}" data-release-id="${release.id}"><span>Drop Story Here</span></div>`;
             }
@@ -278,22 +271,22 @@ window.StoryMapRenderer = {
           });
         }
       });
+      html += `</div>`; // Closing grid-container
+    } // --- This is the new closing brace for the 'else' block ---
 
-      // --- 4d. CLOSE HTML TAGS ---
-      html += `</div></div>`;
-      containerElement.html(html);
+    html += `</div>`; // Closing story-map-container
+    containerElement.html(html);
 
-      // --- 5. INITIALIZE INTERACTION MODULES ---
-      if (window.StoryMapInlineEdit)
-        window.StoryMapInlineEdit.init(containerElement[0]);
-      if (window.StoryMapJourneyDragDrop)
-        window.StoryMapJourneyDragDrop.init(containerElement[0]);
-      if (window.StoryMapFeatureDragDrop)
-        window.StoryMapFeatureDragDrop.init(containerElement[0]);
-      if (window.StoryMapStoryDragDrop)
-        window.StoryMapStoryDragDrop.init(containerElement[0]);
-      if (window.StoryMapAddItemHandler)
-        window.StoryMapAddItemHandler.init(containerElement[0]);
-    }
+    // --- 5. INITIALIZE INTERACTION MODULES ---
+    if (window.StoryMapInlineEdit)
+      window.StoryMapInlineEdit.init(containerElement[0]);
+    if (window.StoryMapJourneyDragDrop)
+      window.StoryMapJourneyDragDrop.init(containerElement[0]);
+    if (window.StoryMapFeatureDragDrop)
+      window.StoryMapFeatureDragDrop.init(containerElement[0]);
+    if (window.StoryMapStoryDragDrop)
+      window.StoryMapStoryDragDrop.init(containerElement[0]);
+    if (window.StoryMapAddItemHandler)
+      window.StoryMapAddItemHandler.init(containerElement[0]);
   },
 };
