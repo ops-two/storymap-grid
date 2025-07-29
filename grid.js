@@ -81,15 +81,22 @@ window.StoryMapRenderer = {
     });
 
     features.forEach((feature, index) => {
-      // THE GUARANTEE: First, get only the features that are siblings under the same journey.
+      console.log(
+        `%c--- DEBUGGING FEATURE ADD BUTTONS for Feature: ${feature.name} ---`,
+        "color: #00aaff;"
+      );
+
+      // THE LOGIC WE ARE TESTING
       const featuresInSameJourney = allFeatures.filter(
         (f) => f.journeyId === feature.journeyId
       );
       const ownIndexInJourney = featuresInSameJourney.findIndex(
         (f) => f.id === feature.id
       );
+      console.log(
+        `This feature is at index ${ownIndexInJourney} within its own journey.`
+      );
 
-      // Now, find the true previous and next siblings *within that group*.
       const prevFeature =
         ownIndexInJourney > 0
           ? featuresInSameJourney[ownIndexInJourney - 1]
@@ -98,21 +105,37 @@ window.StoryMapRenderer = {
         ownIndexInJourney < featuresInSameJourney.length - 1
           ? featuresInSameJourney[ownIndexInJourney + 1]
           : null;
+      console.log("Found Previous Sibling:", prevFeature);
+      console.log("Found Next Sibling:", nextFeature);
 
-      // This logic is now mathematically guaranteed to be correct.
       const beforeOrder = prevFeature
         ? prevFeature.order
         : (feature.order || 0) - 20;
       const afterOrder = nextFeature
         ? nextFeature.order
         : (feature.order || 0) + 20;
+      console.log(
+        `Final calculated beforeOrder: ${beforeOrder}, afterOrder: ${afterOrder}`
+      );
 
-      html += `<div class="card feature-card" data-id="${feature.id}" ...>
-                  <div class="add-item-button before" data-add-type="feature" data-journey-id="${feature.journeyId}" data-before-order="${beforeOrder}" data-after-order="${feature.order}">+</div>
-                  <span class="card-title-text">${feature.name}</span>
-                  <div class="card-icon-button">${iconSvg}</div>
-                  <div class="add-item-button after" data-add-type="feature" data-journey-id="${feature.journeyId}" data-before-order="${feature.order}" data-after-order="${afterOrder}">+</div>
-               </div>`;
+      html += `<div class="card feature-card" data-id="${
+        feature.id
+      }" data-type="feature" data-order="${
+        feature.order
+      }" style="grid-column: ${index + 1};">
+                <div class="add-item-button before" data-add-type="feature" data-journey-id="${
+                  feature.journeyId
+                }" data-before-order="${beforeOrder}" data-after-order="${
+        feature.order
+      }">+</div>
+                <span class="card-title-text">${feature.name}</span>
+                <div class="card-icon-button">${iconSvg}</div>
+                <div class="add-item-button after" data-add-type="feature" data-journey-id="${
+                  feature.journeyId
+                }" data-before-order="${
+        feature.order
+      }" data-after-order="${afterOrder}">+</div>
+             </div>`;
     });
 
     // --- 4c. RENDER STORIES AND RELEASES (with Corrected Attributes) ---

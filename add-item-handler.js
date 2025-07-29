@@ -15,38 +15,54 @@ window.StoryMapAddItemHandler = {
     });
   },
 
+  // In add-item-handler.js, replace ONLY the handleAdd function
+
   handleAdd(button) {
-    // 1. Read the recipe from the button's data attributes.
+    console.log(
+      "%c--- ADD ITEM HANDLER INITIATED ---",
+      "color: #ff00ff; font-weight: bold;"
+    );
+    console.log("STEP 1: The button element that was clicked is:", button);
+    console.log(
+      "STEP 2: Inspecting the full dataset of the clicked button:",
+      button.dataset
+    );
+
     const addType = button.dataset.addType;
     const journeyId = button.dataset.journeyId;
-    const featureId = button.dataset.featureId;
-    const releaseId = button.dataset.releaseId;
 
-    // --- THIS IS THE CRITICAL FIX ---
-    // We now ONLY read the original attributes, which are guaranteed to be numbers by the new renderer.
-    const beforeOrder = parseFloat(button.dataset.beforeOrder);
-    const afterOrder = parseFloat(button.dataset.afterOrder);
+    // --- WE WILL LOG THE RAW VALUES BEFORE PARSING ---
+    const rawBeforeOrder = button.dataset.beforeOrder;
+    const rawAfterOrder = button.dataset.afterOrder;
+    console.log(
+      `STEP 3: Raw attribute values. beforeOrder: "${rawBeforeOrder}", afterOrder: "${rawAfterOrder}"`
+    );
 
-    // 2. This calculation will now NEVER produce NaN.
+    const beforeOrder = parseFloat(rawBeforeOrder);
+    const afterOrder = parseFloat(rawAfterOrder);
+    console.log(
+      `STEP 4: Values after parseFloat. beforeOrder: ${beforeOrder}, afterOrder: ${afterOrder}`
+    );
+
     const newOrderValue = (beforeOrder + afterOrder) / 2;
+    console.log(
+      `%cSTEP 5: FINAL CALCULATED newOrderValue = ${newOrderValue}`,
+      "color: green; font-weight: bold;"
+    );
 
-    // Failsafe. Should never run now, but is good practice.
+    // Failsafe from your working code.
     if (isNaN(newOrderValue)) {
       console.error("Calculation resulted in NaN. Aborting.", button.dataset);
       return;
     }
 
-    // 3. Construct the precise payload for Bubble.
     const payload = {
       addType: addType,
       newOrderValue: newOrderValue,
       ...(journeyId && { parentJourneyId: journeyId }),
-      ...(featureId && { parentFeatureId: featureId }),
-      ...(releaseId && { parentReleaseId: releaseId }),
     };
 
-    // 4. Dispatch the event for the Event Bridge to catch.
-    console.log("Dispatching add request:", payload);
+    console.log("--- DEBUGGING COMPLETE. FIRING EVENT TO BUBBLE. ---");
     document.dispatchEvent(
       new CustomEvent("storymap:add", { detail: payload })
     );
