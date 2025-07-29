@@ -1,4 +1,4 @@
-// The definitive, complete, and final feature-drag-drop.js file.
+// The definitive feature-drag-drop.js, built from your proven working code.
 
 window.StoryMapFeatureDragDrop = {
   draggedCard: null,
@@ -10,7 +10,7 @@ window.StoryMapFeatureDragDrop = {
   },
 
   setupFeatureDragging: function () {
-    // Make only the real feature cards draggable. This is your proven logic.
+    // Make only the real feature cards draggable.
     const featureCards = this.container.querySelectorAll(".feature-card");
     featureCards.forEach((card) => {
       if (card.dataset.dragSetup === "true") return;
@@ -67,18 +67,14 @@ window.StoryMapFeatureDragDrop = {
       const allFeatures = window.StoryMapDataStore.getEntitiesArray("feature");
       const draggedFeature = allFeatures.find((f) => f.id === draggedId);
 
-      // --- THE DEFINITIVE FIX FOR FINDING THE TARGET JOURNEY ---
       let targetJourneyId;
       if (isDropZone) {
-        // If dropping on an empty zone, the journey ID is directly on the target.
         targetJourneyId = target.dataset.journeyId;
       } else {
-        // If dropping on a card, find the card in the Data Store to get its journey ID.
         const targetFeature = allFeatures.find((f) => f.id === targetId);
         targetJourneyId = targetFeature ? targetFeature.journeyId : null;
       }
       if (!targetJourneyId) {
-        console.error("Could not determine target journey ID.");
         this.isProcessing = false;
         return;
       }
@@ -98,6 +94,7 @@ window.StoryMapFeatureDragDrop = {
         const targetIndex = sortedList.findIndex(
           (item) => item.id === targetId
         );
+
         if (draggedIndex > targetIndex) {
           if (targetIndex === 0) {
             newOrderValue = targetFeature.order / 2;
@@ -113,10 +110,19 @@ window.StoryMapFeatureDragDrop = {
             newOrderValue = targetFeature.order + 10;
           }
         }
+
+        const fullFeatureData = window.StoryMapDataStore.getEntityForUpdate(
+          "feature",
+          draggedId
+        );
+        if (fullFeatureData) fullFeatureData.order_index = newOrderValue;
         payload = {
           entityType: "feature",
           entityId: draggedId,
+          fieldName: "order_index",
           newValue: newOrderValue,
+          oldValue: draggedFeature.order,
+          allData: fullFeatureData,
         };
       } else {
         // --- CASE 2: RE-PARENTING (including to an empty journey) ---
@@ -126,10 +132,19 @@ window.StoryMapFeatureDragDrop = {
         const lastFeature =
           featuresInNewJourney[featuresInNewJourney.length - 1];
         newOrderValue = lastFeature ? lastFeature.order + 10 : 10;
+
+        const fullFeatureData = window.StoryMapDataStore.getEntityForUpdate(
+          "feature",
+          draggedId
+        );
+        if (fullFeatureData) fullFeatureData.order_index = newOrderValue;
         payload = {
           entityType: "feature",
           entityId: draggedId,
+          fieldName: "order_index_and_journey",
           newValue: newOrderValue,
+          oldValue: draggedFeature.order,
+          allData: fullFeatureData,
           newParentId: targetJourneyId,
         };
       }
@@ -152,8 +167,9 @@ window.StoryMapFeatureDragDrop = {
         window.StoryMapRenderer.render(mainCanvas);
       }
 
+      // THIS IS THE CRITICAL FIX: We are now dispatching the correct event.
       document.dispatchEvent(
-        new CustomEvent("storymap:reorder", { detail: payload })
+        new CustomEvent("storymap:update", { detail: payload })
       );
     } finally {
       this.isProcessing = false;
