@@ -109,7 +109,12 @@ window.StoryMapDataStore = {
       (a, b) => (a.order || 0) - (b.order || 0)
     );
   },
-
+  updateEntityName(entityType, entityId, newName) {
+    const entity = this.getEntity(entityType, entityId);
+    if (entity) {
+      entity.name = newName;
+    }
+  },
   getEntityMap(entityType) {
     switch (entityType) {
       case "journey":
