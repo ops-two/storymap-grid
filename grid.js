@@ -153,40 +153,50 @@ window.StoryMapRenderer = {
           const storiesInColumn = unreleasedStories.filter(
             (s) => s.featureId === feature.id
           );
-          storiesInColumn.forEach((story, storyIndex) => {
-            const prevStory =
-              storyIndex > 0 ? storiesInColumn[storyIndex - 1] : null;
-            const nextStory =
-              storyIndex < storiesInColumn.length - 1
-                ? storiesInColumn[storyIndex + 1]
-                : null;
-            const beforeOrder = prevStory
-              ? prevStory.order
-              : (story.order || 0) - 20;
-            const afterOrder = nextStory
-              ? nextStory.order
-              : (story.order || 0) + 20;
-            html += `<div class="card story-card ${
-              story.type === "Tech-Req" ? "tech" : ""
-            }" data-id="${story.id}" data-type="story" data-order="${
-              story.order
-            }">
-                                <div class="add-item-button above" data-add-type="story" data-feature-id="${
-                                  feature.id
-                                }" data-release-id="unassigned" data-before-order="${beforeOrder}" data-after-order="${
-              story.order
-            }">+</div>
-                                <span class="card-title-text">${
-                                  story.name
-                                }</span>
-                                <div class="card-icon-button">${iconSvg}</div>
-                                <div class="add-item-button below" data-add-type="story" data-feature-id="${
-                                  feature.id
-                                }" data-release-id="unassigned" data-before-order="${
-              story.order
-            }" data-after-order="${afterOrder}">+</div>
-                             </div>`;
-          });
+
+          // --- THIS IS THE CRITICAL UPGRADE ---
+          if (storiesInColumn.length > 0) {
+            // If stories exist, render them using the proven logic.
+            storiesInColumn.forEach((story, storyIndex) => {
+              const prevStory =
+                storyIndex > 0 ? storiesInColumn[storyIndex - 1] : null;
+              const nextStory =
+                storyIndex < storiesInColumn.length - 1
+                  ? storiesInColumn[storyIndex + 1]
+                  : null;
+              const beforeOrder = prevStory
+                ? prevStory.order
+                : (story.order || 0) - 20;
+              const afterOrder = nextStory
+                ? nextStory.order
+                : (story.order || 0) + 20;
+              html += `<div class="card story-card ${
+                story.type === "Tech-Req" ? "tech" : ""
+              }" data-id="${story.id}" data-type="story" data-order="${
+                story.order
+              }">
+                        <div class="add-item-button above" data-add-type="story" data-feature-id="${
+                          feature.id
+                        }" data-release-id="unassigned" data-before-order="${beforeOrder}" data-after-order="${
+                story.order
+              }">+</div>
+                        <span class="card-title-text">${story.name}</span>
+                        <div class="card-icon-button">${iconSvg}</div>
+                        <div class="add-item-button below" data-add-type="story" data-feature-id="${
+                          feature.id
+                        }" data-release-id="unassigned" data-before-order="${
+                story.order
+              }" data-after-order="${afterOrder}">+</div>
+                     </div>`;
+            });
+          } else {
+            // If the column is empty, render the new "+ Add Story" button.
+            html += `<div class="empty-story-placeholder">
+                    <div class="add-item-button-static" data-add-type="story" data-feature-id="${feature.id}" data-release-id="unassigned" data-before-order="0" data-after-order="20">+ Add Story</div>
+                 </div>`;
+          }
+
+          // The "Drop Story Here" zone is now only needed if stories already exist.
           html += `<div class="empty-column-drop-zone" data-feature-id="${feature.id}" data-release-id="unassigned"><span>Drop Story Here</span></div>`;
         }
         html += `</div>`;
@@ -207,44 +217,49 @@ window.StoryMapRenderer = {
             const storiesInColumn = releaseStories.filter(
               (s) => s.featureId === feature.id
             );
-            storiesInColumn.forEach((story, storyIndex) => {
-              const prevStory =
-                storyIndex > 0 ? storiesInColumn[storyIndex - 1] : null;
-              const nextStory =
-                storyIndex < storiesInColumn.length - 1
-                  ? storiesInColumn[storyIndex + 1]
-                  : null;
-              const beforeOrder = prevStory
-                ? prevStory.order
-                : (story.order || 0) - 20;
-              const afterOrder = nextStory
-                ? nextStory.order
-                : (story.order || 0) + 20;
-              html += `<div class="card story-card ${
-                story.type === "Tech-Req" ? "tech" : ""
-              }" data-id="${story.id}" data-type="story" data-order="${
-                story.order
-              }">
-                                    <div class="add-item-button above" data-add-type="story" data-feature-id="${
-                                      feature.id
-                                    }" data-release-id="${
-                release.id
-              }" data-before-order="${beforeOrder}" data-after-order="${
-                story.order
-              }">+</div>
-                                    <span class="card-title-text">${
-                                      story.name
-                                    }</span>
-                                    <div class="card-icon-button">${iconSvg}</div>
-                                    <div class="add-item-button below" data-add-type="story" data-feature-id="${
-                                      feature.id
-                                    }" data-release-id="${
-                release.id
-              }" data-before-order="${
-                story.order
-              }" data-after-order="${afterOrder}">+</div>
-                                 </div>`;
-            });
+
+            // --- THIS IS THE CRITICAL UPGRADE (Identical to the one above) ---
+            if (storiesInColumn.length > 0) {
+              storiesInColumn.forEach((story, storyIndex) => {
+                const prevStory =
+                  storyIndex > 0 ? storiesInColumn[storyIndex - 1] : null;
+                const nextStory =
+                  storyIndex < storiesInColumn.length - 1
+                    ? storiesInColumn[storyIndex + 1]
+                    : null;
+                const beforeOrder = prevStory
+                  ? prevStory.order
+                  : (story.order || 0) - 20;
+                const afterOrder = nextStory
+                  ? nextStory.order
+                  : (story.order || 0) + 20;
+                html += `<div class="card story-card ${
+                  story.type === "Tech-Req" ? "tech" : ""
+                }" data-id="${story.id}" data-type="story" data-order="${
+                  story.order
+                }">
+                        <div class="add-item-button above" data-add-type="story" data-feature-id="${
+                          feature.id
+                        }" data-release-id="${
+                  release.id
+                }" data-before-order="${beforeOrder}" data-after-order="${
+                  story.order
+                }">+</div>
+                        <span class="card-title-text">${story.name}</span>
+                        <div class="card-icon-button">${iconSvg}</div>
+                        <div class="add-item-button below" data-add-type="story" data-feature-id="${
+                          feature.id
+                        }" data-release-id="${release.id}" data-before-order="${
+                  story.order
+                }" data-after-order="${afterOrder}">+</div>
+                     </div>`;
+              });
+            } else {
+              html += `<div class="empty-story-placeholder">
+                    <div class="add-item-button-static" data-add-type="story" data-feature-id="${feature.id}" data-release-id="${release.id}" data-before-order="0" data-after-order="20">+ Add Story</div>
+                 </div>`;
+            }
+
             html += `<div class="empty-column-drop-zone" data-feature-id="${feature.id}" data-release-id="${release.id}"><span>Drop Story Here</span></div>`;
           }
           html += `</div>`;

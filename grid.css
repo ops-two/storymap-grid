@@ -338,3 +338,20 @@
   border-color: #6f42c1; /* Purple */
   background-color: rgba(111, 66, 193, 0.1);
 }
+
+/* --- DEFINITIVE STYLES FOR EMPTY STORY PLACEHOLDER --- */
+
+.empty-story-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--story-height); /* Ensure it has a minimum height */
+  border-radius: 6px;
+  border: 2px dashed #ccc; /* Dotted border */
+  box-sizing: border-box;
+  padding: 8px;
+  margin-bottom: var(--vertical-gap); /* Add spacing to match other stories */
+}
+
+/* The static "+ Add Story" button will reuse the style we already have for
+   .add-item-button-static, so no new styles are needed for the button itself. */
