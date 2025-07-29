@@ -217,7 +217,13 @@ window.StoryMapRenderer = {
       window.StoryMapFeatureDragDrop.init(containerElement[0]);
     if (window.StoryMapStoryDragDrop)
       window.StoryMapStoryDragDrop.init(containerElement[0]);
-    if (window.StoryMapAddItemHandler)
+    if (window.StoryMapAddItemHandler) {
+      console.log("AddItemHandler FOUND. Initializing...");
       window.StoryMapAddItemHandler.init(containerElement[0]);
+    } else {
+      console.error(
+        "CRITICAL FAILURE: window.StoryMapAddItemHandler was NOT FOUND. The script may not be loading."
+      );
+    }
   },
 };

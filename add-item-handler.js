@@ -3,15 +3,27 @@
 window.StoryMapAddItemHandler = {
   isInitialized: false,
 
+  // In add-item-handler.js, replace ONLY the init function
+
   init(container) {
     if (this.isInitialized) return;
     this.isInitialized = true;
 
-    console.log("Add Item Handler Initializing...");
+    // This log PROVES that this function is being called.
+    console.log(
+      "%c--- AddItemHandler init() EXECUTED ---",
+      "color: green; font-weight: bold;"
+    );
+    // This log PROVES we received the correct container.
+    console.log("AddItemHandler received container element:", container);
 
     container.addEventListener("click", (e) => {
+      // This log PROVES the listener is attached and hearing clicks.
+      console.log("Container clicked. Checking if target is an add button...");
+
       if (!e.target.classList.contains("add-item-button")) return;
 
+      console.log("%cAdd Item Button Clicked!", "color: green;");
       const button = e.target;
       e.stopPropagation();
 
