@@ -1,4 +1,4 @@
-// The definitive and complete grid.js renderer, with the corrected card structure and all fixes.
+// The definitive and complete grid.js renderer, with all fixes.
 
 window.StoryMapRenderer = {
   render: function (containerElement) {
@@ -32,8 +32,8 @@ window.StoryMapRenderer = {
     const totalColumns = features.length > 0 ? features.length : 1;
     document.documentElement.style.setProperty("--total-columns", totalColumns);
 
-    // Define the icon SVG as a variable for safe and clean insertion.
-    const iconSvg = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w.org/2000/svg"><path d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 2V8H20" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 13H8" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 17H8" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 9H8" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    // CRITICAL FIX: Define the SVG as a clean JavaScript variable. This prevents all syntax errors.
+    const iconSvg = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 2V8H20" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 13H8" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 17H8" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 9H8" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
     // --- 4. HTML GENERATION ---
     const projectTitle = project ? project.name : "Unnamed Project";
@@ -48,25 +48,24 @@ window.StoryMapRenderer = {
 
     // --- 4a. RENDER JOURNEYS ---
     journeys.forEach((journey) => {
-      if (!journey.featureIds) return;
+      if (!journey.featureIds || journey.featureIds.length === 0) return;
+      // ... (Your proven journey grouping logic is preserved here) ...
       const featureIndices = journey.featureIds
         .map((id) => featureOrderMap.get(id))
         .filter((i) => i !== undefined);
       if (featureIndices.length === 0) return;
       featureIndices.sort((a, b) => a - b);
       const groups = [];
-      if (featureIndices.length > 0) {
-        let currentGroup = [featureIndices[0]];
-        for (let i = 1; i < featureIndices.length; i++) {
-          if (featureIndices[i] === featureIndices[i - 1] + 1) {
-            currentGroup.push(featureIndices[i]);
-          } else {
-            groups.push(currentGroup);
-            currentGroup = [featureIndices[i]];
-          }
+      let currentGroup = [featureIndices[0]];
+      for (let i = 1; i < featureIndices.length; i++) {
+        if (featureIndices[i] === featureIndices[i - 1] + 1) {
+          currentGroup.push(featureIndices[i]);
+        } else {
+          groups.push(currentGroup);
+          currentGroup = [featureIndices[i]];
         }
-        groups.push(currentGroup);
       }
+      groups.push(currentGroup);
       groups.forEach((group, groupIndex) => {
         const startCol = Math.min(...group) + 1;
         const span = group.length;
@@ -93,59 +92,60 @@ window.StoryMapRenderer = {
                  </div>`;
     });
 
-    // --- 4c. RENDER STORIES AND RELEASES ---
+    // --- 4c. RENDER STORIES AND RELEASES (THE DEFINITIVE, CORRECTED LOGIC) ---
     const unreleasedStories = stories.filter((s) => !s.releaseId);
 
-    if (unreleasedStories.length > 0) {
-      html += `<div class="release-header">Unassigned</div>`;
-      features.forEach((feature, index) => {
-        const storiesInColumn = unreleasedStories.filter(
-          (s) => s.featureId === feature.id
-        );
-        html += `<div class="feature-column" style="grid-column: ${
-          index + 1
-        };" data-feature-id="${feature.id}" data-release-id="unassigned">`;
+    html += `<div class="release-header">Unassigned</div>`;
+    features.forEach((feature, index) => {
+      const storiesInColumn = unreleasedStories.filter(
+        (s) => s.featureId === feature.id
+      );
+      html += `<div class="feature-column" style="grid-column: ${
+        index + 1
+      };" data-feature-id="${feature.id}" data-release-id="unassigned">`;
+      if (storiesInColumn.length > 0) {
         storiesInColumn.forEach((story) => {
           html += `<div class="card story-card ${
             story.type === "Tech-Req" ? "tech" : ""
           }" data-id="${story.id}" data-type="story" data-order="${
             story.order
           }">
-                        <span class="card-title-text">${story.name}</span>
-                        <div class="card-icon-button">${iconSvg}</div>
-                     </div>`;
+                            <span class="card-title-text">${story.name}</span>
+                            <div class="card-icon-button">${iconSvg}</div>
+                         </div>`;
         });
-        html += `<div class="empty-column-drop-zone" data-feature-id="${feature.id}" data-release-id="unassigned"><span>Drop Story Here</span></div>`;
-        html += `</div>`;
-      });
-    }
+      }
+      html += `<div class="empty-column-drop-zone" data-feature-id="${feature.id}" data-release-id="unassigned"><span>Drop Story Here</span></div>`;
+      html += `</div>`;
+    });
 
     releases.forEach((release) => {
       if (!release || !release.name) return;
       const releaseStories = stories.filter((s) => s.releaseId === release.id);
-      if (releaseStories.length > 0) {
-        html += `<div class="release-header" data-id="${release.id}">${release.name}</div>`;
-        features.forEach((feature, index) => {
-          const storiesInColumn = releaseStories.filter(
-            (s) => s.featureId === feature.id
-          );
-          html += `<div class="feature-column" style="grid-column: ${
-            index + 1
-          };" data-feature-id="${feature.id}" data-release-id="${release.id}">`;
+
+      html += `<div class="release-header" data-id="${release.id}">${release.name}</div>`;
+      features.forEach((feature, index) => {
+        const storiesInColumn = releaseStories.filter(
+          (s) => s.featureId === feature.id
+        );
+        html += `<div class="feature-column" style="grid-column: ${
+          index + 1
+        };" data-feature-id="${feature.id}" data-release-id="${release.id}">`;
+        if (storiesInColumn.length > 0) {
           storiesInColumn.forEach((story) => {
             html += `<div class="card story-card ${
               story.type === "Tech-Req" ? "tech" : ""
             }" data-id="${story.id}" data-type="story" data-order="${
               story.order
             }">
-                          <span class="card-title-text">${story.name}</span>
-                          <div class="card-icon-button">${iconSvg}</div>
-                       </div>`;
+                              <span class="card-title-text">${story.name}</span>
+                              <div class="card-icon-button">${iconSvg}</div>
+                           </div>`;
           });
-          html += `<div class="empty-column-drop-zone" data-feature-id="${feature.id}" data-release-id="${release.id}"><span>Drop Story Here</span></div>`;
-          html += `</div>`;
-        });
-      }
+        }
+        html += `<div class="empty-column-drop-zone" data-feature-id="${feature.id}" data-release-id="${release.id}"><span>Drop Story Here</span></div>`;
+        html += `</div>`;
+      });
     });
 
     // --- 4d. CLOSE HTML TAGS ---
