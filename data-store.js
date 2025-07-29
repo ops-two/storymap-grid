@@ -43,7 +43,7 @@ window.StoryMapDataStore = {
       const releaseRef = s.get("release_custom_release");
       this.data.stories.set(storyId, {
         id: storyId,
-        name: s.get("title_text") || `Story ${index + 1}`,
+        name: s.get("name_text") || `Story ${index + 1}`,
         order: s.get("order_index_number"),
         type: s.get("type_option_storytype"),
         featureId: featureRef ? featureRef.get("_id") : null,
