@@ -40,17 +40,21 @@ window.StoryMapRenderer = {
             <div class="story-map-grid-container">
     `;
 
-    // --- 4a. RENDER JOURNEYS (THE DEFINITIVE FIX IS HERE) ---
+    // In grid.js, FIND and REPLACE the entire 'journeys.forEach' loop.
+
+    // --- 4a. RENDER JOURNEYS (ALWAYS RENDERS ALL JOURNEYS CORRECTLY) ---
     journeys.forEach((journey, index) => {
       const journeyFeatures = allFeatures.filter(
         (f) => f.journeyId === journey.id
       );
+
       if (journeyFeatures.length > 0) {
-        // This is your proven "smart splitting" logic, now restored and corrected.
+        // --- CASE 1: Journey has features. This is your proven, working logic. ---
         const featureIndices = journeyFeatures
           .map((f) => displayItems.findIndex((df) => df.id === f.id))
           .filter((i) => i !== -1);
         if (featureIndices.length === 0) return;
+
         featureIndices.sort((a, b) => a - b);
         const groups = [];
         let currentGroup = [featureIndices[0]];
@@ -63,6 +67,7 @@ window.StoryMapRenderer = {
           }
         }
         groups.push(currentGroup);
+
         groups.forEach((group, groupIndex) => {
           const startCol = Math.min(...group) + 1;
           const span = group.length;
@@ -79,20 +84,32 @@ window.StoryMapRenderer = {
             ? nextJourney.order
             : (journey.order || 0) + 20;
 
-          // The HTML structure is now CORRECT, restoring the inline-edit functionality.
           html += `<div class="card journey-card" data-id="${journey.id}" data-type="journey" data-order="${journey.order}" style="grid-column: ${startCol} / span ${span};">
-                      <div class="add-item-button before" data-add-type="journey" data-before-order="${beforeOrder}" data-after-order="${journey.order}">+</div>
-                      <span class="card-title-text">${title}</span>
-                      <div class="card-icon-button">${iconSvg}</div>
-                      <div class="add-item-button after" data-add-type="journey" data-before-order="${journey.order}" data-after-order="${afterOrder}">+</div>
-                   </div>`;
+                  <div class="add-item-button before" data-add-type="journey" data-before-order="${beforeOrder}" data-after-order="${journey.order}">+</div>
+                  <span class="card-title-text">${title}</span>
+                  <div class="card-icon-button">${iconSvg}</div>
+                  <div class="add-item-button after" data-add-type="journey" data-before-order="${journey.order}" data-after-order="${afterOrder}">+</div>
+               </div>`;
         });
       } else {
-        // This is your proven empty journey logic, now with the correct HTML structure.
+        // --- CASE 2: Journey is EMPTY. This is the new, corrected logic. ---
         const placeholderIndex = displayItems.findIndex(
           (df) => df.isPlaceholder && df.journey.id === journey.id
         );
         if (placeholderIndex !== -1) {
+          const startCol = placeholderIndex + 1;
+          const span = 1;
+
+          const prevJourney = journeys[index - 1];
+          const nextJourney = journeys[index + 1];
+          const beforeOrder = prevJourney
+            ? prevJourney.order
+            : (journey.order || 0) - 20;
+          const afterOrder = nextJourney
+            ? nextJourney.order
+            : (journey.order || 0) + 20;
+
+          // CRITICAL FIX: It now renders a proper, styled .journey-card
           html += `<div class="card journey-card" data-id="${journey.id}" data-type="journey" data-order="${journey.order}" style="grid-column: ${startCol} / span ${span};">
                     <div class="add-item-button before" data-add-type="journey" data-before-order="${beforeOrder}" data-after-order="${journey.order}">+</div>
                     <span class="card-title-text">${journey.name}</span>
