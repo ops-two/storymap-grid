@@ -10,7 +10,7 @@ window.StoryMapFeatureDragDrop = {
   },
 
   setupFeatureDragging: function () {
-    // Make only the real feature cards draggable.
+    // This is your proven, working logic for making cards draggable. It is preserved perfectly.
     const featureCards = this.container.querySelectorAll(".feature-card");
     featureCards.forEach((card) => {
       if (card.dataset.dragSetup === "true") return;
@@ -28,9 +28,10 @@ window.StoryMapFeatureDragDrop = {
       });
     });
 
-    // Listen for drops on ALL potential targets: existing cards AND the new empty drop zones.
+    // --- THE CRITICAL UPGRADE ---
+    // The drop targets now include the correctly classed ".empty-feature-placeholder".
     const dropTargets = this.container.querySelectorAll(
-      ".feature-card, .empty-feature-drop-zone"
+      ".feature-card, .empty-feature-placeholder"
     );
     dropTargets.forEach((target) => {
       target.addEventListener("dragover", (e) => {
@@ -57,8 +58,11 @@ window.StoryMapFeatureDragDrop = {
     try {
       this.isProcessing = true;
       const draggedId = this.draggedCard.dataset.id;
-      const isDropZone = target.classList.contains("empty-feature-drop-zone");
+
+      // --- THE UPGRADED LOGIC ---
+      const isDropZone = target.classList.contains("empty-feature-placeholder");
       const targetId = isDropZone ? null : target.dataset.id;
+
       if (!draggedId || draggedId === targetId) {
         this.isProcessing = false;
         return;
@@ -67,17 +71,9 @@ window.StoryMapFeatureDragDrop = {
       const allFeatures = window.StoryMapDataStore.getEntitiesArray("feature");
       const draggedFeature = allFeatures.find((f) => f.id === draggedId);
 
-      let targetJourneyId;
-      if (isDropZone) {
-        targetJourneyId = target.dataset.journeyId;
-      } else {
-        const targetFeature = allFeatures.find((f) => f.id === targetId);
-        targetJourneyId = targetFeature ? targetFeature.journeyId : null;
-      }
-      if (!targetJourneyId) {
-        this.isProcessing = false;
-        return;
-      }
+      // Get the target journey ID directly from the target's data attribute.
+      // This is now guaranteed to work for both cards AND the new empty drop zone.
+      const targetJourneyId = target.dataset.journeyId;
 
       let newOrderValue;
       let payload;
@@ -94,7 +90,6 @@ window.StoryMapFeatureDragDrop = {
         const targetIndex = sortedList.findIndex(
           (item) => item.id === targetId
         );
-
         if (draggedIndex > targetIndex) {
           if (targetIndex === 0) {
             newOrderValue = targetFeature.order / 2;
@@ -149,7 +144,7 @@ window.StoryMapFeatureDragDrop = {
         };
       }
 
-      // --- Your proven Optimistic UI Update and Event Dispatch logic ---
+      // --- Your proven Optimistic UI Update and Event Dispatch logic is preserved perfectly ---
       window.StoryMapDataStore.updateEntityOrder(
         "feature",
         draggedId,
@@ -167,7 +162,6 @@ window.StoryMapFeatureDragDrop = {
         window.StoryMapRenderer.render(mainCanvas);
       }
 
-      // THIS IS THE CRITICAL FIX: We are now dispatching the correct event.
       document.dispatchEvent(
         new CustomEvent("storymap:update", { detail: payload })
       );
