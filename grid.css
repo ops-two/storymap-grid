@@ -9,10 +9,9 @@
   --vertical-gap: 12px;
 }
 
-/* --- MAIN LAYOUT CONTAINERS --- */
 .story-map-container {
   padding: 20px;
-  font-family: Arial, sans-serif;
+  font-family: "Inter", sans-serif; /* <-- THIS IS THE NEW LINE */
   height: 100%;
   overflow: auto;
 }
@@ -72,6 +71,12 @@
   text-overflow: ellipsis;
   cursor: text;
 }
+.story-card .card-title-text {
+  display: block; /* Change from flex-box to a simple block */
+  white-space: normal; /* Allow text to wrap naturally */
+  overflow: visible; /* Show all overflowing text */
+  -webkit-line-clamp: unset; /* REMOVE the 2-line limit */
+}
 .card-icon-button {
   width: 20px;
   height: 20px;
@@ -112,7 +117,13 @@
   border-left: 5px solid #6f42c1;
 }
 .story-card {
-  height: var(--story-height);
+  min-height: var(
+    --story-height
+  ); /* Use min-height to ensure a consistent base size */
+  height: auto; /* Allow the card to grow */
+  align-items: flex-start; /* Align content to the top */
+  padding-top: 10px; /* Add some top padding for better spacing */
+  padding-bottom: 10px; /* Add some bottom padding */
   font-weight: 500;
   border: 1px solid #28a745;
   border-left: 5px solid #28a745;
