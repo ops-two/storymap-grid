@@ -126,40 +126,43 @@ window.StoryMapStoryDragDrop = {
           }
           payload.fieldName = fieldNameParts.join("_and_");
         } else {
+          // --- THIS IS THE DEFINITIVE FIX: YOUR PROVEN RE-INDEXING LOGIC ---
           const allStoriesInColumn = Array.from(
             targetColumn.querySelectorAll(".story-card")
           ).map((c) =>
             window.StoryMapDataStore.getEntity("story", c.dataset.id)
           );
-          const draggedItem = allStoriesInColumn.find(
-            (item) => item.id === draggedId
-          );
-          const listWithoutDragged = allStoriesInColumn.filter(
-            (item) => item.id !== draggedId
-          );
-          const targetIndex = listWithoutDragged.findIndex(
+          const targetItem = allStoriesInColumn.find(
             (item) => item.id === targetId
           );
-          if (targetIndex === -1 || !draggedItem) {
-            this.isProcessing = false;
-            return;
-          }
-          const targetItem = listWithoutDragged[targetIndex];
-          if (targetIndex === 0) {
-            newOrderValue = targetItem.order / 2;
+          const draggedIndex = allStoriesInColumn.findIndex(
+            (item) => item.id === draggedId
+          );
+          const targetIndex = allStoriesInColumn.findIndex(
+            (item) => item.id === targetId
+          );
+
+          if (draggedIndex > targetIndex) {
+            // Dragging DOWN-TO-UP
+            if (targetIndex === 0) {
+              newOrderValue = targetItem.order / 2;
+            } else {
+              const prevItem = allStoriesInColumn[targetIndex - 1];
+              newOrderValue = (prevItem.order + targetItem.order) / 2;
+            }
           } else {
-            const prevItem = listWithoutDragged[targetIndex - 1];
-            newOrderValue = (prevItem.order + targetItem.order) / 2;
-          }
-          if (newOrderValue === draggedItem.order) {
-            this.isProcessing = false;
-            return;
+            // Dragging UP-TO-DOWN
+            const nextItem = allStoriesInColumn[targetIndex + 1];
+            if (nextItem) {
+              newOrderValue = (targetItem.order + nextItem.order) / 2;
+            } else {
+              newOrderValue = targetItem.order + 10;
+            }
           }
           payload.fieldName = "order_index";
           payload.newValue = newOrderValue;
         }
       }
-
       // --- (Your proven Optimistic UI Update and Event Dispatch logic is preserved here) ---
       const mainCanvas = $(this.container).closest('[id^="bubble-r-box"]');
       if (window.StoryMapRenderer && mainCanvas.length) {
