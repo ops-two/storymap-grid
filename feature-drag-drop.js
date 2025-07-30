@@ -6,9 +6,9 @@ window.StoryMapFeatureDragDrop = {
 
   init: function (container) {
     this.container = container;
-    // We must clean up old listeners to prevent bugs from previous versions.
+    // Clean up any old listeners to prevent bugs from previous flawed versions
     const oldTargets = this.container.querySelectorAll(
-      ".feature-card, .empty-feature-placeholder, .empty-feature-drop-zone"
+      ".feature-card, .empty-feature-placeholder, .empty-feature-drop-zone, .add-item-button-static"
     );
     oldTargets.forEach((target) => {
       const newTarget = target.cloneNode(true);
@@ -18,17 +18,17 @@ window.StoryMapFeatureDragDrop = {
   },
 
   setupFeatureDragging: function () {
-    // Draggable items are only the real feature cards.
+    // This is your proven logic for making cards draggable. It is preserved.
     const featureCards = this.container.querySelectorAll(".feature-card");
     featureCards.forEach((card) => {
       card.draggable = true;
       card.addEventListener("dragstart", (e) => {
         this.draggedCard = card;
         setTimeout(() => card.classList.add("dragging"), 0);
+        e.dataTransfer.effectAllowed = "move";
       });
       card.addEventListener("dragend", (e) => {
         card.classList.remove("dragging");
-        // Use a more specific selector for cleanup
         this.container
           .querySelectorAll(".drag-over")
           .forEach((c) => c.classList.remove("drag-over"));
@@ -36,23 +36,27 @@ window.StoryMapFeatureDragDrop = {
     });
 
     // --- THIS IS THE CRITICAL UPGRADE ---
-    // Drop targets are now BOTH existing cards AND the new empty drop zones.
+    // Drop targets are now existing cards AND the static add buttons inside empty placeholders.
     const dropTargets = this.container.querySelectorAll(
-      ".feature-card, .empty-feature-drop-zone"
+      ".feature-card, .empty-feature-placeholder .add-item-button-static"
     );
     dropTargets.forEach((target) => {
       target.addEventListener("dragover", (e) => {
         if (this.draggedCard && this.draggedCard !== target) {
           e.preventDefault();
-          target.classList.add("drag-over");
+          const dropZone =
+            target.closest(".empty-feature-placeholder") || target;
+          dropZone.classList.add("drag-over");
         }
       });
       target.addEventListener("dragleave", (e) => {
-        target.classList.remove("drag-over");
+        const dropZone = target.closest(".empty-feature-placeholder") || target;
+        dropZone.classList.remove("drag-over");
       });
       target.addEventListener("drop", (e) => {
         e.preventDefault();
-        target.classList.remove("drag-over");
+        const dropZone = target.closest(".empty-feature-placeholder") || target;
+        dropZone.classList.remove("drag-over");
         if (this.draggedCard) {
           this.handleDrop(target);
         }
@@ -65,8 +69,10 @@ window.StoryMapFeatureDragDrop = {
     try {
       this.isProcessing = true;
       const draggedId = this.draggedCard.dataset.id;
-      const isDropZone = target.classList.contains("empty-feature-drop-zone");
-      const targetId = isDropZone ? null : target.dataset.id;
+      const isStaticButton = target.classList.contains(
+        "add-item-button-static"
+      );
+      const targetId = isStaticButton ? null : target.dataset.id;
       if (!draggedId || draggedId === targetId) {
         this.isProcessing = false;
         return;
@@ -76,7 +82,7 @@ window.StoryMapFeatureDragDrop = {
       const draggedFeature = allFeatures.find((f) => f.id === draggedId);
 
       let targetJourneyId;
-      if (isDropZone) {
+      if (isStaticButton) {
         targetJourneyId = target.dataset.journeyId;
       } else {
         const targetFeature = allFeatures.find((f) => f.id === targetId);
@@ -98,19 +104,28 @@ window.StoryMapFeatureDragDrop = {
         const targetIndex = sortedList.findIndex(
           (item) => item.id === targetId
         );
-        const prevItem = sortedList[targetIndex - 1];
-        newOrderValue =
-          ((prevItem ? prevItem.order : 0) + targetFeature.order) / 2;
+        if (targetIndex === -1) {
+          this.isProcessing = false;
+          return;
+        }
+
+        const prevItem = targetIndex > 0 ? sortedList[targetIndex - 1] : null;
+        newOrderValue = prevItem
+          ? (prevItem.order + targetFeature.order) / 2
+          : targetFeature.order / 2;
+
+        const fullFeatureData = window.StoryMapDataStore.getEntityForUpdate(
+          "feature",
+          draggedId
+        );
+        if (fullFeatureData) fullFeatureData.order_index = newOrderValue;
         payload = {
           entityType: "feature",
           entityId: draggedId,
           fieldName: "order_index",
           newValue: newOrderValue,
-          allData: {
-            entityId: draggedId,
-            order_index: newOrderValue,
-            name_text: draggedFeature.name,
-          },
+          oldValue: draggedFeature.order,
+          allData: fullFeatureData,
         };
       } else {
         const featuresInNewJourney = allFeatures.filter(
@@ -119,17 +134,20 @@ window.StoryMapFeatureDragDrop = {
         const lastFeature =
           featuresInNewJourney[featuresInNewJourney.length - 1];
         newOrderValue = lastFeature ? lastFeature.order + 10 : 10;
+
+        const fullFeatureData = window.StoryMapDataStore.getEntityForUpdate(
+          "feature",
+          draggedId
+        );
+        if (fullFeatureData) fullFeatureData.order_index = newOrderValue;
         payload = {
           entityType: "feature",
           entityId: draggedId,
           fieldName: "order_index_and_journey",
           newValue: newOrderValue,
+          oldValue: draggedFeature.order,
+          allData: fullFeatureData,
           newParentId: targetJourneyId,
-          allData: {
-            entityId: draggedId,
-            order_index: newOrderValue,
-            name_text: draggedFeature.name,
-          },
         };
       }
 
