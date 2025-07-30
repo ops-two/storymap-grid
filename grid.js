@@ -120,15 +120,18 @@ window.StoryMapRenderer = {
       }
     });
 
-    // --- 4b. RENDER FEATURES (HANDLES PLACEHOLDERS CORRECTLY) ---
     displayItems.forEach((item, index) => {
       if (item.isPlaceholder) {
-        html += `<div class="empty-feature-placeholder" style="grid-column: ${
+        html += `<div class="feature-column empty" style="grid-column: ${
           index + 1
         };">
-                    <div class="add-item-button-static" data-add-type="feature" data-journey-id="${
+                    <div class="empty-feature-drop-zone" data-journey-id="${
                       item.journey.id
-                    }" data-before-order="0" data-after-order="20">+ Add Feature</div>
+                    }">
+                        <div class="add-item-button-static" data-add-type="feature" data-journey-id="${
+                          item.journey.id
+                        }" data-before-order="0" data-after-order="20">+ Add Feature</div>
+                    </div>
                  </div>`;
       } else {
         const feature = item;
