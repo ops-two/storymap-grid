@@ -93,11 +93,12 @@ window.StoryMapRenderer = {
           (df) => df.isPlaceholder && df.journey.id === journey.id
         );
         if (placeholderIndex !== -1) {
-          html += `<div class="empty-journey-placeholder" style="grid-column: ${
-            placeholderIndex + 1
-          } / span 1;">
-                        <span class="card-title-text">${journey.name}</span>
-                     </div>`;
+          html += `<div class="card journey-card" data-id="${journey.id}" data-type="journey" data-order="${journey.order}" style="grid-column: ${startCol} / span ${span};">
+                    <div class="add-item-button before" data-add-type="journey" data-before-order="${beforeOrder}" data-after-order="${journey.order}">+</div>
+                    <span class="card-title-text">${journey.name}</span>
+                    <div class="card-icon-button">${iconSvg}</div>
+                    <div class="add-item-button after" data-add-type="journey" data-before-order="${journey.order}" data-after-order="${afterOrder}">+</div>
+                 </div>`;
         }
       }
     });
