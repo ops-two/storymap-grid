@@ -106,13 +106,38 @@ window.StoryMapStoryDragDrop = {
         payload = { entityType: "story", entityId: draggedId };
 
         if (featureChanged || releaseChanged) {
-          const storiesInNewColumn = Array.from(
+          // --- THIS IS THE DEFINITIVE FIX FOR DIAGONAL DROPS ---
+          const allStoriesInNewColumn = Array.from(
             targetColumn.querySelectorAll(".story-card")
           ).map((c) =>
             window.StoryMapDataStore.getEntity("story", c.dataset.id)
           );
-          const lastStory = storiesInNewColumn[storiesInNewColumn.length - 1];
-          newOrderValue = lastStory ? lastStory.order + 10 : 10;
+
+          if (targetId) {
+            // Case 1: Dropped ON a specific story in the new column
+            const targetItem = allStoriesInNewColumn.find(
+              (item) => item.id === targetId
+            );
+            const targetIndex = allStoriesInNewColumn.findIndex(
+              (item) => item.id === targetId
+            );
+            if (targetIndex === -1) {
+              this.isProcessing = false;
+              return;
+            }
+
+            const prevItem =
+              targetIndex > 0 ? allStoriesInNewColumn[targetIndex - 1] : null;
+            newOrderValue = prevItem
+              ? (prevItem.order + targetItem.order) / 2
+              : targetItem.order / 2;
+          } else {
+            // Case 2: Dropped into an empty space (placeholder or drop zone) in the new column
+            const lastStory =
+              allStoriesInNewColumn[allStoriesInNewColumn.length - 1];
+            newOrderValue = lastStory ? lastStory.order + 10 : 10;
+          }
+
           payload.newValue = newOrderValue;
           let fieldNameParts = ["order_index"];
           if (featureChanged) {
