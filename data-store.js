@@ -38,6 +38,11 @@ window.StoryMapDataStore = {
 
     this.data.stories.clear();
     rawData.rawStories.forEach((s, index) => {
+      console.log(
+        `RAW DATA from Bubble: Story ID: ${s.get("_id")}, Raw Type Value:`,
+        s.get("type_option_storytype")
+      );
+
       const storyId = s.get("_id");
       const featureRef = s.get("feature_custom_feature3");
       const releaseRef = s.get("release_custom_release");
