@@ -303,3 +303,21 @@
   outline: none;
   box-sizing: border-box;
 }
+
+/* In grid.css, ADD these new rules */
+
+/* This is your existing rule, which is correct */
+.story-card.tech {
+  border-color: #007bff;
+  border-left-color: #007bff;
+}
+
+/* --- THIS IS THE NEW RULE FOR THE TITLE TEXT --- */
+/* It applies the 3-line clamp ONLY to Tech-Req titles */
+.card-title-text.tech-req-title {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

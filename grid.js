@@ -172,7 +172,7 @@ window.StoryMapRenderer = {
       }
     });
 
-    // --- 4c. RENDER STORIES AND RELEASES (This is your proven, working logic) ---
+    // --- 4c. RENDER STORIES AND RELEASES (with Tech-Req Formatting) ---
     const sortedReleasesToRender = releases
       .filter((r) => r && r.name)
       .sort((a, b) => a.name.localeCompare(b.name));
@@ -207,31 +207,36 @@ window.StoryMapRenderer = {
               const afterOrder = nextStory
                 ? nextStory.order
                 : (story.order || 0) + 20;
+
+              // --- THIS IS THE CRITICAL UPGRADE ---
+              const isTechReq = story.type === "Tech-Req";
+              const titleClass = isTechReq ? "tech-req-title" : ""; // Add a class for Tech-Req titles
+
               html += `<div class="card story-card ${
-                story.type === "Tech-Req" ? "tech" : ""
+                isTechReq ? "tech" : ""
               }" data-id="${story.id}" data-type="story" data-order="${
                 story.order
               }">
-                                    <div class="add-item-button above" data-add-type="story" data-feature-id="${
-                                      feature.id
-                                    }" data-release-id="unassigned" data-before-order="${beforeOrder}" data-after-order="${
+                      <div class="add-item-button above" data-add-type="story" data-feature-id="${
+                        feature.id
+                      }" data-release-id="unassigned" data-before-order="${beforeOrder}" data-after-order="${
                 story.order
               }">+</div>
-                                    <span class="card-title-text">${
-                                      story.name
-                                    }</span>
-                                    <div class="card-icon-button">${iconSvg}</div>
-                                    <div class="add-item-button below" data-add-type="story" data-feature-id="${
-                                      feature.id
-                                    }" data-release-id="unassigned" data-before-order="${
+                      <span class="card-title-text ${titleClass}">${
+                story.name
+              }</span>
+                      <div class="card-icon-button">${iconSvg}</div>
+                      <div class="add-item-button below" data-add-type="story" data-feature-id="${
+                        feature.id
+                      }" data-release-id="unassigned" data-before-order="${
                 story.order
               }" data-after-order="${afterOrder}">+</div>
-                                 </div>`;
+                   </div>`;
             });
           } else {
             html += `<div class="empty-story-placeholder" data-feature-id="${feature.id}" data-release-id="unassigned">
-                                <div class="add-item-button-static" data-add-type="story" data-feature-id="${feature.id}" data-release-id="unassigned" data-before-order="0" data-after-order="20">+ Add Story</div>
-                             </div>`;
+                    <div class="add-item-button-static" data-add-type="story" data-feature-id="${feature.id}" data-release-id="unassigned" data-before-order="0" data-after-order="20">+ Add Story</div>
+                 </div>`;
           }
           html += `<div class="empty-column-drop-zone" data-feature-id="${feature.id}" data-release-id="unassigned"><span>Drop Story Here</span></div>`;
         }
@@ -267,35 +272,38 @@ window.StoryMapRenderer = {
                 const afterOrder = nextStory
                   ? nextStory.order
                   : (story.order || 0) + 20;
+
+                // --- THIS IS THE CRITICAL UPGRADE ---
+                const isTechReq = story.type === "Tech-Req";
+                const titleClass = isTechReq ? "tech-req-title" : "";
+
                 html += `<div class="card story-card ${
-                  story.type === "Tech-Req" ? "tech" : ""
+                  isTechReq ? "tech" : ""
                 }" data-id="${story.id}" data-type="story" data-order="${
                   story.order
                 }">
-                                        <div class="add-item-button above" data-add-type="story" data-feature-id="${
-                                          feature.id
-                                        }" data-release-id="${
+                        <div class="add-item-button above" data-add-type="story" data-feature-id="${
+                          feature.id
+                        }" data-release-id="${
                   release.id
                 }" data-before-order="${beforeOrder}" data-after-order="${
                   story.order
                 }">+</div>
-                                        <span class="card-title-text">${
-                                          story.name
-                                        }</span>
-                                        <div class="card-icon-button">${iconSvg}</div>
-                                        <div class="add-item-button below" data-add-type="story" data-feature-id="${
-                                          feature.id
-                                        }" data-release-id="${
-                  release.id
-                }" data-before-order="${
+                        <span class="card-title-text ${titleClass}">${
+                  story.name
+                }</span>
+                        <div class="card-icon-button">${iconSvg}</div>
+                        <div class="add-item-button below" data-add-type="story" data-feature-id="${
+                          feature.id
+                        }" data-release-id="${release.id}" data-before-order="${
                   story.order
                 }" data-after-order="${afterOrder}">+</div>
-                                     </div>`;
+                     </div>`;
               });
             } else {
               html += `<div class="empty-story-placeholder" data-feature-id="${feature.id}" data-release-id="${release.id}">
-                                    <div class="add-item-button-static" data-add-type="story" data-feature-id="${feature.id}" data-release-id="${release.id}" data-before-order="0" data-after-order="20">+ Add Story</div>
-                                 </div>`;
+                      <div class="add-item-button-static" data-add-type="story" data-feature-id="${feature.id}" data-release-id="${release.id}" data-before-order="0" data-after-order="20">+ Add Story</div>
+                   </div>`;
             }
             html += `<div class="empty-column-drop-zone" data-feature-id="${feature.id}" data-release-id="${release.id}"><span>Drop Story Here</span></div>`;
           }
@@ -303,7 +311,6 @@ window.StoryMapRenderer = {
         });
       }
     });
-
     // --- 4d. CLOSE HTML TAGS ---
     html += `</div></div>`;
     containerElement.html(html);
