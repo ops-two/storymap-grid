@@ -120,7 +120,7 @@ window.StoryMapRenderer = {
 
     displayItems.forEach((item, index) => {
       if (item.isPlaceholder) {
-        html += `<div class="feature-column" style="grid-column: ${
+        html += `<div class="feature-column empty-feature-drop-zone" style="grid-column: ${
           index + 1
         };" data-journey-id="${item.journey.id}">
                 <div class="empty-feature-placeholder">
