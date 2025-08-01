@@ -73,10 +73,6 @@ window.StoryMapJourneyDragDrop = {
 
   // In journey-drag-drop.js, replace ONLY the handleDrop function
 
-  // In journey-drag-drop.js, replace ONLY the handleDrop function
-
-  // In journey-drag-drop.js, replace ONLY the handleDrop function
-
   handleDrop: function (targetCard) {
     // Failsafes to prevent errors.
     if (this.isProcessing || !this.draggedCard) return;
@@ -94,9 +90,7 @@ window.StoryMapJourneyDragDrop = {
       const targetIndex = sortedList.findIndex((item) => item.id === targetId);
 
       if (targetIndex === -1 || !draggedItem) {
-        console.error("Could not find dragged or target journey.");
         this.isProcessing = false;
-        this.draggedCard = null;
         return;
       }
 

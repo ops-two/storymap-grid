@@ -40,8 +40,6 @@ window.StoryMapRenderer = {
             <div class="story-map-grid-container">
     `;
 
-    // In grid.js, FIND and REPLACE the entire 'journeys.forEach' loop.
-
     // --- 4a. RENDER JOURNEYS (ALWAYS RENDERS ALL JOURNEYS CORRECTLY) ---
     journeys.forEach((journey, index) => {
       const journeyFeatures = allFeatures.filter(
@@ -110,7 +108,7 @@ window.StoryMapRenderer = {
             : (journey.order || 0) + 20;
 
           // CRITICAL FIX: It now renders a proper, styled .journey-card
-          html += `<div class="card journey-card" data-id="${journey.id}" data-type="journey" data-order="${journey.order}" style="grid-column: ${startCol} / span ${span};">
+          html += `<div class="card journey-card " data-id="${journey.id}" data-type="journey" data-order="${journey.order}" style="grid-column: ${startCol} / span ${span};">
                     <div class="add-item-button before" data-add-type="journey" data-before-order="${beforeOrder}" data-after-order="${journey.order}">+</div>
                     <span class="card-title-text">${journey.name}</span>
                     <div class="card-icon-button">${iconSvg}</div>
