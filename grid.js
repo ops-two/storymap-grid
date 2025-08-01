@@ -209,7 +209,7 @@ window.StoryMapRenderer = {
                 : (story.order || 0) + 20;
 
               // --- THIS IS THE CRITICAL UPGRADE ---
-              const isTechReq = story.type === "Tech-Req";
+              const isTechReq = story.type && story.type === "Tech-Req";
               const titleClass = isTechReq ? "tech-req-title" : ""; // Add a class for Tech-Req titles
 
               html += `<div class="card story-card ${
