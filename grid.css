@@ -72,11 +72,12 @@
   cursor: text;
 }
 .story-card .card-title-text {
-  display: block; /* Change from flex-box to a simple block */
-  white-space: normal; /* Allow text to wrap naturally */
-  overflow: visible; /* Show all overflowing text */
-  -webkit-line-clamp: unset; /* REMOVE the 2-line limit */
-  padding: 8px 0; /* Add vertical padding to the text itself */
+  display: block;
+  white-space: normal;
+  overflow: visible;
+  -webkit-line-clamp: unset;
+  /* THIS IS THE CRITICAL FIX: The padding is now correct and balanced. */
+  padding: 10px 0;
 }
 .card-icon-button {
   width: 20px;
@@ -118,13 +119,10 @@
   border-left: 5px solid #6f42c1;
 }
 .story-card {
-  min-height: var(
-    --story-height
-  ); /* Use min-height to ensure a consistent base size */
-  height: auto; /* Allow the card to grow */
-  align-items: flex-start; /* Align content to the top */
-  padding-top: 10px; /* Add some top padding for better spacing */
-  padding-bottom: 10px; /* Add some bottom padding */
+  min-height: var(--story-height);
+  height: auto;
+  align-items: flex-start; /* This is correct, keep it */
+  /* REMOVED the top and bottom padding from the card itself */
   font-weight: 500;
   border: 1px solid #28a745;
   border-left: 5px solid #28a745;
@@ -292,24 +290,23 @@
 
 /* --- INLINE EDIT INPUT --- */
 .inline-edit-input {
-  position: absolute; /* Lift the input to cover the whole card */
+  position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  padding: 0 8px; /* Match the card's horizontal padding */
+  /* THIS IS THE CRITICAL FIX: The padding now matches the story card's text. */
+  padding: 10px 8px;
 
-  /* --- THIS IS THE CRITICAL FIX --- */
-  border: none; /* Remove the border */
-  outline: none; /* Remove the focus outline */
-  background-color: transparent; /* Make the background invisible */
-
-  border-radius: 6px; /* Match the card's border-radius */
+  border: none;
+  outline: none;
+  background-color: transparent;
+  border-radius: 6px;
   font-size: inherit;
   font-family: inherit;
   color: inherit;
   box-sizing: border-box;
-  text-align: inherit; /* Inherit text alignment from the parent card */
+  text-align: inherit;
 }
 
 /* In grid.css, ADD these new rules */
