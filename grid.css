@@ -76,6 +76,7 @@
   white-space: normal; /* Allow text to wrap naturally */
   overflow: visible; /* Show all overflowing text */
   -webkit-line-clamp: unset; /* REMOVE the 2-line limit */
+  padding: 8px 0; /* Add vertical padding to the text itself */
 }
 .card-icon-button {
   width: 20px;
@@ -291,17 +292,24 @@
 
 /* --- INLINE EDIT INPUT --- */
 .inline-edit-input {
+  position: absolute; /* Lift the input to cover the whole card */
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
-  padding: 4px 8px;
-  border: 2px solid #007bff;
-  border-radius: 4px;
+  padding: 0 8px; /* Match the card's horizontal padding */
+
+  /* --- THIS IS THE CRITICAL FIX --- */
+  border: none; /* Remove the border */
+  outline: none; /* Remove the focus outline */
+  background-color: transparent; /* Make the background invisible */
+
+  border-radius: 6px; /* Match the card's border-radius */
   font-size: inherit;
   font-family: inherit;
-  background: white;
   color: inherit;
-  outline: none;
   box-sizing: border-box;
+  text-align: inherit; /* Inherit text alignment from the parent card */
 }
 
 /* In grid.css, ADD these new rules */
