@@ -100,7 +100,6 @@ window.StoryMapInlineEdit = {
     };
     return fieldMap[entityType] || "name_text";
   },
-
   saveEdit() {
     if (!this.activeEdit) return;
     const { input, entityType, entityId, originalText, card, fieldName } =
@@ -131,12 +130,15 @@ window.StoryMapInlineEdit = {
         })
       );
 
-      // We will now re-render to ensure the UI is perfectly in sync.
+      // The full re-render is the final step. It handles all UI cleanup.
       const mainCanvas = $(this.container).closest('[id^="bubble-r-box"]');
       if (window.StoryMapRenderer && mainCanvas.length) {
         window.StoryMapRenderer.render(mainCanvas);
       }
-      card.classList.remove("is-editing"); // Remove the state class
+
+      // CRITICAL FIX: The line below has been REMOVED. The re-render makes it unnecessary.
+      // card.classList.remove("is-editing");
+
       this.activeEdit = null;
     } else {
       this.cancelEdit();
