@@ -76,6 +76,7 @@
   white-space: normal;
   overflow: visible;
   -webkit-line-clamp: unset;
+  height: auto; /* Allow the text element to grow vertically */
 }
 .card-icon-button {
   width: 20px;
@@ -117,7 +118,6 @@
   border-left: 5px solid #6f42c1;
 }
 .story-card {
-  min-height: var(--story-height);
   height: auto;
   align-items: flex-start;
   /* THIS IS THE CRITICAL FIX: Restore balanced vertical padding */
