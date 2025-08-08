@@ -46,14 +46,6 @@ window.StoryMapRenderer = {
                 <div class="add-item-button-static large" data-add-type="journey" data-before-order="0" data-after-order="20">+ Add Your First Journey</div>
             </div>
       `;
-    } else {
-      // If journeys DO exist, run all of our proven, existing rendering logic.
-      html += `
-            <div class="story-map-info">
-                <small>Journeys: ${journeys.length} | Features: ${allFeatures.length} | Stories: ${stories.length} | Releases: ${releases.length}</small>
-            </div>
-            <div class="story-map-grid-container">
-      `;
     }
     // --- 4a. RENDER JOURNEYS (ALWAYS RENDERS ALL JOURNEYS CORRECTLY) ---
     journeys.forEach((journey, index) => {
