@@ -101,7 +101,6 @@ window.StoryMapJourneyDragDrop = {
       );
 
       if (draggedIndex > targetIndex) {
-        // DRAGGING RIGHT-TO-LEFT
         if (targetIndex === 0) {
           newOrderValue = targetItem.order / 2;
         } else {
@@ -109,7 +108,6 @@ window.StoryMapJourneyDragDrop = {
           newOrderValue = (prevItem.order + targetItem.order) / 2;
         }
       } else {
-        // DRAGGING LEFT-TO-RIGHT
         const nextItem = sortedList[targetIndex + 1];
         if (nextItem) {
           newOrderValue = (targetItem.order + nextItem.order) / 2;

@@ -45,6 +45,8 @@ window.StoryMapInlineEdit = {
     const textElement = card.querySelector(".card-title-text");
     if (!textElement) return;
 
+    card.classList.add("is-editing"); // Add the state class
+
     // --- The rest of this function is YOUR proven, working code. It is preserved perfectly. ---
     const currentText = textElement.textContent.trim();
     const input = document.createElement("input");
@@ -100,6 +102,8 @@ window.StoryMapInlineEdit = {
     const { input, entityType, entityId, originalText, card, fieldName } =
       this.activeEdit;
     const newValue = input.value.trim();
+    card.classList.remove("is-editing"); // Remove the state class
+
     if (newValue !== originalText && newValue !== "") {
       input.disabled = true;
       input.style.opacity = "0.6";
@@ -138,6 +142,8 @@ window.StoryMapInlineEdit = {
   cancelEdit() {
     if (!this.activeEdit) return;
     const { textElement, input } = this.activeEdit;
+    card.classList.remove("is-editing"); // Remove the state class
+
     textElement.style.display = "";
     input.remove();
     this.activeEdit = null;
