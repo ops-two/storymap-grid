@@ -76,8 +76,6 @@
   white-space: normal;
   overflow: visible;
   -webkit-line-clamp: unset;
-  /* THIS IS THE CRITICAL FIX: The padding is now correct and balanced. */
-  padding: 10px 0;
 }
 .card-icon-button {
   width: 20px;
@@ -121,8 +119,10 @@
 .story-card {
   min-height: var(--story-height);
   height: auto;
-  align-items: flex-start; /* This is correct, keep it */
-  /* REMOVED the top and bottom padding from the card itself */
+  align-items: flex-start;
+  /* THIS IS THE CRITICAL FIX: Restore balanced vertical padding */
+  padding-top: 10px;
+  padding-bottom: 10px;
   font-weight: 500;
   border: 1px solid #28a745;
   border-left: 5px solid #28a745;
