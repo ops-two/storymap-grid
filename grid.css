@@ -22,7 +22,7 @@
   padding: 20px;
   min-width: fit-content;
   background: white;
-  border: 1px solid #ddd;
+  border: none;
   border-radius: 8px;
 }
 .story-map-info {
