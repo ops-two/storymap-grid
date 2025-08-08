@@ -321,7 +321,7 @@
 /* It applies the 3-line clamp ONLY to Tech-Req titles */
 .card-title-text.tech-req-title {
   display: -webkit-box;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: unset;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
