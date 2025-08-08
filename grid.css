@@ -288,25 +288,25 @@
   color: #333;
 }
 
-/* --- INLINE EDIT INPUT --- */
 .inline-edit-input {
-  position: absolute;
-  top: 0;
-  left: 0;
   width: 100%;
-  height: 100%;
-  /* THIS IS THE CRITICAL FIX: The padding now matches the story card's text. */
-  padding: 10px 8px;
+  height: auto; /* Allow it to grow */
 
+  /* --- THIS IS THE CRITICAL FIX --- */
+  padding: 0; /* The padding is handled by the parent card */
   border: none;
   outline: none;
-  background-color: transparent;
-  border-radius: 6px;
-  font-size: inherit;
+  background: transparent;
+  resize: none; /* Disable manual resizing handle */
+
+  /* Inherit all text styles to look seamless */
   font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
   color: inherit;
+
   box-sizing: border-box;
-  text-align: inherit;
 }
 
 /* In grid.css, ADD these new rules */

@@ -49,11 +49,10 @@ window.StoryMapInlineEdit = {
 
     // --- The rest of this function is YOUR proven, working code. It is preserved perfectly. ---
     const currentText = textElement.textContent.trim();
-    const input = document.createElement("input");
-    input.type = "text";
+    const input = document.createElement("textarea");
     input.value = currentText;
     input.className = "inline-edit-input";
-
+    input.rows = 1;
     this.activeEdit = {
       card,
       textElement,
@@ -68,9 +67,14 @@ window.StoryMapInlineEdit = {
     card.appendChild(input);
     input.focus();
     input.select();
-
+    const adjustHeight = () => {
+      input.style.height = "auto"; // Reset height
+      input.style.height = input.scrollHeight + "px"; // Set to content height
+    };
+    input.addEventListener("input", adjustHeight);
+    setTimeout(adjustHeight, 0); // Adjust height on initial render
     input.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {
+      if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
         this.saveEdit();
       } else if (e.key === "Escape") {
