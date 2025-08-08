@@ -141,8 +141,8 @@ window.StoryMapInlineEdit = {
 
   cancelEdit() {
     if (!this.activeEdit) return;
-    const { textElement, input } = this.activeEdit;
-    card.classList.remove("is-editing"); // Remove the state class
+    const { textElement, input, card } = this.activeEdit;
+    card.classList.remove("is-editing");
 
     textElement.style.display = "";
     input.remove();
