@@ -106,7 +106,6 @@ window.StoryMapInlineEdit = {
     const { input, entityType, entityId, originalText, card, fieldName } =
       this.activeEdit;
     const newValue = input.value.trim();
-    card.classList.remove("is-editing"); // Remove the state class
 
     if (newValue !== originalText && newValue !== "") {
       input.disabled = true;
@@ -137,6 +136,7 @@ window.StoryMapInlineEdit = {
       if (window.StoryMapRenderer && mainCanvas.length) {
         window.StoryMapRenderer.render(mainCanvas);
       }
+      card.classList.remove("is-editing"); // Remove the state class
       this.activeEdit = null;
     } else {
       this.cancelEdit();
