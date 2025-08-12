@@ -76,41 +76,16 @@
   color: #333;
   word-wrap: break-word;
   overflow-wrap: break-word;
-  padding: 12px;
+  padding: 8px;
   width: 100%;
   box-sizing: border-box;
 }
 
-.card-icon-button {
-  width: 20px;
-  height: 20px;
-  padding: 2px;
-  margin-left: 4px;
-  border-radius: 4px;
-  opacity: 0;
-  transform: scale(0.8);
-  transition: opacity 0.15s, transform 0.15s;
-  cursor: pointer;
-  flex-shrink: 0;
-}
+/* Old icon styles removed - now using absolute positioning */
 
-.card:hover .card-icon-button {
-  opacity: 1;
-  transform: scale(1);
-}
+/* Old hover rule removed */
 
-.card-icon-button:hover {
-  background-color: rgba(0, 0, 0, 0.08);
-}
-
-.card-icon-button svg {
-  width: 100%;
-  height: 100%;
-  stroke: #555;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
+/* Old SVG styles removed - now handled by new overlay styles */
 
 .journey-card {
   height: var(--journey-height);
@@ -198,7 +173,7 @@ textarea.inline-edit-input {
   min-height: 40px;
   line-height: 1.3;
   width: 100%;
-  padding: 12px;
+  padding: 8px;
   box-sizing: border-box;
   position: absolute;
   top: 0;
@@ -320,10 +295,18 @@ textarea.inline-edit-input {
   transform: translateX(-50%) scale(1);
 }
 
+.card {
+  position: relative;
+  display: block; /* Changed from flex to block to prevent icon space reservation */
+  border-radius: 6px;
+  box-sizing: border-box;
+  border: 2px dashed #ccc;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
 .empty-feature-placeholder,
 .empty-story-placeholder,
-.empty-column-drop-zone.card {
-  position: relative;
+.empty-column-drop-zone {
   display: flex;
   align-items: center;
   justify-content: center;
