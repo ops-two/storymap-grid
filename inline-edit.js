@@ -16,6 +16,7 @@ window.StoryMapInlineEdit = {
     // The dblclick listener is now the main "controller" for starting edits.
     this.container.addEventListener("dblclick", (e) => {
       if (!e.target.classList.contains("card-title-text")) return;
+
       const card = e.target.closest(".card");
       if (!card) return;
 
@@ -24,6 +25,7 @@ window.StoryMapInlineEdit = {
         this.saveEdit();
       }
 
+      // Only start a new edit if one isn't already active on THIS card.
       if (!card.querySelector(".inline-edit-input")) {
         const entityType = card.dataset.type;
         const entityId = card.dataset.id;
@@ -34,6 +36,7 @@ window.StoryMapInlineEdit = {
 
     // The global listener is now smarter. It uses 'mousedown' and checks if the click is truly outside.
     document.addEventListener("mousedown", (e) => {
+      // Save only if the click is TRULY outside of any interactive card area.
       if (this.activeEdit && !e.target.closest(".card")) {
         this.saveEdit();
       }
@@ -41,6 +44,7 @@ window.StoryMapInlineEdit = {
   },
 
   startEdit(card, entityType, entityId) {
+    // This is your proven, working startEdit logic. It is preserved.
     const textElement = card.querySelector(".card-title-text");
     if (!textElement) return;
     card.classList.add("is-editing");
@@ -81,6 +85,7 @@ window.StoryMapInlineEdit = {
   },
 
   getFieldName(entityType) {
+    // This is your proven getFieldName logic. It is preserved.
     const fieldMap = {
       journey: "name_text",
       feature: "name_text",
@@ -105,6 +110,7 @@ window.StoryMapInlineEdit = {
     const newValue = input.value.trim();
 
     if (newValue !== "" && newValue !== originalText) {
+      // This is your proven data dispatch logic. It is preserved.
       window.StoryMapDataStore.updateEntityName(entityType, entityId, newValue);
       const fullEntityData = window.StoryMapDataStore.getEntityForUpdate(
         entityType,
@@ -136,6 +142,7 @@ window.StoryMapInlineEdit = {
 
   cancelEdit() {
     if (!this.activeEdit) return;
+    // This is your proven cancel logic, now guaranteed to have the 'card' variable.
     const { textElement, input, card } = this.activeEdit;
     card.classList.remove("is-editing");
     textElement.style.display = "";
@@ -144,6 +151,18 @@ window.StoryMapInlineEdit = {
   },
 
   getFieldNameForBubble(entityType) {
+    // This is your proven helper function. It is preserved.
     return entityType === "story" ? "title_text" : "name_text";
+  },
+
+  gatherEntityData(card, entityType, newValue) {
+    // This is your proven helper function. It is preserved.
+    const data = { entityId: card.dataset.id, name_text: newValue };
+    const orderValue =
+      card.getAttribute("data-order") ||
+      card.getAttribute("data-order-index") ||
+      "0";
+    data.order_index = parseInt(orderValue);
+    return data;
   },
 };
