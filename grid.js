@@ -2,31 +2,31 @@
 
 window.StoryMapRenderer = {
   // Calculate the required height for a story card based on its content
-  calculateStoryHeight: function(storyText) {
+  calculateStoryHeight: function (storyText) {
     // Create a temporary element to measure text height
-    const tempDiv = document.createElement('div');
-    tempDiv.style.position = 'absolute';
-    tempDiv.style.visibility = 'hidden';
-    tempDiv.style.width = '160px'; // Full story card width
-    tempDiv.style.fontSize = '13px';
-    tempDiv.style.fontFamily = 'inherit';
-    tempDiv.style.lineHeight = '1.3';
-    tempDiv.style.padding = '8px'; // Match actual story card text padding
-    tempDiv.style.margin = '0';
-    tempDiv.style.wordWrap = 'break-word';
-    tempDiv.style.whiteSpace = 'normal';
-    tempDiv.style.boxSizing = 'border-box';
-    tempDiv.style.display = 'block';
+    const tempDiv = document.createElement("div");
+    tempDiv.style.position = "absolute";
+    tempDiv.style.visibility = "hidden";
+    tempDiv.style.width = "160px"; // Full story card width
+    tempDiv.style.fontSize = "13px";
+    tempDiv.style.fontFamily = "inherit";
+    tempDiv.style.lineHeight = "1.3";
+    tempDiv.style.padding = "8px"; // Match actual story card text padding
+    tempDiv.style.margin = "0";
+    tempDiv.style.wordWrap = "break-word";
+    tempDiv.style.whiteSpace = "normal";
+    tempDiv.style.boxSizing = "border-box";
+    tempDiv.style.display = "block";
     tempDiv.textContent = storyText;
-    
+
     document.body.appendChild(tempDiv);
     const textHeight = tempDiv.offsetHeight;
     document.body.removeChild(tempDiv);
-    
+
     // Add extra breathing room (padding already included in textHeight measurement)
     const extraPadding = 8; // Additional padding for better appearance
     const minHeight = 50;
-    
+
     const calculatedHeight = textHeight + extraPadding;
     return Math.max(calculatedHeight, minHeight);
   },
@@ -34,7 +34,7 @@ window.StoryMapRenderer = {
   render: function (containerElement) {
     // --- 0. DEFINE ICON SVG FOR ALL SECTIONS ---
     const iconSvg = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 2V8H20" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 13H8" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 17H8" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 9H8" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-    
+
     // --- 1. PULL CLEAN DATA FROM THE DATA STORE ---
     const project = window.StoryMapDataStore.data.project;
     const journeys = window.StoryMapDataStore.getEntitiesArray("journey");
@@ -281,8 +281,21 @@ window.StoryMapRenderer = {
     // --- THIS IS THE CRITICAL FIX ---
     // Now, we loop through ALL releases, regardless of whether they have stories.
     sortedReleasesToRender.forEach((release) => {
+      // Format the release header with name and target date
+      let releaseHeaderText = release.name;
+      if (release.targetDate) {
+        // Format the date nicely (e.g., "Dec 5, 2002")
+        const targetDate = new Date(release.targetDate);
+        const formattedDate = targetDate.toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric'
+        });
+        releaseHeaderText = `${release.name} | ${formattedDate}`;
+      }
+      
       // We render the header UNCONDITIONALLY.
-      html += `<div class="release-header" data-id="${release.id}">${release.name}</div>`;
+      html += `<div class="release-header" data-id="${release.id}">${releaseHeaderText}</div>`;
 
       const releaseStories = stories.filter((s) => s.releaseId === release.id);
 
