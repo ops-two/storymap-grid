@@ -67,6 +67,17 @@
   cursor: text;
 }
 
+/* Story cards need special layout for content overflow fix */
+.story-card {
+  display: block; /* Override flex for story cards only */
+  align-items: unset;
+  justify-content: unset;
+  /* Ensure story card styling is maintained */
+  font-weight: 500;
+  border: 1px solid #28a745;
+  border-left: 5px solid #28a745;
+}
+
 /* Remove line-clamp from story cards to show full content */
 .story-card .card-title-text {
   display: block;
@@ -297,10 +308,11 @@ textarea.inline-edit-input {
 
 .card {
   position: relative;
-  display: block; /* Changed from flex to block to prevent icon space reservation */
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 6px;
   box-sizing: border-box;
-  border: 2px dashed #ccc;
   transition: background-color 0.2s, border-color 0.2s;
 }
 
