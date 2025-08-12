@@ -89,9 +89,13 @@
   color: #333;
   word-wrap: break-word;
   overflow-wrap: break-word;
+  white-space: normal;
+  hyphens: auto;
   padding: 8px; /* Padding matches JavaScript calculateStoryHeight calculation */
   width: 100%;
+  max-width: 100%;
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 /* Doc icon overlay system - allows content to use full width */
@@ -346,48 +350,21 @@ textarea.inline-edit-input {
   transition: background-color 0.2s, border-color 0.2s;
 }
 
-/* Complete blue outline elimination - aggressive approach */
-* {
-  outline: 0 !important;
-  outline: none !important;
-  outline-width: 0 !important;
-  outline-style: none !important;
-  outline-color: transparent !important;
-  -webkit-tap-highlight-color: rgba(0, 0, 0, 0) !important;
-  -webkit-tap-highlight-color: transparent !important;
-  -webkit-focus-ring-color: rgba(0, 0, 0, 0) !important;
-  -moz-outline: 0 !important;
-  -moz-outline: none !important;
-}
-
-/* Meticulous outline removal for all input and interactive elements */
+/* Only remove blue focus outline from input elements during editing */
 input,
 input:focus,
 input:active,
-input:hover,
 textarea,
 textarea:focus,
 textarea:active,
-textarea:hover,
 .inline-edit-input,
 .inline-edit-input:focus,
-.inline-edit-input:active,
-.inline-edit-input:hover,
-button,
-button:focus,
-button:active,
-button:hover,
-div, span, a,
-.card, .card *,
-div[data-type], div[data-id],
-[tabindex], [tabindex] *,
-:focus, :active, :hover {
+.inline-edit-input:active {
   outline: 0 !important;
   outline: none !important;
   outline-width: 0 !important;
   outline-style: none !important;
   outline-color: transparent !important;
-  outline-offset: 0 !important;
   box-shadow: none !important;
   -webkit-tap-highlight-color: rgba(0,0,0,0) !important;
   -webkit-focus-ring-color: rgba(0,0,0,0) !important;
