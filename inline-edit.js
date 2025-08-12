@@ -13,27 +13,32 @@ window.StoryMapInlineEdit = {
   },
 
   setupEditHandlers() {
-    // This is the proven DBLCLICK event. It is correct.
+    // This is your proven DBLCLICK event logic. It is preserved.
     this.container.addEventListener("dblclick", (e) => {
-      // --- CRITICAL CHANGE #1: The Target ---
-      // We now check if the user double-clicked the text, not just the card.
-      if (!e.target.classList.contains("card-title-text")) {
-        return; // Exit if the double-click was not on the text itself.
+      if (!e.target.classList.contains("card-title-text")) return;
+
+      // If we are already editing something, save it first before starting a new edit.
+      if (this.activeEdit) {
+        this.saveEdit();
       }
 
       const card = e.target.closest(".card");
       if (!card || card.querySelector(".inline-edit-input")) return;
-
       const entityType = card.dataset.type;
       const entityId = card.dataset.id;
       if (!entityType || !entityId) return;
-
       this.startEdit(card, entityType, entityId);
     });
 
-    // This global listener is correct and has been preserved.
-    document.addEventListener("click", (e) => {
-      if (this.activeEdit && !e.target.closest(".inline-edit-input")) {
+    // --- THIS IS THE CRITICAL FIX ---
+    // We change from "click" to "mousedown" to fire before the dblclick.
+    // We also add a check to ensure the click wasn't on another card's text.
+    document.addEventListener("mousedown", (e) => {
+      if (
+        this.activeEdit &&
+        !e.target.closest(".inline-edit-input") &&
+        !e.target.classList.contains("card-title-text")
+      ) {
         this.saveEdit();
       }
     });
