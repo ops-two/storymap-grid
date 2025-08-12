@@ -116,7 +116,7 @@ window.StoryMapRenderer = {
             ? nextJourney.order
             : (journey.order || 0) + 20;
 
-          html += `<div class="card journey-card" data-id="${journey.id}" data-type="journey" data-order="${journey.order}" style="grid-column: ${startCol} / span ${span};">
+          html += `<div class="card journey-card" data-id="${journey.id}" data-type="journey" data-order="${journey.order}" style="grid-column: ${startCol} / span ${span};" tabindex="-1">
                   <div class="add-item-button before" data-add-type="journey" data-before-order="${beforeOrder}" data-after-order="${journey.order}">+</div>
                   <span class="card-title-text">${title}</span>
                   <div class="card-icon-button">${iconSvg}</div>
@@ -142,7 +142,7 @@ window.StoryMapRenderer = {
             : (journey.order || 0) + 20;
 
           // CRITICAL FIX: It now renders a proper, styled .journey-card
-          html += `<div class="card journey-card " data-id="${journey.id}" data-type="journey" data-order="${journey.order}" style="grid-column: ${startCol} / span ${span};">
+          html += `<div class="card journey-card " data-id="${journey.id}" data-type="journey" data-order="${journey.order}" style="grid-column: ${startCol} / span ${span};" tabindex="-1">
                     <div class="add-item-button before" data-add-type="journey" data-before-order="${beforeOrder}" data-after-order="${journey.order}">+</div>
                     <span class="card-title-text">${journey.name}</span>
                     <div class="card-icon-button">${iconSvg}</div>
@@ -189,7 +189,7 @@ window.StoryMapRenderer = {
           feature.id
         }" data-type="feature" data-order="${
           feature.order
-        }" style="grid-column: ${index + 1};">
+        }" style="grid-column: ${index + 1};" tabindex="-1">
                     <div class="add-item-button before" data-add-type="feature" data-journey-id="${
                       feature.journeyId
                     }" data-before-order="${beforeOrder}" data-after-order="${
@@ -249,13 +249,13 @@ window.StoryMapRenderer = {
                 isTechReq ? "tech" : ""
               }" data-id="${story.id}" data-type="story" data-order="${
                 story.order
-              }">
+              }" tabindex="-1">
                       <div class="add-item-button above" data-add-type="story" data-feature-id="${
                         feature.id
                       }" data-release-id="unassigned" data-before-order="${beforeOrder}" data-after-order="${
                 story.order
               }">+</div>
-                      <span class="card-title-text ${titleClass}">${
+                      <span class="card-title-text ${titleClass}">${story.name}</span>
                 story.name
               }</span>
                       <div class="card-icon-button">${iconSvg}</div>
@@ -318,7 +318,7 @@ window.StoryMapRenderer = {
                 isTechReq ? "tech" : ""
               }" data-id="${story.id}" data-type="story" data-order="${
                 story.order
-              }" style="height: ${storyHeight}px;">
+              }" style="height: ${storyHeight}px;" tabindex="-1">
                       <div class="add-item-button above" data-add-type="story" data-feature-id="${
                         feature.id
                       }" data-release-id="${

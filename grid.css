@@ -316,25 +316,13 @@ textarea.inline-edit-input {
   transition: background-color 0.2s, border-color 0.2s;
 }
 
-/* Remove blue focus outline from all cards and interactive elements */
-.card,
-.card:focus,
-.card:active,
-.journey-card,
-.journey-card:focus,
-.journey-card:active,
-.feature-card,
-.feature-card:focus,
-.feature-card:active,
-.story-card,
-.story-card:focus,
-.story-card:active,
-.card-title-text,
-.card-title-text:focus,
-.add-item-button-static,
-.add-item-button-static:focus {
+/* Simple and direct fix for blue focus outline */
+* {
   outline: none !important;
-  box-shadow: none !important;
+}
+
+*:focus {
+  outline: none !important;
 }
 
 .empty-feature-placeholder,
