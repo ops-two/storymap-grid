@@ -7,29 +7,27 @@ window.StoryMapRenderer = {
     const tempDiv = document.createElement('div');
     tempDiv.style.position = 'absolute';
     tempDiv.style.visibility = 'hidden';
-    tempDiv.style.width = '144px'; // Full story card width for content
+    tempDiv.style.width = '160px'; // Full story card width
     tempDiv.style.fontSize = '13px';
     tempDiv.style.fontFamily = 'inherit';
     tempDiv.style.lineHeight = '1.3';
-    tempDiv.style.padding = '0';
+    tempDiv.style.padding = '8px'; // Match actual story card text padding
     tempDiv.style.margin = '0';
     tempDiv.style.wordWrap = 'break-word';
     tempDiv.style.whiteSpace = 'normal';
+    tempDiv.style.boxSizing = 'border-box';
+    tempDiv.style.display = 'block';
     tempDiv.textContent = storyText;
     
     document.body.appendChild(tempDiv);
     const textHeight = tempDiv.offsetHeight;
     document.body.removeChild(tempDiv);
     
-    // Add proper padding for card content (matching CSS) + extra breathing room
-    const paddingTop = 8;
-    const paddingBottom = 8;
-    const paddingLeft = 8;
-    const paddingRight = 8;
+    // Add extra breathing room (padding already included in textHeight measurement)
     const extraPadding = 8; // Additional padding for better appearance
     const minHeight = 50;
     
-    const calculatedHeight = textHeight + paddingTop + paddingBottom + extraPadding;
+    const calculatedHeight = textHeight + extraPadding;
     return Math.max(calculatedHeight, minHeight);
   },
 
