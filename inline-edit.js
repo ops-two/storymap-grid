@@ -45,9 +45,6 @@ window.StoryMapInlineEdit = {
     const textElement = card.querySelector(".card-title-text");
     if (!textElement) return;
 
-    // Add CSS class to hide icons during edit mode
-    card.classList.add("is-editing");
-
     // --- The rest of this function is YOUR proven, working code. It is preserved perfectly. ---
     const currentText = textElement.textContent.trim();
     const input = document.createElement("input");
@@ -99,10 +96,6 @@ window.StoryMapInlineEdit = {
     if (!this.activeEdit) return;
     const { input, entityType, entityId, originalText, card, fieldName } =
       this.activeEdit;
-
-    // Remove CSS class to show icons again
-    card.classList.remove("is-editing");
-
     const newValue = input.value.trim();
     if (newValue !== originalText && newValue !== "") {
       input.disabled = true;
@@ -141,11 +134,7 @@ window.StoryMapInlineEdit = {
 
   cancelEdit() {
     if (!this.activeEdit) return;
-    const { textElement, input, card } = this.activeEdit;
-
-    // Remove CSS class to show icons again
-    card.classList.remove("is-editing");
-
+    const { textElement, input } = this.activeEdit;
     textElement.style.display = "";
     input.remove();
     this.activeEdit = null;
