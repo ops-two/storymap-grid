@@ -1,6 +1,36 @@
 // The definitive, complete, and final grid.js renderer.
 
 window.StoryMapRenderer = {
+  // Calculate the required height for a story card based on its content
+  calculateStoryHeight: function(storyText) {
+    // Create a temporary element to measure text height
+    const tempDiv = document.createElement('div');
+    tempDiv.style.cssText = `
+      position: absolute;
+      visibility: hidden;
+      width: 144px;
+      padding: 0 8px;
+      font-size: 13px;
+      line-height: 1.3;
+      font-weight: 500;
+      white-space: normal;
+      word-wrap: break-word;
+      font-family: Arial, sans-serif;
+      box-sizing: border-box;
+    `;
+    tempDiv.textContent = storyText;
+    document.body.appendChild(tempDiv);
+    
+    // Get the natural height and add padding for card structure
+    const contentHeight = tempDiv.offsetHeight;
+    const minHeight = 50; // Minimum story card height
+    const padding = 16; // Account for card padding and margins
+    const calculatedHeight = Math.max(minHeight, contentHeight + padding);
+    
+    document.body.removeChild(tempDiv);
+    return calculatedHeight;
+  },
+
   render: function (containerElement) {
     // --- 1. PULL CLEAN DATA FROM THE DATA STORE ---
     const project = window.StoryMapDataStore.data.project;
@@ -281,11 +311,12 @@ window.StoryMapRenderer = {
                 : (story.order || 0) + 20;
               const isTechReq = story.type && story.type === "Tech-Req";
               const titleClass = isTechReq ? "tech-req-title" : "";
+              const storyHeight = this.calculateStoryHeight(story.name);
               html += `<div class="card story-card ${
                 isTechReq ? "tech" : ""
               }" data-id="${story.id}" data-type="story" data-order="${
                 story.order
-              }">
+              }" style="height: ${storyHeight}px;">
                       <div class="add-item-button above" data-add-type="story" data-feature-id="${
                         feature.id
                       }" data-release-id="${
