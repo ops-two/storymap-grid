@@ -74,10 +74,20 @@
   justify-content: unset;
   /* Ensure story card styling is maintained */
   font-weight: 500;
-  border: 1px solid #28a745;
-  border-left: 5px solid #28a745;
+  border: 1px solid #28a745 !important;
+  border-left: 5px solid #28a745 !important;
   /* Padding is handled dynamically in JavaScript calculateStoryHeight function */
   box-sizing: border-box;
+}
+
+/* Ensure story card borders are maintained on hover and all states */
+.story-card:hover,
+.story-card:focus,
+.story-card:active {
+  border: 1px solid #28a745 !important;
+  border-left: 5px solid #28a745 !important;
+  font-weight: 500 !important;
+  display: block !important;
 }
 
 /* Remove line-clamp from story cards to show full content */
