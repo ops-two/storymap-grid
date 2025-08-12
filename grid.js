@@ -256,7 +256,9 @@ window.StoryMapRenderer = {
                       }" data-release-id="unassigned" data-before-order="${beforeOrder}" data-after-order="${
                 story.order
               }">+</div>
-                      <span class="card-title-text ${titleClass}">${story.name}</span>
+                      <span class="card-title-text ${titleClass}">${
+                story.name
+              }</span>
                       <div class="card-icon-button">${iconSvg}</div>
                       <div class="add-item-button below" data-add-type="story" data-feature-id="${
                         feature.id
