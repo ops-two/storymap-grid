@@ -34,6 +34,9 @@ window.StoryMapRenderer = {
   },
 
   render: function (containerElement) {
+    // --- 0. DEFINE ICON SVG FOR ALL SECTIONS ---
+    const iconSvg = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 2V8H20" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 13H8" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 17H8" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 9H8" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    
     // --- 1. PULL CLEAN DATA FROM THE DATA STORE ---
     const project = window.StoryMapDataStore.data.project;
     const journeys = window.StoryMapDataStore.getEntitiesArray("journey");
@@ -56,10 +59,9 @@ window.StoryMapRenderer = {
     const unassignedFeatures = allFeatures.filter((f) => !f.journeyId);
     displayItems.push(...unassignedFeatures);
 
-    // --- 3. GRID CALCULATION & SVG DEFINITION ---
+    // --- 3. GRID CALCULATION ---
     const totalColumns = displayItems.length > 0 ? displayItems.length : 1;
     document.documentElement.style.setProperty("--total-columns", totalColumns);
-    const iconSvg = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 2V8H20" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 13H8" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 17H8" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 9H8" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
     // --- 4. HTML GENERATION ---
     let html = `
@@ -250,7 +252,7 @@ window.StoryMapRenderer = {
                 isTechReq ? "tech" : ""
               }" data-id="${story.id}" data-type="story" data-order="${
                 story.order
-              }" style="height: ${storyHeight}px;" tabindex="-1">
+              }" style="height: ${storyHeight}px;">
                       <div class="add-item-button above" data-add-type="story" data-feature-id="${
                         feature.id
                       }" data-release-id="unassigned" data-before-order="${beforeOrder}" data-after-order="${
@@ -317,7 +319,7 @@ window.StoryMapRenderer = {
                 isTechReq ? "tech" : ""
               }" data-id="${story.id}" data-type="story" data-order="${
                 story.order
-              }" style="height: ${storyHeight}px;" tabindex="-1">
+              }" style="height: ${storyHeight}px;">
                       <div class="add-item-button above" data-add-type="story" data-feature-id="${
                         feature.id
                       }" data-release-id="${
