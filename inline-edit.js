@@ -81,6 +81,9 @@ window.StoryMapInlineEdit = {
     });
   },
 
+  // --- All of your remaining functions are preserved, UNCHANGED. ---
+  // They are proven to work and will not be touched.
+
   getFieldName(entityType) {
     const fieldMap = {
       journey: "name_text",
