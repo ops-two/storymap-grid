@@ -314,11 +314,27 @@ textarea.inline-edit-input {
   border-radius: 6px;
   box-sizing: border-box;
   transition: background-color 0.2s, border-color 0.2s;
-  outline: none; /* Remove blue focus outline */
 }
 
-.card:focus {
-  outline: none; /* Ensure no focus outline */
+/* Remove blue focus outline from all cards and interactive elements */
+.card,
+.card:focus,
+.card:active,
+.journey-card,
+.journey-card:focus,
+.journey-card:active,
+.feature-card,
+.feature-card:focus,
+.feature-card:active,
+.story-card,
+.story-card:focus,
+.story-card:active,
+.card-title-text,
+.card-title-text:focus,
+.add-item-button-static,
+.add-item-button-static:focus {
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 .empty-feature-placeholder,
@@ -338,7 +354,7 @@ textarea.inline-edit-input {
 }
 
 .empty-story-placeholder {
-  height: 58px; /* Match one-liner story card height (50px min + 8px extra padding) */
+  height: 46px; /* 20% smaller than 58px for better proportion */
   margin-bottom: var(--vertical-gap);
 }
 
