@@ -28,21 +28,13 @@ window.StoryMapInlineEdit = {
       const entityId = card.dataset.id;
       if (!entityType || !entityId) return;
 
-      // Prevent the click event from bubbling and triggering the global click listener
-      e.preventDefault();
-      e.stopPropagation();
-
       this.startEdit(card, entityType, entityId);
     });
 
     // This global listener is correct and has been preserved.
     document.addEventListener("click", (e) => {
       if (this.activeEdit && !e.target.closest(".inline-edit-input")) {
-        // Prevent immediate exit after starting edit (give 100ms buffer)
-        const timeSinceStart = Date.now() - (this.activeEdit.startTime || 0);
-        if (timeSinceStart > 100) {
-          this.saveEdit();
-        }
+        this.saveEdit();
       }
     });
   },
@@ -81,8 +73,7 @@ window.StoryMapInlineEdit = {
       entityId,
       originalText: currentText,
       fieldName: this.getFieldName(entityType),
-      hiddenIcons: hiddenIcons, // Store hidden icons for restoration
-      startTime: Date.now() // Add timestamp to prevent immediate exit
+      hiddenIcons: hiddenIcons // Store hidden icons for restoration
     };
 
     textElement.style.display = "none";
