@@ -1,4 +1,4 @@
-// The definitive inline-edit.js, adapted for the Miro-like UI
+// The definitive, complete, and final inline-edit.js file.
 
 window.StoryMapInlineEdit = {
   container: null,
@@ -13,46 +13,41 @@ window.StoryMapInlineEdit = {
   },
 
   setupEditHandlers() {
-    // This is your proven DBLCLICK event logic. It is preserved.
+    // The dblclick listener now acts as the main "controller"
     this.container.addEventListener("dblclick", (e) => {
       if (!e.target.classList.contains("card-title-text")) return;
 
-      // If we are already editing something, save it first before starting a new edit.
-      if (this.activeEdit) {
+      const card = e.target.closest(".card");
+      if (!card) return;
+
+      // If we are already editing a DIFFERENT card, save it first.
+      if (this.activeEdit && this.activeEdit.card !== card) {
         this.saveEdit();
       }
 
-      const card = e.target.closest(".card");
-      if (!card || card.querySelector(".inline-edit-input")) return;
-      const entityType = card.dataset.type;
-      const entityId = card.dataset.id;
-      if (!entityType || !entityId) return;
-      this.startEdit(card, entityType, entityId);
+      // Only start a new edit if one isn't already active on THIS card.
+      if (!card.querySelector(".inline-edit-input")) {
+        const entityType = card.dataset.type;
+        const entityId = card.dataset.id;
+        if (!entityType || !entityId) return;
+        this.startEdit(card, entityType, entityId);
+      }
     });
 
-    // --- THIS IS THE CRITICAL FIX ---
-    // We change from "click" to "mousedown" to fire before the dblclick.
-    // We also add a check to ensure the click wasn't on another card's text.
+    // The global listener is now smarter and safer.
     document.addEventListener("mousedown", (e) => {
-      if (
-        this.activeEdit &&
-        !e.target.closest(".inline-edit-input") &&
-        !e.target.classList.contains("card-title-text")
-      ) {
+      // Save only if the click is TRULY outside of any interactive card area.
+      if (this.activeEdit && !e.target.closest(".card")) {
         this.saveEdit();
       }
     });
   },
 
   startEdit(card, entityType, entityId) {
-    // --- CRITICAL CHANGE #2: The Selector ---
-    // We now look for '.card-title-text' instead of '.card-title'.
+    // This is your proven, working startEdit logic. It is preserved.
     const textElement = card.querySelector(".card-title-text");
     if (!textElement) return;
-
-    card.classList.add("is-editing"); // Add the state class
-
-    // --- The rest of this function is YOUR proven, working code. It is preserved perfectly. ---
+    card.classList.add("is-editing");
     const currentText = textElement.textContent.trim();
     const input = document.createElement("textarea");
     input.value = currentText;
@@ -67,17 +62,16 @@ window.StoryMapInlineEdit = {
       originalText: currentText,
       fieldName: this.getFieldName(entityType),
     };
-
     textElement.style.display = "none";
     card.appendChild(input);
     input.focus();
     input.select();
     const adjustHeight = () => {
-      input.style.height = "auto"; // Reset height
-      input.style.height = input.scrollHeight + "px"; // Set to content height
+      input.style.height = "auto";
+      input.style.height = input.scrollHeight + "px";
     };
     input.addEventListener("input", adjustHeight);
-    setTimeout(adjustHeight, 0); // Adjust height on initial render
+    setTimeout(adjustHeight, 0);
     input.addEventListener("keydown", (e) => {
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
@@ -87,13 +81,8 @@ window.StoryMapInlineEdit = {
         this.cancelEdit();
       }
     });
-    input.addEventListener("click", (e) => {
-      e.stopPropagation();
-    });
+    input.addEventListener("click", (e) => e.stopPropagation());
   },
-
-  // --- All of your remaining functions are preserved, UNCHANGED. ---
-  // They are proven to work and will not be touched.
 
   getFieldName(entityType) {
     const fieldMap = {
@@ -105,23 +94,27 @@ window.StoryMapInlineEdit = {
     };
     return fieldMap[entityType] || "name_text";
   },
+
   saveEdit() {
     if (!this.activeEdit) return;
-    const { input, entityType, entityId, originalText, card, fieldName } =
-      this.activeEdit;
+    const {
+      input,
+      entityType,
+      entityId,
+      originalText,
+      card,
+      textElement,
+      fieldName,
+    } = this.activeEdit;
     const newValue = input.value.trim();
 
     if (newValue !== originalText && newValue !== "") {
-      input.disabled = true;
-      input.style.opacity = "0.6";
-
       window.StoryMapDataStore.updateEntityName(entityType, entityId, newValue);
       const fullEntityData = window.StoryMapDataStore.getEntityForUpdate(
         entityType,
         entityId
       );
       if (fullEntityData) fullEntityData.name_text = newValue;
-
       document.dispatchEvent(
         new CustomEvent("storymap:update", {
           detail: {
@@ -134,27 +127,21 @@ window.StoryMapInlineEdit = {
           },
         })
       );
-
-      // The full re-render is the final step. It handles all UI cleanup.
-      const mainCanvas = $(this.container).closest('[id^="bubble-r-box"]');
-      if (window.StoryMapRenderer && mainCanvas.length) {
-        window.StoryMapRenderer.render(mainCanvas);
-      }
-
-      // CRITICAL FIX: The line below has been REMOVED. The re-render makes it unnecessary.
-      // card.classList.remove("is-editing");
-
-      this.activeEdit = null;
-    } else {
-      this.cancelEdit();
     }
+
+    // --- THIS IS THE CRITICAL FIX: SURGICAL DOM CLEANUP ---
+    // We manually restore the card to its original state instead of re-rendering everything.
+    textElement.textContent = newValue || originalText; // Revert if new value is empty
+    textElement.style.display = "";
+    input.remove();
+    card.classList.remove("is-editing");
+    this.activeEdit = null;
   },
 
   cancelEdit() {
     if (!this.activeEdit) return;
     const { textElement, input, card } = this.activeEdit;
     card.classList.remove("is-editing");
-
     textElement.style.display = "";
     input.remove();
     this.activeEdit = null;
@@ -162,18 +149,5 @@ window.StoryMapInlineEdit = {
 
   getFieldNameForBubble(entityType) {
     return entityType === "story" ? "title_text" : "name_text";
-  },
-
-  gatherEntityData(card, entityType, newValue) {
-    const data = {
-      entityId: card.dataset.id,
-      name_text: newValue,
-    };
-    const orderValue =
-      card.getAttribute("data-order") ||
-      card.getAttribute("data-order-index") ||
-      "0";
-    data.order_index = parseInt(orderValue);
-    return data;
   },
 };
