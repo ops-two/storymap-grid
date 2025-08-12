@@ -94,11 +94,44 @@
   box-sizing: border-box;
 }
 
-/* Old icon styles removed - now using absolute positioning */
+/* Doc icon overlay system - allows content to use full width */
+.card-icon-button {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 20px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s ease, background-color 0.2s ease;
+  z-index: 5;
+  pointer-events: none;
+}
 
-/* Old hover rule removed */
+.card:hover .card-icon-button {
+  opacity: 1;
+  pointer-events: auto;
+}
 
-/* Old SVG styles removed - now handled by new overlay styles */
+.card-icon-button:hover {
+  background-color: rgba(200, 200, 200, 0.9);
+  cursor: pointer;
+}
+
+.card.is-editing .card-icon-button {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.card-icon-button svg {
+  width: 12px;
+  height: 12px;
+  stroke: #666;
+}
 
 .journey-card {
   height: var(--journey-height);
@@ -313,45 +346,51 @@ textarea.inline-edit-input {
   transition: background-color 0.2s, border-color 0.2s;
 }
 
-/* Robust blue outline removal - multiple approaches */
-*,
-*:before,
-*:after {
+/* Complete blue outline elimination - aggressive approach */
+* {
   outline: 0 !important;
   outline: none !important;
+  outline-width: 0 !important;
+  outline-style: none !important;
+  outline-color: transparent !important;
   -webkit-tap-highlight-color: rgba(0,0,0,0) !important;
   -webkit-tap-highlight-color: transparent !important;
+  -webkit-focus-ring-color: rgba(0,0,0,0) !important;
+  -webkit-focus-ring-color: transparent !important;
+  -moz-outline: 0 !important;
+  -moz-outline: none !important;
 }
 
 *:focus,
 *:active,
-*:hover {
+*:hover,
+*:visited,
+*:link {
   outline: 0 !important;
   outline: none !important;
+  outline-width: 0 !important;
+  outline-style: none !important;
+  outline-color: transparent !important;
   box-shadow: none !important;
+  border-outline: none !important;
+  -webkit-focus-ring-color: rgba(0,0,0,0) !important;
   -webkit-focus-ring-color: transparent !important;
 }
 
-/* Remove browser default focus styles */
-input:focus,
-textarea:focus,
-button:focus,
-div:focus,
-span:focus {
+/* Aggressive targeting for all interactive elements */
+input, textarea, button, div, span, a, 
+.card, .card *, 
+div[data-type], div[data-id],
+[tabindex], [tabindex] *,
+:focus, :active, :hover {
   outline: 0 !important;
   outline: none !important;
-  border: none !important;
+  outline-width: 0 !important;
+  outline-style: none !important;
+  outline-color: transparent !important;
   box-shadow: none !important;
-}
-
-/* Specific card targeting */
-.card,
-.card *,
-div[data-type],
-div[data-id] {
-  outline: 0 !important;
-  outline: none !important;
-  -webkit-tap-highlight-color: transparent !important;
+  -webkit-tap-highlight-color: rgba(0,0,0,0) !important;
+  -webkit-focus-ring-color: rgba(0,0,0,0) !important;
 }
 
 .empty-feature-placeholder,
