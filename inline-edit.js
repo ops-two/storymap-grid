@@ -45,18 +45,8 @@ window.StoryMapInlineEdit = {
     const textElement = card.querySelector(".card-title-text");
     if (!textElement) return;
 
-    // Hide icons during edit mode - find and hide any icons in the card
-    const icons = card.querySelectorAll('.card-icon, .icon, [class*="icon"]');
-    const hiddenIcons = [];
-    icons.forEach(icon => {
-      if (icon.style.display !== 'none') {
-        hiddenIcons.push({
-          element: icon,
-          originalDisplay: icon.style.display || ''
-        });
-        icon.style.display = 'none';
-      }
-    });
+    // Add CSS class to hide icons during edit mode (no DOM manipulation)
+    card.classList.add("is-editing");
 
     // --- The rest of this function is YOUR proven, working code. It is preserved perfectly. ---
     const currentText = textElement.textContent.trim();
@@ -73,7 +63,6 @@ window.StoryMapInlineEdit = {
       entityId,
       originalText: currentText,
       fieldName: this.getFieldName(entityType),
-      hiddenIcons: hiddenIcons // Store hidden icons for restoration
     };
 
     textElement.style.display = "none";
@@ -109,15 +98,11 @@ window.StoryMapInlineEdit = {
 
   saveEdit() {
     if (!this.activeEdit) return;
-    const { input, entityType, entityId, originalText, card, fieldName, hiddenIcons } =
+    const { input, entityType, entityId, originalText, card, fieldName } =
       this.activeEdit;
 
-    // Restore hidden icons
-    if (hiddenIcons) {
-      hiddenIcons.forEach(iconData => {
-        iconData.element.style.display = iconData.originalDisplay;
-      });
-    }
+    // Remove CSS class to show icons again
+    card.classList.remove("is-editing");
 
     const newValue = input.value.trim();
     if (newValue !== originalText && newValue !== "") {
@@ -157,14 +142,10 @@ window.StoryMapInlineEdit = {
 
   cancelEdit() {
     if (!this.activeEdit) return;
-    const { textElement, input, hiddenIcons } = this.activeEdit;
+    const { textElement, input, card } = this.activeEdit;
 
-    // Restore hidden icons
-    if (hiddenIcons) {
-      hiddenIcons.forEach(iconData => {
-        iconData.element.style.display = iconData.originalDisplay;
-      });
-    }
+    // Remove CSS class to show icons again
+    card.classList.remove("is-editing");
 
     textElement.style.display = "";
     input.remove();
