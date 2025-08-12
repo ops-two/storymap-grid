@@ -70,16 +70,15 @@
 /* Remove line-clamp from story cards to show full content */
 .story-card .card-title-text {
   display: block;
-  -webkit-line-clamp: unset;
-  line-clamp: unset;
-  -webkit-box-orient: unset;
-  overflow: hidden;
-  text-overflow: unset;
-  white-space: normal;
-  word-wrap: break-word;
-  height: auto;
-  line-height: 1.3;
+  text-align: left;
   font-size: 13px;
+  line-height: 1.3;
+  color: #333;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  padding: 12px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .card-icon-button {
@@ -198,6 +197,14 @@ textarea.inline-edit-input {
   resize: none;
   min-height: 40px;
   line-height: 1.3;
+  width: 100%;
+  padding: 12px;
+  box-sizing: border-box;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
 }
 
 .empty-column-drop-zone {
@@ -315,7 +322,8 @@ textarea.inline-edit-input {
 
 .empty-feature-placeholder,
 .empty-story-placeholder,
-.empty-column-drop-zone {
+.empty-column-drop-zone.card {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -380,6 +388,34 @@ textarea.inline-edit-input {
 .empty-feature-placeholder:hover .add-item-button-static,
 .empty-story-placeholder:hover .add-item-button-static {
   color: #333;
+}
+
+/* Doc icon overlay styling */
+.card-icon-button {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  background: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 10;
+}
+
+.card-icon-button svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Show icon on hover */
+.card:hover .card-icon-button {
+  opacity: 1;
 }
 
 /* Hide doc icon during editing mode */

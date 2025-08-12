@@ -5,30 +5,31 @@ window.StoryMapRenderer = {
   calculateStoryHeight: function(storyText) {
     // Create a temporary element to measure text height
     const tempDiv = document.createElement('div');
-    tempDiv.style.cssText = `
-      position: absolute;
-      visibility: hidden;
-      width: 144px;
-      padding: 0 8px;
-      font-size: 13px;
-      line-height: 1.3;
-      font-weight: 500;
-      white-space: normal;
-      word-wrap: break-word;
-      font-family: Arial, sans-serif;
-      box-sizing: border-box;
-    `;
+    tempDiv.style.position = 'absolute';
+    tempDiv.style.visibility = 'hidden';
+    tempDiv.style.width = '144px'; // Full story card width for content
+    tempDiv.style.fontSize = '13px';
+    tempDiv.style.fontFamily = 'inherit';
+    tempDiv.style.lineHeight = '1.3';
+    tempDiv.style.padding = '0';
+    tempDiv.style.margin = '0';
+    tempDiv.style.wordWrap = 'break-word';
+    tempDiv.style.whiteSpace = 'normal';
     tempDiv.textContent = storyText;
+    
     document.body.appendChild(tempDiv);
-    
-    // Get the natural height and add padding for card structure
-    const contentHeight = tempDiv.offsetHeight;
-    const minHeight = 50; // Minimum story card height
-    const padding = 16; // Account for card padding and margins
-    const calculatedHeight = Math.max(minHeight, contentHeight + padding);
-    
+    const textHeight = tempDiv.offsetHeight;
     document.body.removeChild(tempDiv);
-    return calculatedHeight;
+    
+    // Add proper padding for card content
+    const paddingTop = 12;
+    const paddingBottom = 12;
+    const paddingLeft = 12;
+    const paddingRight = 12;
+    const minHeight = 60;
+    
+    const calculatedHeight = textHeight + paddingTop + paddingBottom;
+    return Math.max(calculatedHeight, minHeight);
   },
 
   render: function (containerElement) {
