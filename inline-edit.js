@@ -13,10 +13,9 @@ window.StoryMapInlineEdit = {
   },
 
   setupEditHandlers() {
-    // The dblclick listener now acts as the main "controller"
+    // The dblclick listener is now the main "controller" for starting edits.
     this.container.addEventListener("dblclick", (e) => {
       if (!e.target.classList.contains("card-title-text")) return;
-
       const card = e.target.closest(".card");
       if (!card) return;
 
@@ -25,7 +24,6 @@ window.StoryMapInlineEdit = {
         this.saveEdit();
       }
 
-      // Only start a new edit if one isn't already active on THIS card.
       if (!card.querySelector(".inline-edit-input")) {
         const entityType = card.dataset.type;
         const entityId = card.dataset.id;
@@ -34,9 +32,8 @@ window.StoryMapInlineEdit = {
       }
     });
 
-    // The global listener is now smarter and safer.
+    // The global listener is now smarter. It uses 'mousedown' and checks if the click is truly outside.
     document.addEventListener("mousedown", (e) => {
-      // Save only if the click is TRULY outside of any interactive card area.
       if (this.activeEdit && !e.target.closest(".card")) {
         this.saveEdit();
       }
@@ -44,7 +41,6 @@ window.StoryMapInlineEdit = {
   },
 
   startEdit(card, entityType, entityId) {
-    // This is your proven, working startEdit logic. It is preserved.
     const textElement = card.querySelector(".card-title-text");
     if (!textElement) return;
     card.classList.add("is-editing");
@@ -108,7 +104,7 @@ window.StoryMapInlineEdit = {
     } = this.activeEdit;
     const newValue = input.value.trim();
 
-    if (newValue !== originalText && newValue !== "") {
+    if (newValue !== "" && newValue !== originalText) {
       window.StoryMapDataStore.updateEntityName(entityType, entityId, newValue);
       const fullEntityData = window.StoryMapDataStore.getEntityForUpdate(
         entityType,
@@ -131,7 +127,7 @@ window.StoryMapInlineEdit = {
 
     // --- THIS IS THE CRITICAL FIX: SURGICAL DOM CLEANUP ---
     // We manually restore the card to its original state instead of re-rendering everything.
-    textElement.textContent = newValue || originalText; // Revert if new value is empty
+    textElement.textContent = newValue || originalText;
     textElement.style.display = "";
     input.remove();
     card.classList.remove("is-editing");
