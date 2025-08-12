@@ -33,14 +33,6 @@ window.StoryMapInlineEdit = {
         this.startEdit(card, entityType, entityId);
       }
     });
-
-    // The global listener is now smarter. It uses 'mousedown' to fire before other clicks.
-    document.addEventListener("mousedown", (e) => {
-      // Save only if the click is TRULY outside of any interactive card area.
-      if (this.activeEdit && !e.target.closest(".card")) {
-        this.saveEdit();
-      }
-    });
   },
 
   startEdit(card, entityType, entityId) {
@@ -72,6 +64,11 @@ window.StoryMapInlineEdit = {
     };
     input.addEventListener("input", adjustHeight);
     setTimeout(adjustHeight, 0);
+
+    // --- THIS IS THE CRITICAL FIX ---
+    // We now listen for 'blur' (losing focus) instead of a global click.
+    input.addEventListener("blur", () => this.saveEdit());
+
     input.addEventListener("keydown", (e) => {
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
@@ -85,7 +82,6 @@ window.StoryMapInlineEdit = {
   },
 
   getFieldName(entityType) {
-    // This is your proven getFieldName logic. It is preserved.
     const fieldMap = {
       journey: "name_text",
       feature: "name_text",
@@ -107,10 +103,13 @@ window.StoryMapInlineEdit = {
       textElement,
       fieldName,
     } = this.activeEdit;
+
+    // Set activeEdit to null FIRST to prevent re-triggering.
+    this.activeEdit = null;
+
     const newValue = input.value.trim();
 
     if (newValue !== "" && newValue !== originalText) {
-      // This is your proven data dispatch logic. It is preserved.
       window.StoryMapDataStore.updateEntityName(entityType, entityId, newValue);
       const fullEntityData = window.StoryMapDataStore.getEntityForUpdate(
         entityType,
@@ -131,32 +130,30 @@ window.StoryMapInlineEdit = {
       );
     }
 
-    // --- THIS IS THE CRITICAL FIX: SURGICAL DOM CLEANUP ---
-    // We manually restore the card to its original state instead of re-rendering everything.
+    // Surgical DOM cleanup.
     textElement.textContent = newValue || originalText;
     textElement.style.display = "";
     input.remove();
     card.classList.remove("is-editing");
-    this.activeEdit = null;
   },
 
   cancelEdit() {
     if (!this.activeEdit) return;
-    // This is your proven cancel logic, now guaranteed to have the 'card' variable.
     const { textElement, input, card } = this.activeEdit;
+
+    // Set activeEdit to null FIRST.
+    this.activeEdit = null;
+
     card.classList.remove("is-editing");
     textElement.style.display = "";
     input.remove();
-    this.activeEdit = null;
   },
 
   getFieldNameForBubble(entityType) {
-    // This is your proven helper function. It is preserved.
     return entityType === "story" ? "title_text" : "name_text";
   },
 
   gatherEntityData(card, entityType, newValue) {
-    // This is your proven helper function. It is preserved.
     const data = { entityId: card.dataset.id, name_text: newValue };
     const orderValue =
       card.getAttribute("data-order") ||
