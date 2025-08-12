@@ -190,6 +190,16 @@
   white-space: nowrap;
 }
 
+/* Specific styles for textarea (multiline editing) */
+textarea.inline-edit-input {
+  text-align: left;
+  white-space: normal;
+  overflow: hidden;
+  resize: none;
+  min-height: 40px;
+  line-height: 1.3;
+}
+
 .empty-column-drop-zone {
   display: flex;
   align-items: center;
@@ -320,7 +330,7 @@
 }
 
 .empty-story-placeholder {
-  min-height: var(--story-height);
+  height: 35px; /* Shorter than story cards */
   margin-bottom: var(--vertical-gap);
 }
 
