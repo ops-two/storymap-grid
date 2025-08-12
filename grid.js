@@ -21,14 +21,15 @@ window.StoryMapRenderer = {
     const textHeight = tempDiv.offsetHeight;
     document.body.removeChild(tempDiv);
     
-    // Add proper padding for card content (matching CSS)
+    // Add proper padding for card content (matching CSS) + extra breathing room
     const paddingTop = 8;
     const paddingBottom = 8;
     const paddingLeft = 8;
     const paddingRight = 8;
+    const extraPadding = 8; // Additional padding for better appearance
     const minHeight = 50;
     
-    const calculatedHeight = textHeight + paddingTop + paddingBottom;
+    const calculatedHeight = textHeight + paddingTop + paddingBottom + extraPadding;
     return Math.max(calculatedHeight, minHeight);
   },
 
