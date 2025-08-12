@@ -1,4 +1,4 @@
-// The definitive, complete, and final inline-edit.js file.
+// The definitive inline-edit.js, built from your proven working code.
 
 window.StoryMapInlineEdit = {
   container: null,
@@ -13,38 +13,40 @@ window.StoryMapInlineEdit = {
   },
 
   setupEditHandlers() {
-    // The dblclick listener is now the main "controller" for starting edits.
+    // This is your proven, working dblclick logic. It is preserved.
     this.container.addEventListener("dblclick", (e) => {
-      if (!e.target.classList.contains("card-title-text")) return;
-
-      const card = e.target.closest(".card");
-      if (!card) return;
-
-      // If we are already editing a DIFFERENT card, save the old one first.
-      if (this.activeEdit && this.activeEdit.card !== card) {
-        this.saveEdit();
+      if (!e.target.classList.contains("card-title-text")) {
+        return;
       }
+      const card = e.target.closest(".card");
+      if (!card || card.querySelector(".inline-edit-input")) return;
+      const entityType = card.dataset.type;
+      const entityId = card.dataset.id;
+      if (!entityType || !entityId) return;
+      this.startEdit(card, entityType, entityId);
+    });
 
-      // Only start a new edit if one isn't already active on THIS card.
-      if (!card.querySelector(".inline-edit-input")) {
-        const entityType = card.dataset.type;
-        const entityId = card.dataset.id;
-        if (!entityType || !entityId) return;
-        this.startEdit(card, entityType, entityId);
+    // This is your proven, working global click listener. It is preserved.
+    document.addEventListener("click", (e) => {
+      if (this.activeEdit && !e.target.closest(".inline-edit-input")) {
+        this.saveEdit();
       }
     });
   },
 
   startEdit(card, entityType, entityId) {
-    // This is your proven, working startEdit logic. It is preserved.
     const textElement = card.querySelector(".card-title-text");
     if (!textElement) return;
-    card.classList.add("is-editing");
+
+    // --- THIS IS THE CRITICAL FIX ---
+    card.classList.add("is-editing"); // Add the state class
+
+    // The rest of your proven, working logic is preserved.
     const currentText = textElement.textContent.trim();
-    const input = document.createElement("textarea");
+    const input = document.createElement("input");
+    input.type = "text";
     input.value = currentText;
     input.className = "inline-edit-input";
-    input.rows = 1;
     this.activeEdit = {
       card,
       textElement,
@@ -58,19 +60,8 @@ window.StoryMapInlineEdit = {
     card.appendChild(input);
     input.focus();
     input.select();
-    const adjustHeight = () => {
-      input.style.height = "auto";
-      input.style.height = input.scrollHeight + "px";
-    };
-    input.addEventListener("input", adjustHeight);
-    setTimeout(adjustHeight, 0);
-
-    // --- THIS IS THE CRITICAL FIX ---
-    // We now listen for 'blur' (losing focus) instead of a global click.
-    input.addEventListener("blur", () => this.saveEdit());
-
     input.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" && !e.shiftKey) {
+      if (e.key === "Enter") {
         e.preventDefault();
         this.saveEdit();
       } else if (e.key === "Escape") {
@@ -82,6 +73,7 @@ window.StoryMapInlineEdit = {
   },
 
   getFieldName(entityType) {
+    // This is your proven, working function. It is preserved.
     const fieldMap = {
       journey: "name_text",
       feature: "name_text",
@@ -94,22 +86,17 @@ window.StoryMapInlineEdit = {
 
   saveEdit() {
     if (!this.activeEdit) return;
-    const {
-      input,
-      entityType,
-      entityId,
-      originalText,
-      card,
-      textElement,
-      fieldName,
-    } = this.activeEdit;
+    const { input, entityType, entityId, originalText, card, fieldName } =
+      this.activeEdit;
 
-    // Set activeEdit to null FIRST to prevent re-triggering.
-    this.activeEdit = null;
+    // --- THIS IS THE CRITICAL FIX ---
+    card.classList.remove("is-editing"); // Remove the state class
 
+    // The rest of your proven, working logic is preserved.
     const newValue = input.value.trim();
-
-    if (newValue !== "" && newValue !== originalText) {
+    if (newValue !== originalText && newValue !== "") {
+      input.disabled = true;
+      input.style.opacity = "0.6";
       window.StoryMapDataStore.updateEntityName(entityType, entityId, newValue);
       const fullEntityData = window.StoryMapDataStore.getEntityForUpdate(
         entityType,
@@ -128,32 +115,36 @@ window.StoryMapInlineEdit = {
           },
         })
       );
+      const mainCanvas = $(this.container).closest('[id^="bubble-r-box"]');
+      if (window.StoryMapRenderer && mainCanvas.length) {
+        window.StoryMapRenderer.render(mainCanvas);
+      }
+      this.activeEdit = null;
+    } else {
+      this.cancelEdit();
     }
-
-    // Surgical DOM cleanup.
-    textElement.textContent = newValue || originalText;
-    textElement.style.display = "";
-    input.remove();
-    card.classList.remove("is-editing");
   },
 
   cancelEdit() {
     if (!this.activeEdit) return;
-    const { textElement, input, card } = this.activeEdit;
+    const { textElement, input, card } = this.activeEdit; // Get card from activeEdit
 
-    // Set activeEdit to null FIRST.
-    this.activeEdit = null;
+    // --- THIS IS THE CRITICAL FIX ---
+    card.classList.remove("is-editing"); // Remove the state class
 
-    card.classList.remove("is-editing");
+    // The rest of your proven, working logic is preserved.
     textElement.style.display = "";
     input.remove();
+    this.activeEdit = null;
   },
 
   getFieldNameForBubble(entityType) {
+    // This is your proven, working function. It is preserved.
     return entityType === "story" ? "title_text" : "name_text";
   },
 
   gatherEntityData(card, entityType, newValue) {
+    // This is your proven, working function. It is preserved.
     const data = { entityId: card.dataset.id, name_text: newValue };
     const orderValue =
       card.getAttribute("data-order") ||
