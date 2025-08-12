@@ -34,7 +34,11 @@ window.StoryMapInlineEdit = {
     // This global listener is correct and has been preserved.
     document.addEventListener("click", (e) => {
       if (this.activeEdit && !e.target.closest(".inline-edit-input")) {
-        this.saveEdit();
+        // Prevent immediate exit after starting edit (give 100ms buffer)
+        const timeSinceStart = Date.now() - (this.activeEdit.startTime || 0);
+        if (timeSinceStart > 100) {
+          this.saveEdit();
+        }
       }
     });
   },
@@ -67,6 +71,7 @@ window.StoryMapInlineEdit = {
       entityId,
       originalText: currentText,
       fieldName: this.getFieldName(entityType),
+      startTime: Date.now() // Add timestamp to prevent immediate exit
     };
 
     textElement.style.display = "none";
