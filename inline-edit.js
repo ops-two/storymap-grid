@@ -20,7 +20,7 @@ window.StoryMapInlineEdit = {
       const card = e.target.closest(".card");
       if (!card) return;
 
-      // If we are already editing a DIFFERENT card, save it first.
+      // If we are already editing a DIFFERENT card, save the old one first.
       if (this.activeEdit && this.activeEdit.card !== card) {
         this.saveEdit();
       }
@@ -34,7 +34,7 @@ window.StoryMapInlineEdit = {
       }
     });
 
-    // The global listener is now smarter. It uses 'mousedown' and checks if the click is truly outside.
+    // The global listener is now smarter. It uses 'mousedown' to fire before other clicks.
     document.addEventListener("mousedown", (e) => {
       // Save only if the click is TRULY outside of any interactive card area.
       if (this.activeEdit && !e.target.closest(".card")) {
