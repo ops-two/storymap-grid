@@ -55,21 +55,17 @@ window.StoryMapStoryDragDrop = {
       });
     });
   },
-
   handleDrop: function (target) {
     if (this.isProcessing || !this.draggedCard) return;
 
     try {
       this.isProcessing = true;
       const draggedId = this.draggedCard.dataset.id;
-
-      // --- THE UPGRADED LOGIC ---
       const isPlaceholder = target.classList.contains(
         "empty-story-placeholder"
       );
       const isDropZone = target.classList.contains("empty-column-drop-zone");
       const targetId = isPlaceholder || isDropZone ? null : target.dataset.id;
-
       if (draggedId === targetId) {
         this.isProcessing = false;
         return;
@@ -77,22 +73,18 @@ window.StoryMapStoryDragDrop = {
 
       let payload;
 
-      // --- CASE 1: Dropping into an EMPTY feature column (+ Add Story box) ---
       if (isPlaceholder) {
         const targetFeatureId = target.dataset.featureId;
         const targetReleaseId = target.dataset.releaseId;
-        const newOrderValue = 10; // First story in a column can be 10.
-
         payload = {
           entityType: "story",
           entityId: draggedId,
           fieldName: "order_index_and_feature_and_release",
-          newValue: newOrderValue,
+          newValue: 10,
           newParentId: targetFeatureId,
           newReleaseId: targetReleaseId === "unassigned" ? "" : targetReleaseId,
         };
       } else {
-        // --- CASE 2: Dropping on another card or a normal drop zone (Your proven, working logic) ---
         const draggedColumn = this.draggedCard.closest(".feature-column");
         const targetColumn = target.closest(".feature-column");
         const draggedFeatureId = draggedColumn.dataset.featureId;
