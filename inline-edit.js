@@ -34,11 +34,7 @@ window.StoryMapInlineEdit = {
     // This global listener is correct and has been preserved.
     document.addEventListener("click", (e) => {
       if (this.activeEdit && !e.target.closest(".inline-edit-input")) {
-        // Prevent immediate exit after starting edit (give 100ms buffer)
-        const timeSinceStart = Date.now() - (this.activeEdit.startTime || 0);
-        if (timeSinceStart > 100) {
-          this.saveEdit();
-        }
+        this.saveEdit();
       }
     });
   },
@@ -51,15 +47,8 @@ window.StoryMapInlineEdit = {
 
     // --- The rest of this function is YOUR proven, working code. It is preserved perfectly. ---
     const currentText = textElement.textContent.trim();
-    
-    // Use textarea for story cards to support multiline editing
-    const isStoryCard = entityType === "story";
-    const input = document.createElement(isStoryCard ? "textarea" : "input");
-    
-    if (!isStoryCard) {
-      input.type = "text";
-    }
-    
+    const input = document.createElement("input");
+    input.type = "text";
     input.value = currentText;
     input.className = "inline-edit-input";
 
@@ -71,7 +60,6 @@ window.StoryMapInlineEdit = {
       entityId,
       originalText: currentText,
       fieldName: this.getFieldName(entityType),
-      startTime: Date.now() // Add timestamp to prevent immediate exit
     };
 
     textElement.style.display = "none";
@@ -79,27 +67,8 @@ window.StoryMapInlineEdit = {
     input.focus();
     input.select();
 
-    // Auto-resize textarea for story cards
-    if (isStoryCard) {
-      const autoResize = () => {
-        input.style.height = 'auto';
-        input.style.height = input.scrollHeight + 'px';
-      };
-      
-      // Initial resize
-      autoResize();
-      
-      // Resize on input
-      input.addEventListener('input', autoResize);
-    }
-
     input.addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
-        // For textarea (story cards), allow Enter to create new lines
-        if (isStoryCard && !e.ctrlKey && !e.metaKey) {
-          return; // Allow normal Enter behavior for new lines
-        }
-        // For input or Ctrl+Enter/Cmd+Enter, save the edit
         e.preventDefault();
         this.saveEdit();
       } else if (e.key === "Escape") {
