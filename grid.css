@@ -76,6 +76,8 @@
   white-space: normal;
   overflow: visible;
   -webkit-line-clamp: unset;
+  overflow-wrap: break-word;
+
   height: auto; /* Allow the text element to grow vertically */
 }
 .card-icon-button {

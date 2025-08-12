@@ -174,10 +174,12 @@ window.StoryMapRenderer = {
       }
     });
 
-    // --- 4c. RENDER STORIES AND RELEASES (with Tech-Req Formatting) ---
+    // --- 4c. RENDER STORIES AND RELEASES (with Empty Release Logic) ---
     const sortedReleasesToRender = releases
       .filter((r) => r && r.name)
       .sort((a, b) => a.name.localeCompare(b.name));
+
+    // This is your proven, working "Unassigned" section. It is preserved perfectly.
     const unreleasedStories = stories.filter((s) => !s.releaseId);
     if (
       unreleasedStories.length > 0 ||
@@ -209,11 +211,8 @@ window.StoryMapRenderer = {
               const afterOrder = nextStory
                 ? nextStory.order
                 : (story.order || 0) + 20;
-
-              // --- THIS IS THE CRITICAL UPGRADE ---
               const isTechReq = story.type && story.type === "Tech-Req";
-              const titleClass = isTechReq ? "tech-req-title" : ""; // Add a class for Tech-Req titles
-
+              const titleClass = isTechReq ? "tech-req-title" : "";
               html += `<div class="card story-card ${
                 isTechReq ? "tech" : ""
               }" data-id="${story.id}" data-type="story" data-order="${
@@ -236,7 +235,7 @@ window.StoryMapRenderer = {
                    </div>`;
             });
           } else {
-            html += `<div class="empty-story-placeholder" data-feature-id="${feature.id}" data-release-id="unassigned">
+            html += `<div class="empty-story-placeholder">
                     <div class="add-item-button-static" data-add-type="story" data-feature-id="${feature.id}" data-release-id="unassigned" data-before-order="0" data-after-order="20">+ Add Story</div>
                  </div>`;
           }
@@ -245,73 +244,75 @@ window.StoryMapRenderer = {
         html += `</div>`;
       });
     }
+
+    // --- THIS IS THE CRITICAL FIX ---
+    // Now, we loop through ALL releases, regardless of whether they have stories.
     sortedReleasesToRender.forEach((release) => {
+      // We render the header UNCONDITIONALLY.
+      html += `<div class="release-header" data-id="${release.id}">${release.name}</div>`;
+
       const releaseStories = stories.filter((s) => s.releaseId === release.id);
-      if (releaseStories.length > 0) {
-        html += `<div class="release-header" data-id="${release.id}">${release.name}</div>`;
-        displayItems.forEach((item, index) => {
-          html += `<div class="feature-column" style="grid-column: ${
-            index + 1
-          };" data-feature-id="${
-            item.isPlaceholder ? "" : item.id
-          }" data-release-id="${release.id}">`;
-          if (!item.isPlaceholder) {
-            const feature = item;
-            const storiesInColumn = releaseStories.filter(
-              (s) => s.featureId === feature.id
-            );
-            if (storiesInColumn.length > 0) {
-              storiesInColumn.forEach((story, storyIndex) => {
-                const prevStory =
-                  storyIndex > 0 ? storiesInColumn[storyIndex - 1] : null;
-                const nextStory =
-                  storyIndex < storiesInColumn.length - 1
-                    ? storiesInColumn[storyIndex + 1]
-                    : null;
-                const beforeOrder = prevStory
-                  ? prevStory.order
-                  : (story.order || 0) - 20;
-                const afterOrder = nextStory
-                  ? nextStory.order
-                  : (story.order || 0) + 20;
 
-                // --- THIS IS THE CRITICAL UPGRADE ---
-                const isTechReq = story.type === "Tech-Req";
-                const titleClass = isTechReq ? "tech-req-title" : "";
+      displayItems.forEach((item, index) => {
+        html += `<div class="feature-column" style="grid-column: ${
+          index + 1
+        };" data-feature-id="${
+          item.isPlaceholder ? "" : item.id
+        }" data-release-id="${release.id}">`;
+        if (!item.isPlaceholder) {
+          const feature = item;
+          const storiesInColumn = releaseStories.filter(
+            (s) => s.featureId === feature.id
+          );
 
-                html += `<div class="card story-card ${
-                  isTechReq ? "tech" : ""
-                }" data-id="${story.id}" data-type="story" data-order="${
-                  story.order
-                }">
-                        <div class="add-item-button above" data-add-type="story" data-feature-id="${
-                          feature.id
-                        }" data-release-id="${
-                  release.id
-                }" data-before-order="${beforeOrder}" data-after-order="${
-                  story.order
-                }">+</div>
-                        <span class="card-title-text ${titleClass}">${
-                  story.name
-                }</span>
-                        <div class="card-icon-button">${iconSvg}</div>
-                        <div class="add-item-button below" data-add-type="story" data-feature-id="${
-                          feature.id
-                        }" data-release-id="${release.id}" data-before-order="${
-                  story.order
-                }" data-after-order="${afterOrder}">+</div>
-                     </div>`;
-              });
-            } else {
-              html += `<div class="empty-story-placeholder" data-feature-id="${feature.id}" data-release-id="${release.id}">
-                      <div class="add-item-button-static" data-add-type="story" data-feature-id="${feature.id}" data-release-id="${release.id}" data-before-order="0" data-after-order="20">+ Add Story</div>
+          if (storiesInColumn.length > 0) {
+            storiesInColumn.forEach((story, storyIndex) => {
+              const prevStory =
+                storyIndex > 0 ? storiesInColumn[storyIndex - 1] : null;
+              const nextStory =
+                storyIndex < storiesInColumn.length - 1
+                  ? storiesInColumn[storyIndex + 1]
+                  : null;
+              const beforeOrder = prevStory
+                ? prevStory.order
+                : (story.order || 0) - 20;
+              const afterOrder = nextStory
+                ? nextStory.order
+                : (story.order || 0) + 20;
+              const isTechReq = story.type && story.type === "Tech-Req";
+              const titleClass = isTechReq ? "tech-req-title" : "";
+              html += `<div class="card story-card ${
+                isTechReq ? "tech" : ""
+              }" data-id="${story.id}" data-type="story" data-order="${
+                story.order
+              }">
+                      <div class="add-item-button above" data-add-type="story" data-feature-id="${
+                        feature.id
+                      }" data-release-id="${
+                release.id
+              }" data-before-order="${beforeOrder}" data-after-order="${
+                story.order
+              }">+</div>
+                      <span class="card-title-text ${titleClass}">${
+                story.name
+              }</span>
+                      <div class="card-icon-button">${iconSvg}</div>
+                      <div class="add-item-button below" data-add-type="story" data-feature-id="${
+                        feature.id
+                      }" data-release-id="${release.id}" data-before-order="${
+                story.order
+              }" data-after-order="${afterOrder}">+</div>
                    </div>`;
-            }
-            html += `<div class="empty-column-drop-zone" data-feature-id="${feature.id}" data-release-id="${release.id}"><span>Drop Story Here</span></div>`;
+            });
+          } else {
+            html += `<div class="empty-story-placeholder">
+                    <div class="add-item-button-static" data-add-type="story" data-feature-id="${feature.id}" data-release-id="${release.id}" data-before-order="0" data-after-order="20">+ Add Story</div>
+                 </div>`;
           }
-          html += `</div>`;
-        });
-      }
+          html += `<div class="empty-column-drop-zone" data-feature-id="${feature.id}" data-release-id="${release.id}"><span>Drop Story Here</span></div>`;
+        }
+        html += `</div>`;
+      });
     });
     // --- 4d. CLOSE HTML TAGS ---
     html += `</div></div>`;
