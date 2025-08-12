@@ -67,6 +67,18 @@
   cursor: text;
 }
 
+/* Remove line-clamp from story cards to show full content */
+.story-card .card-title-text {
+  display: block;
+  -webkit-line-clamp: unset;
+  line-clamp: unset;
+  -webkit-box-orient: unset;
+  overflow: visible;
+  text-overflow: unset;
+  white-space: normal;
+  word-wrap: break-word;
+}
+
 .card-icon-button {
   width: 20px;
   height: 20px;
