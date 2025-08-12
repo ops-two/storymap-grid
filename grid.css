@@ -76,6 +76,8 @@
   font-weight: 500;
   border: 1px solid #28a745;
   border-left: 5px solid #28a745;
+  /* Padding is handled dynamically in JavaScript calculateStoryHeight function */
+  box-sizing: border-box;
 }
 
 /* Remove line-clamp from story cards to show full content */
@@ -87,7 +89,7 @@
   color: #333;
   word-wrap: break-word;
   overflow-wrap: break-word;
-  padding: 8px;
+  padding: 8px; /* Padding matches JavaScript calculateStoryHeight calculation */
   width: 100%;
   box-sizing: border-box;
 }
@@ -113,12 +115,7 @@
   border-left: 5px solid #6f42c1;
 }
 
-.story-card {
-  /* Height is now dynamically calculated in JavaScript */
-  font-weight: 500;
-  border: 1px solid #28a745;
-  border-left: 5px solid #28a745;
-}
+/* Duplicate .story-card rule removed - consolidated above */
 
 .story-card.tech {
   border-color: #007bff;
