@@ -316,13 +316,39 @@ textarea.inline-edit-input {
   transition: background-color 0.2s, border-color 0.2s;
 }
 
-/* Simple and direct fix for blue focus outline */
+/* Comprehensive blue outline removal */
 * {
   outline: none !important;
+  -webkit-tap-highlight-color: transparent !important;
 }
 
 *:focus {
   outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Specific targeting for all card elements */
+.card,
+.journey-card,
+.feature-card,
+.story-card,
+div[data-type],
+div[data-id],
+[tabindex] {
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+.card:focus,
+.journey-card:focus,
+.feature-card:focus,
+.story-card:focus,
+div[data-type]:focus,
+div[data-id]:focus,
+[tabindex]:focus {
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
 }
 
 .empty-feature-placeholder,

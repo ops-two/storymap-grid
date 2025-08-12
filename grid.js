@@ -245,19 +245,18 @@ window.StoryMapRenderer = {
                 : (story.order || 0) + 20;
               const isTechReq = story.type && story.type === "Tech-Req";
               const titleClass = isTechReq ? "tech-req-title" : "";
+              const storyHeight = this.calculateStoryHeight(story.name);
               html += `<div class="card story-card ${
                 isTechReq ? "tech" : ""
               }" data-id="${story.id}" data-type="story" data-order="${
                 story.order
-              }" tabindex="-1">
+              }" style="height: ${storyHeight}px;" tabindex="-1">
                       <div class="add-item-button above" data-add-type="story" data-feature-id="${
                         feature.id
                       }" data-release-id="unassigned" data-before-order="${beforeOrder}" data-after-order="${
                 story.order
               }">+</div>
                       <span class="card-title-text ${titleClass}">${story.name}</span>
-                story.name
-              }</span>
                       <div class="card-icon-button">${iconSvg}</div>
                       <div class="add-item-button below" data-add-type="story" data-feature-id="${
                         feature.id
