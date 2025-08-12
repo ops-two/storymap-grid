@@ -314,6 +314,11 @@ textarea.inline-edit-input {
   border-radius: 6px;
   box-sizing: border-box;
   transition: background-color 0.2s, border-color 0.2s;
+  outline: none; /* Remove blue focus outline */
+}
+
+.card:focus {
+  outline: none; /* Ensure no focus outline */
 }
 
 .empty-feature-placeholder,
@@ -333,7 +338,7 @@ textarea.inline-edit-input {
 }
 
 .empty-story-placeholder {
-  height: 35px; /* Shorter than story cards */
+  height: 58px; /* Match one-liner story card height (50px min + 8px extra padding) */
   margin-bottom: var(--vertical-gap);
 }
 
@@ -399,8 +404,9 @@ textarea.inline-edit-input {
   justify-content: center;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   opacity: 0;
-  transition: opacity 0.2s ease;
+  transition: opacity 0.2s ease, background-color 0.2s ease;
   z-index: 10;
+  cursor: pointer; /* Click cursor instead of drag */
 }
 
 .card-icon-button svg {
@@ -411,6 +417,11 @@ textarea.inline-edit-input {
 /* Show icon on hover */
 .card:hover .card-icon-button {
   opacity: 1;
+}
+
+/* Icon hover effect */
+.card-icon-button:hover {
+  background-color: #f5f5f5; /* Light gray background on hover */
 }
 
 /* Hide doc icon during editing mode */
