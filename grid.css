@@ -73,10 +73,14 @@
   -webkit-line-clamp: unset;
   line-clamp: unset;
   -webkit-box-orient: unset;
-  overflow: visible;
+  overflow: hidden;
   text-overflow: unset;
   white-space: normal;
   word-wrap: break-word;
+  height: auto;
+  max-height: calc(var(--story-height) - 20px); /* Account for padding */
+  line-height: 1.2;
+  font-size: 12px; /* Slightly smaller font to fit more text */
 }
 
 .card-icon-button {
@@ -126,8 +130,7 @@
 }
 
 .story-card {
-  height: auto;
-  min-height: var(--story-height);
+  height: var(--story-height);
   font-weight: 500;
   border: 1px solid #28a745;
   border-left: 5px solid #28a745;
