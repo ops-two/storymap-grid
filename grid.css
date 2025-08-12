@@ -313,6 +313,14 @@
   box-sizing: border-box;
 }
 
+/* Specific styles for textarea (multiline editing) */
+textarea.inline-edit-input {
+  min-height: 40px; /* Minimum height for textarea */
+  overflow: hidden; /* Hide scrollbars initially */
+  white-space: pre-wrap; /* Preserve line breaks and wrap text */
+  word-wrap: break-word; /* Break long words */
+}
+
 /* In grid.css, ADD these new rules */
 
 /* This is your existing rule, which is correct */
