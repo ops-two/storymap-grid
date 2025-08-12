@@ -1,4 +1,4 @@
-// The definitive inline-edit.js, built from your proven working code with icon hiding fix.
+// The definitive inline-edit.js, adapted for the Miro-like UI
 
 window.StoryMapInlineEdit = {
   container: null,
@@ -45,7 +45,7 @@ window.StoryMapInlineEdit = {
     const textElement = card.querySelector(".card-title-text");
     if (!textElement) return;
 
-    // Add CSS class to hide icons during edit mode (no DOM manipulation)
+    // Add CSS class to hide icons during edit mode
     card.classList.add("is-editing");
 
     // --- The rest of this function is YOUR proven, working code. It is preserved perfectly. ---
@@ -85,7 +85,6 @@ window.StoryMapInlineEdit = {
   },
 
   getFieldName(entityType) {
-    // This is your proven, working function. It is preserved.
     const fieldMap = {
       journey: "name_text",
       feature: "name_text",
@@ -153,13 +152,14 @@ window.StoryMapInlineEdit = {
   },
 
   getFieldNameForBubble(entityType) {
-    // This is your proven, working function. It is preserved.
     return entityType === "story" ? "title_text" : "name_text";
   },
 
   gatherEntityData(card, entityType, newValue) {
-    // This is your proven, working function. It is preserved.
-    const data = { entityId: card.dataset.id, name_text: newValue };
+    const data = {
+      entityId: card.dataset.id,
+      name_text: newValue,
+    };
     const orderValue =
       card.getAttribute("data-order") ||
       card.getAttribute("data-order-index") ||
