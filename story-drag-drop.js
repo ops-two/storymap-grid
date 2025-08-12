@@ -10,7 +10,7 @@ window.StoryMapStoryDragDrop = {
   },
 
   setupStoryDragging: function () {
-    // This is your proven, working setup logic for draggable cards. It is preserved.
+    // This is your proven, working setup logic. It is preserved perfectly.
     const storyCards = this.container.querySelectorAll(".story-card");
     storyCards.forEach((card) => {
       if (card.dataset.dragSetup === "true") return;
@@ -29,8 +29,6 @@ window.StoryMapStoryDragDrop = {
           .forEach((c) => c.classList.remove("drag-over"));
       });
     });
-
-    // This is your proven, working setup logic for drop targets.
     const dropTargets = this.container.querySelectorAll(
       ".story-card, .empty-column-drop-zone, .empty-story-placeholder"
     );
@@ -44,27 +42,16 @@ window.StoryMapStoryDragDrop = {
       target.addEventListener("dragleave", (e) => {
         target.classList.remove("drag-over");
       });
-
       target.addEventListener("drop", (e) => {
         e.preventDefault();
-
-        // --- THIS IS THE CRITICAL FIX ---
-        // We find the true drop target, which is either the card/zone itself,
-        // or the placeholder that contains the button.
-        const trueTarget = e.target.closest(
-          ".story-card, .empty-column-drop-zone, .empty-story-placeholder"
-        );
-
-        trueTarget.classList.remove("drag-over");
+        target.classList.remove("drag-over");
         if (this.draggedCard) {
-          this.handleDrop(trueTarget);
+          this.handleDrop(target);
         }
       });
     });
   },
 
-  // This is your complete, proven, working handleDrop function.
-  // It is now guaranteed to receive the correct target and does not need to be changed.
   handleDrop: function (target) {
     if (this.isProcessing || !this.draggedCard) return;
 
@@ -81,106 +68,123 @@ window.StoryMapStoryDragDrop = {
         return;
       }
 
-      let payload;
+      const allStories = window.StoryMapDataStore.getEntitiesArray("story");
+      const draggedItem = allStories.find((s) => s.id === draggedId);
+      const draggedColumn = this.draggedCard.closest(".feature-column");
+      const targetColumn = target.closest(".feature-column");
+      const draggedFeatureId = draggedColumn.dataset.featureId;
+      const targetFeatureId = targetColumn.dataset.featureId;
+      const draggedReleaseId = draggedColumn.dataset.releaseId;
+      const targetReleaseId = targetColumn.dataset.releaseId;
+      const featureChanged = draggedFeatureId !== targetFeatureId;
+      const releaseChanged = draggedReleaseId !== targetReleaseId;
 
-      if (isPlaceholder) {
-        const targetFeatureId = target.dataset.featureId;
-        const targetReleaseId = target.dataset.releaseId;
-        payload = {
-          entityType: "story",
-          entityId: draggedId,
-          fieldName: "order_index_and_feature_and_release",
-          newValue: 10,
-          newParentId: targetFeatureId,
-          newReleaseId: targetReleaseId === "unassigned" ? "" : targetReleaseId,
-        };
-      } else {
-        const draggedColumn = this.draggedCard.closest(".feature-column");
-        const targetColumn = target.closest(".feature-column");
-        const draggedFeatureId = draggedColumn.dataset.featureId;
-        const targetFeatureId = targetColumn.dataset.featureId;
-        const draggedReleaseId = draggedColumn.dataset.releaseId;
-        const targetReleaseId = targetColumn.dataset.releaseId;
-        const featureChanged = draggedFeatureId !== targetFeatureId;
-        const releaseChanged = draggedReleaseId !== targetReleaseId;
-        let newOrderValue;
-        payload = { entityType: "story", entityId: draggedId };
+      let newOrderValue;
+      let payload = {
+        entityType: "story",
+        entityId: draggedId,
+        oldValue: draggedItem.order,
+      };
 
-        if (featureChanged || releaseChanged) {
-          const allStoriesInNewColumn = Array.from(
-            targetColumn.querySelectorAll(".story-card")
-          ).map((c) =>
-            window.StoryMapDataStore.getEntity("story", c.dataset.id)
+      if (featureChanged || releaseChanged) {
+        // This is your proven, position-aware diagonal drop logic.
+        const allStoriesInNewColumn = Array.from(
+          targetColumn.querySelectorAll(".story-card")
+        ).map((c) => window.StoryMapDataStore.getEntity("story", c.dataset.id));
+        if (targetId) {
+          const targetItem = allStoriesInNewColumn.find(
+            (item) => item.id === targetId
           );
-          if (targetId) {
-            const targetItem = allStoriesInNewColumn.find(
-              (item) => item.id === targetId
-            );
-            const targetIndex = allStoriesInNewColumn.findIndex(
-              (item) => item.id === targetId
-            );
-            if (targetIndex === -1) {
-              this.isProcessing = false;
-              return;
-            }
-            const prevItem =
-              targetIndex > 0 ? allStoriesInNewColumn[targetIndex - 1] : null;
-            newOrderValue = prevItem
-              ? (prevItem.order + targetItem.order) / 2
-              : targetItem.order / 2;
-          } else {
-            const lastStory =
-              allStoriesInNewColumn[allStoriesInNewColumn.length - 1];
-            newOrderValue = lastStory ? lastStory.order + 10 : 10;
+          const targetIndex = allStoriesInNewColumn.findIndex(
+            (item) => item.id === targetId
+          );
+          if (targetIndex === -1) {
+            this.isProcessing = false;
+            return;
           }
-          payload.newValue = newOrderValue;
-          let fieldNameParts = ["order_index"];
-          if (featureChanged) {
-            fieldNameParts.push("feature");
-            payload.newParentId = targetFeatureId;
-          }
-          if (releaseChanged) {
-            fieldNameParts.push("release");
-            payload.newReleaseId =
-              targetReleaseId === "unassigned" ? "" : targetReleaseId;
-          }
-          payload.fieldName = fieldNameParts.join("_and_");
+          const prevItem =
+            targetIndex > 0 ? allStoriesInNewColumn[targetIndex - 1] : null;
+          newOrderValue = prevItem
+            ? (prevItem.order + targetItem.order) / 2
+            : targetItem.order / 2;
         } else {
-          const allStoriesInColumn = Array.from(
-            targetColumn.querySelectorAll(".story-card")
-          ).map((c) =>
-            window.StoryMapDataStore.getEntity("story", c.dataset.id)
-          );
-          const targetItem = allStoriesInColumn.find(
-            (item) => item.id === targetId
-          );
-          const draggedIndex = allStoriesInColumn.findIndex(
-            (item) => item.id === draggedId
-          );
-          const targetIndex = allStoriesInColumn.findIndex(
-            (item) => item.id === targetId
-          );
-          if (draggedIndex > targetIndex) {
-            if (targetIndex === 0) {
-              newOrderValue = targetItem.order / 2;
-            } else {
-              const prevItem = allStoriesInColumn[targetIndex - 1];
-              newOrderValue = (prevItem.order + targetItem.order) / 2;
-            }
-          } else {
-            const nextItem = allStoriesInColumn[targetIndex + 1];
-            if (nextItem) {
-              newOrderValue = (targetItem.order + nextItem.order) / 2;
-            } else {
-              newOrderValue = targetItem.order + 10;
-            }
-          }
-          payload.fieldName = "order_index";
-          payload.newValue = newOrderValue;
+          const lastStory =
+            allStoriesInNewColumn[allStoriesInNewColumn.length - 1];
+          newOrderValue = lastStory ? lastStory.order + 10 : 10;
         }
+        payload.newValue = newOrderValue;
+        let fieldNameParts = ["order_index"];
+        if (featureChanged) {
+          fieldNameParts.push("feature");
+          payload.newParentId = targetFeatureId;
+        }
+        if (releaseChanged) {
+          fieldNameParts.push("release");
+          payload.newReleaseId =
+            targetReleaseId === "unassigned" ? "" : targetReleaseId;
+        }
+        payload.fieldName = fieldNameParts.join("_and_");
+      } else {
+        // This is your proven, direction-aware vertical reordering logic.
+        const allStoriesInColumn = Array.from(
+          targetColumn.querySelectorAll(".story-card")
+        ).map((c) => window.StoryMapDataStore.getEntity("story", c.dataset.id));
+        const targetItem = allStoriesInColumn.find(
+          (item) => item.id === targetId
+        );
+        const draggedIndex = allStoriesInColumn.findIndex(
+          (item) => item.id === draggedId
+        );
+        const targetIndex = allStoriesInColumn.findIndex(
+          (item) => item.id === targetId
+        );
+        if (draggedIndex > targetIndex) {
+          if (targetIndex === 0) {
+            newOrderValue = targetItem.order / 2;
+          } else {
+            const prevItem = allStoriesInColumn[targetIndex - 1];
+            newOrderValue = (prevItem.order + targetItem.order) / 2;
+          }
+        } else {
+          const nextItem = allStoriesInColumn[targetIndex + 1];
+          if (nextItem) {
+            newOrderValue = (targetItem.order + nextItem.order) / 2;
+          } else {
+            newOrderValue = targetItem.order + 10;
+          }
+        }
+        payload.fieldName = "order_index";
+        payload.newValue = newOrderValue;
       }
 
-      // Your proven Optimistic UI Update and Event Dispatch logic is preserved.
+      const fullStoryData = window.StoryMapDataStore.getEntityForUpdate(
+        "story",
+        draggedId
+      );
+      if (fullStoryData) {
+        fullStoryData.order_index = payload.newValue;
+        payload.allData = fullStoryData;
+      }
+
+      // --- THIS IS THE CRITICAL RESTORATION ---
+      // This is your proven Optimistic UI Update and Event Dispatch logic.
+      window.StoryMapDataStore.updateEntityOrder(
+        "story",
+        draggedId,
+        payload.newValue
+      );
+      if (payload.newParentId) {
+        const story = window.StoryMapDataStore.getEntity("story", draggedId);
+        if (story) story.featureId = payload.newParentId;
+      }
+      if (payload.newReleaseId !== undefined) {
+        const story = window.StoryMapDataStore.getEntity("story", draggedId);
+        if (story) story.releaseId = payload.newReleaseId;
+      }
+      const mainCanvas = $(this.container).closest('[id^="bubble-r-box"]');
+      if (window.StoryMapRenderer && mainCanvas.length) {
+        window.StoryMapRenderer.render(mainCanvas);
+      }
       document.dispatchEvent(
         new CustomEvent("storymap:update", { detail: payload })
       );
