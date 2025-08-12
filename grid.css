@@ -381,3 +381,9 @@ textarea.inline-edit-input {
 .empty-story-placeholder:hover .add-item-button-static {
   color: #333;
 }
+
+/* Hide doc icon during editing mode */
+.card.is-editing .card-icon-button {
+  display: none !important;
+  visibility: hidden !important;
+}

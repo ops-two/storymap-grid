@@ -68,6 +68,7 @@ window.StoryMapInlineEdit = {
     };
 
     textElement.style.display = "none";
+    card.classList.add("is-editing"); // Add class to hide icon
     card.appendChild(input);
     
     // Auto-resize textarea for story cards
@@ -154,6 +155,7 @@ window.StoryMapInlineEdit = {
       if (window.StoryMapRenderer && mainCanvas.length) {
         window.StoryMapRenderer.render(mainCanvas);
       }
+      card.classList.remove("is-editing"); // Remove class to show icon again
       this.activeEdit = null;
     } else {
       this.cancelEdit();
@@ -162,9 +164,10 @@ window.StoryMapInlineEdit = {
 
   cancelEdit() {
     if (!this.activeEdit) return;
-    const { textElement, input } = this.activeEdit;
+    const { textElement, input, card } = this.activeEdit;
     textElement.style.display = "";
     input.remove();
+    card.classList.remove("is-editing"); // Remove class to show icon again
     this.activeEdit = null;
   },
 
