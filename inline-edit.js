@@ -76,7 +76,7 @@ window.StoryMapInlineEdit = {
       // Calculate the available height within the card (subtract padding and borders)
       const cardHeight = card.offsetHeight;
       const verticalPadding = 12; // 6px top + 6px bottom padding for better spacing
-      const availableHeight = cardHeight - verticalPadding * 2; // Account for top and bottom padding
+      const availableHeight = cardHeight - verticalPadding * 2 + 8; // Account for top and bottom padding
 
       // Set textarea to fixed height with scrolling and proper positioning
       input.style.height = availableHeight + "px";

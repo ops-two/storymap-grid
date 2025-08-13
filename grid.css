@@ -403,10 +403,10 @@ textarea.inline-edit-input {
 
 .inline-edit-input:focus {
   /* The primary property to remove the outline ring */
-  outline: none;
+  outline: none !important;
 
   /* Also remove any box-shadow that might be applied on focus */
-  box-shadow: none;
+  box-shadow: none !important;
 }
 .empty-feature-placeholder,
 .empty-story-placeholder,
@@ -523,7 +523,7 @@ textarea.inline-edit-input {
 
 /* 1. Set the overall width of the scrollbar */
 textarea.inline-edit-input::-webkit-scrollbar {
-  width: 6px; /* A very thin width */
+  width: 2px; /* A very thin width */
 }
 
 /* 2. Style the track (the bar the scroll thumb moves along) */
