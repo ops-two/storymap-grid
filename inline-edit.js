@@ -65,6 +65,7 @@ window.StoryMapInlineEdit = {
       entityId,
       originalText: currentText,
       fieldName: this.getFieldName(entityType),
+      originalHeight: isStoryCard ? card.style.height : null, // Store original height for story cards
     };
 
     textElement.style.display = "none";
@@ -76,6 +77,11 @@ window.StoryMapInlineEdit = {
       const autoResize = () => {
         input.style.height = 'auto';
         input.style.height = input.scrollHeight + 'px';
+        
+        // Also update the card container height to match the textarea
+        // Add some padding to account for card borders and spacing
+        const cardHeight = input.scrollHeight + 16; // 8px padding top + 8px padding bottom
+        card.style.height = cardHeight + 'px';
       };
       
       // Initial resize
@@ -164,10 +170,16 @@ window.StoryMapInlineEdit = {
 
   cancelEdit() {
     if (!this.activeEdit) return;
-    const { textElement, input, card } = this.activeEdit;
+    const { textElement, input, card, entityType, originalHeight } = this.activeEdit;
     textElement.style.display = "";
     input.remove();
     card.classList.remove("is-editing"); // Remove class to show icon again
+    
+    // Restore original height for story cards
+    if (entityType === "story" && originalHeight) {
+      card.style.height = originalHeight;
+    }
+    
     this.activeEdit = null;
   },
 
