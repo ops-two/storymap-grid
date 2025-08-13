@@ -520,3 +520,36 @@ textarea.inline-edit-input {
   display: none !important;
   visibility: hidden !important;
 }
+
+/* 1. Set the overall width of the scrollbar */
+textarea.inline-edit-input::-webkit-scrollbar {
+  width: 6px; /* A very thin width */
+}
+
+/* 2. Style the track (the bar the scroll thumb moves along) */
+textarea.inline-edit-input::-webkit-scrollbar-track {
+  background: transparent; /* Make the background track invisible */
+}
+
+/* 3. Style the thumb (the part you drag) */
+textarea.inline-edit-input::-webkit-scrollbar-thumb {
+  background-color: #bbb; /* A subtle grey color for the thumb */
+  border-radius: 10px; /* Give it fully rounded corners */
+}
+
+/* 4. Style the thumb on hover for better user feedback */
+textarea.inline-edit-input::-webkit-scrollbar-thumb:hover {
+  background-color: #999; /* Darken the thumb when the mouse is over it */
+}
+
+/* 5. Hide the up and down arrow buttons */
+textarea.inline-edit-input::-webkit-scrollbar-button {
+  display: none;
+}
+
+/* --- For Firefox --- */
+/* Firefox offers less customization but supports a simple thin scrollbar */
+textarea.inline-edit-input {
+  scrollbar-width: thin;
+  scrollbar-color: #bbb transparent; /* Sets thumb and track color */
+}
