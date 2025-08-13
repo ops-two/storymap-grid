@@ -1,0 +1,262 @@
+/* [Definitive Version: grid.css] */
+
+:root {
+  --card-width: 160px;
+  --journey-height: 45px;
+  --feature-height: 45px;
+  /* --story-height will be set dynamically by the grid.js file */
+  --column-gap: 12px;
+  --vertical-gap: 8px;
+  /* --total-columns will be injected by JS */
+}
+
+.story-map-container {
+  padding: 20px;
+  font-family: Arial, sans-serif;
+  height: 100%;
+  overflow: auto;
+}
+
+.story-map-info {
+  margin-bottom: 15px;
+  color: #666;
+}
+
+.story-map-grid-container {
+  display: grid;
+  grid-template-columns: repeat(var(--total-columns, 1), var(--card-width));
+  gap: var(--vertical-gap) var(--column-gap);
+  padding: 20px;
+  min-width: fit-content;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+.card {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  border-radius: 6px;
+  font-size: 13px;
+  padding: 0 8px;
+  box-sizing: border-box;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  background-color: #fff;
+  color: #212529;
+  position: relative;
+  text-align: left;
+}
+
+.card:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.card-title-text {
+  flex-grow: 1;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-word;
+  line-height: 1.3;
+  cursor: text;
+}
+
+/* Story cards need special layout for content overflow fix */
+.story-card {
+  display: block; /* Override flex for story cards only */
+  align-items: unset;
+  justify-content: unset;
+  font-weight: 500;
+  border: 1px solid #28a745 !important;
+  border-left: 5px solid #28a745 !important;
+  padding: 0; /* Padding is handled by the inner text element */
+  box-sizing: border-box;
+  /* The `height` attribute will be applied inline via JavaScript */
+}
+
+/* Remove line-clamp from story cards to show full content */
+.story-card .card-title-text {
+  display: block;
+  -webkit-line-clamp: unset;
+  line-clamp: unset;
+  text-align: left;
+  font-size: 13px;
+  line-height: 1.3;
+  color: #333;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
+  hyphens: auto;
+  padding: 8px; /* This padding MUST match the JS calculateStoryHeight calculation */
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden; /* Hide any minor overflow within the calculated height */
+}
+
+/* Doc icon overlay system */
+.card-icon-button {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 20px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s ease, background-color 0.2s ease;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.card:hover .card-icon-button {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.card-icon-button:hover {
+  background-color: rgba(200, 200, 200, 0.9);
+  cursor: pointer;
+}
+
+.card.is-editing .card-icon-button {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.card-icon-button svg {
+  width: 12px;
+  height: 12px;
+  stroke: #666;
+}
+
+.journey-card {
+  height: var(--journey-height);
+  font-weight: 600;
+  font-size: 14px;
+  border: 1px solid #ffc107;
+  border-left: 5px solid #ffc107;
+}
+
+.feature-card {
+  height: var(--feature-height);
+  font-weight: 500;
+  border: 1px solid #6f42c1;
+  border-left: 5px solid #6f42c1;
+}
+
+.story-card.tech {
+  border-color: #007bff;
+  border-left-color: #007bff;
+}
+
+.journey-card,
+.feature-card,
+.story-card {
+  cursor: move;
+}
+
+.journey-card.dragging,
+.feature-card.dragging,
+.story-card.dragging {
+  opacity: 0.5;
+}
+
+/* Specific styles for textarea (multiline editing) */
+textarea.inline-edit-input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%; /* Fills the parent card, which has a fixed height */
+  padding: 8px; /* Must match .card-title-text padding for seamless transition */
+  box-sizing: border-box;
+  border: 2px solid #007bff;
+  border-radius: 4px;
+  resize: none;
+  overflow: auto; /* Show scrollbar if user types more text than fits */
+
+  /* Font styles must match original for consistency */
+  font-size: 13px;
+  font-family: Arial, sans-serif;
+  line-height: 1.3;
+  text-align: left;
+  white-space: normal;
+  color: inherit;
+  background: white;
+  outline: none;
+}
+
+.empty-column-drop-zone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  border: 2px dashed #ccc;
+  color: #aaa;
+  font-size: 13px;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+  opacity: 0;
+  height: 10px;
+  pointer-events: none;
+}
+
+.story-drag-active .empty-column-drop-zone {
+  opacity: 1;
+  height: 80px; /* A default height for an empty drop target */
+  pointer-events: auto;
+}
+
+.story-drag-active .empty-column-drop-zone.drag-over {
+  border-color: #28a745;
+  background-color: rgba(40, 167, 69, 0.1);
+}
+
+.release-header {
+  grid-column: 1 / -1;
+  border-bottom: 1px solid #dee2e6;
+  margin: 20px 0 10px 0;
+  color: #6c757d;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.feature-column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--vertical-gap);
+}
+
+.empty-story-placeholder {
+  height: 46px;
+  margin-bottom: var(--vertical-gap);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  box-sizing: border-box;
+  border: 2px dashed #ccc;
+}
+
+.add-item-button-static {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+  border: none;
+  color: #888;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
