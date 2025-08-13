@@ -155,11 +155,31 @@
   border-left: 5px solid #ffc107;
 }
 
+/* Ensure journey card styling is maintained on hover and all states */
+.journey-card:hover,
+.journey-card:focus,
+.journey-card:active {
+  border: 1px solid #ffc107 !important;
+  border-left: 5px solid #ffc107 !important;
+  font-weight: 600 !important;
+  background-color: inherit !important;
+}
+
 .feature-card {
   height: var(--feature-height);
   font-weight: 500;
   border: 1px solid #6f42c1;
   border-left: 5px solid #6f42c1;
+}
+
+/* Ensure feature card styling is maintained on hover and all states */
+.feature-card:hover,
+.feature-card:focus,
+.feature-card:active {
+  border: 1px solid #6f42c1 !important;
+  border-left: 5px solid #6f42c1 !important;
+  font-weight: 500 !important;
+  background-color: inherit !important;
 }
 
 /* Duplicate .story-card rule removed - consolidated above */
@@ -298,11 +318,14 @@ textarea.inline-edit-input {
   transform: scale(0.8);
   transition: opacity 0.15s ease-out, transform 0.15s ease-out,
     background-color 0.15s;
+  /* Prevent layout shifts by ensuring buttons don't affect document flow */
+  pointer-events: none;
 }
 
 .card:hover .add-item-button {
   opacity: 1;
   transform: scale(1);
+  pointer-events: auto;
 }
 
 .add-item-button:hover {
