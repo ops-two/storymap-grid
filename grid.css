@@ -255,7 +255,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-
+/* checkpoint 1 */
 /* Specific styles for textarea (multiline editing) */
 textarea.inline-edit-input {
   text-align: left;
