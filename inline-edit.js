@@ -47,7 +47,7 @@ window.StoryMapInlineEdit = {
 
     // --- The rest of this function is YOUR proven, working code. It is preserved perfectly. ---
     const currentText = textElement.textContent.trim();
-    
+
     // Use textarea for story cards to enable multiline editing
     const isStoryCard = entityType === "story";
     const input = document.createElement(isStoryCard ? "textarea" : "input");
@@ -70,22 +70,25 @@ window.StoryMapInlineEdit = {
     textElement.style.display = "none";
     card.classList.add("is-editing"); // Add class to hide icon
     card.appendChild(input);
-    
+
     // Fixed-height textarea for story cards with internal scrolling
     if (isStoryCard) {
       // Calculate the available height within the card (subtract padding and borders)
       const cardHeight = card.offsetHeight;
-      const availableHeight = cardHeight - 16; // Account for 8px padding top + 8px bottom
-      
-      // Set textarea to fixed height with scrolling
-      input.style.height = availableHeight + 'px';
-      input.style.minHeight = availableHeight + 'px';
-      input.style.maxHeight = availableHeight + 'px';
-      input.style.overflowY = 'auto';
-      input.style.resize = 'none'; // Prevent manual resizing
-      input.style.boxSizing = 'border-box';
+      const verticalPadding = 12; // 6px top + 6px bottom padding for better spacing
+      const availableHeight = cardHeight - verticalPadding * 2; // Account for top and bottom padding
+
+      // Set textarea to fixed height with scrolling and proper positioning
+      input.style.height = availableHeight + "px";
+      input.style.minHeight = availableHeight + "px";
+      input.style.maxHeight = availableHeight + "px";
+      input.style.overflowY = "auto";
+      input.style.resize = "none"; // Prevent manual resizing
+      input.style.boxSizing = "border-box";
+      input.style.padding = "6px 8px"; // Top/bottom padding for vertical centering, left/right for text spacing
+      input.style.margin = "6px 0"; // Top/bottom margin to center the textarea vertically in the card
     }
-    
+
     input.focus();
     input.select();
 
