@@ -510,6 +510,10 @@ textarea:active,
   color: #333;
 }
 
+.empty-story-placeholder.drag-over {
+  border: 2px dashed #28a745;
+  background-color: rgba(40, 167, 69, 0.1);
+}
 /* Doc icon overlay styling */
 .card-icon-button {
   position: absolute;

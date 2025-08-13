@@ -65,30 +65,25 @@ window.StoryMapInlineEdit = {
       entityId,
       originalText: currentText,
       fieldName: this.getFieldName(entityType),
-      originalHeight: isStoryCard ? card.style.height : null, // Store original height for story cards
     };
 
     textElement.style.display = "none";
     card.classList.add("is-editing"); // Add class to hide icon
     card.appendChild(input);
     
-    // Auto-resize textarea for story cards
+    // Fixed-height textarea for story cards with internal scrolling
     if (isStoryCard) {
-      const autoResize = () => {
-        input.style.height = 'auto';
-        input.style.height = input.scrollHeight + 'px';
-        
-        // Also update the card container height to match the textarea
-        // Add some padding to account for card borders and spacing
-        const cardHeight = input.scrollHeight + 16; // 8px padding top + 8px padding bottom
-        card.style.height = cardHeight + 'px';
-      };
+      // Calculate the available height within the card (subtract padding and borders)
+      const cardHeight = card.offsetHeight;
+      const availableHeight = cardHeight - 16; // Account for 8px padding top + 8px bottom
       
-      // Initial resize
-      autoResize();
-      
-      // Resize on input
-      input.addEventListener('input', autoResize);
+      // Set textarea to fixed height with scrolling
+      input.style.height = availableHeight + 'px';
+      input.style.minHeight = availableHeight + 'px';
+      input.style.maxHeight = availableHeight + 'px';
+      input.style.overflowY = 'auto';
+      input.style.resize = 'none'; // Prevent manual resizing
+      input.style.boxSizing = 'border-box';
     }
     
     input.focus();
@@ -170,16 +165,10 @@ window.StoryMapInlineEdit = {
 
   cancelEdit() {
     if (!this.activeEdit) return;
-    const { textElement, input, card, entityType, originalHeight } = this.activeEdit;
+    const { textElement, input, card } = this.activeEdit;
     textElement.style.display = "";
     input.remove();
     card.classList.remove("is-editing"); // Remove class to show icon again
-    
-    // Restore original height for story cards
-    if (entityType === "story" && originalHeight) {
-      card.style.height = originalHeight;
-    }
-    
     this.activeEdit = null;
   },
 
