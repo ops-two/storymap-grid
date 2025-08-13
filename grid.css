@@ -242,6 +242,7 @@
 .inline-edit-input {
   width: 100%;
   padding: 4px 8px;
+  border: 0;
   border-radius: 4px;
   font-size: inherit;
   font-family: inherit;
