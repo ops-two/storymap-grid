@@ -242,7 +242,6 @@
 .inline-edit-input {
   width: 100%;
   padding: 4px 8px;
-  border: 2px solid #007bff;
   border-radius: 4px;
   font-size: inherit;
   font-family: inherit;
@@ -549,7 +548,7 @@ textarea.inline-edit-input:focus-visible {
   box-shadow: none !important;
 }
 
-textarea.inline-edit-input:focus {
+.inline-edit-input:focus {
   outline: none !important;
   box-shadow: none !important;
 }
