@@ -402,10 +402,7 @@ textarea.inline-edit-input {
 }
 
 .inline-edit-input:focus {
-  /* The primary property to remove the outline ring */
   outline: none !important;
-
-  /* Also remove any box-shadow that might be applied on focus */
   box-shadow: none !important;
 }
 .empty-feature-placeholder,
@@ -547,9 +544,12 @@ textarea.inline-edit-input::-webkit-scrollbar-button {
   display: none;
 }
 
-/* --- For Firefox --- */
-/* Firefox offers less customization but supports a simple thin scrollbar */
-textarea.inline-edit-input {
-  scrollbar-width: thin;
-  scrollbar-color: #bbb transparent; /* Sets thumb and track color */
+textarea.inline-edit-input:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+textarea.inline-edit-input:focus {
+  outline: none !important;
+  box-shadow: none !important;
 }
