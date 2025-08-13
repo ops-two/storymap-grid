@@ -48,7 +48,32 @@
   text-align: left;
 }
 
-/* No hover effects on cards - only icon visibility is handled below */
+/* Separate hover rules for different card types to prevent conflicts */
+.journey-card:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  /* Maintain journey card borders and styling on hover */
+  border: 1px solid #ffc107 !important;
+  border-left: 5px solid #ffc107 !important;
+  font-weight: 600 !important;
+  background-color: #fff !important;
+}
+
+.feature-card:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  /* Maintain feature card borders and styling on hover */
+  border: 1px solid #6f42c1 !important;
+  border-left: 5px solid #6f42c1 !important;
+  font-weight: 500 !important;
+  background-color: #fff !important;
+}
+
+.story-card:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  /* Maintain story card borders and styling on hover */
+  border: 1px solid #28a745 !important;
+  border-left: 5px solid #28a745 !important;
+  font-weight: 500 !important;
+}
 
 /* Default card title text for journey and feature cards */
 .journey-card .card-title-text,
@@ -99,7 +124,26 @@
   cursor: text;
 }
 
-
+/* Ensure story card text doesn't change on hover */
+.story-card:hover .card-title-text {
+  display: block;
+  -webkit-line-clamp: unset;
+  line-clamp: unset;
+  text-align: left;
+  font-size: 13px;
+  line-height: 1.3;
+  color: #333;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
+  hyphens: auto;
+  padding: 8px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  cursor: text;
+}
 
 /* Doc icon overlay system - allows content to use full width */
 .card-icon-button {
