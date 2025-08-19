@@ -427,7 +427,7 @@ textarea.inline-edit-input {
 }
 
 .empty-column-drop-zone {
-  height: 46px;
+  height: 46px; /* Reduced from var(--story-height) 80px to match empty-story-placeholder */
   border-color: transparent;
 }
 
