@@ -274,31 +274,7 @@ textarea.inline-edit-input {
   bottom: 0;
 }
 
-.empty-column-drop-zone {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 6px;
-  border: 2px dashed #ccc;
-  color: #aaa;
-  font-size: 13px;
-  box-sizing: border-box;
-  transition: all 0.2s ease;
-  opacity: 0;
-  height: 10px;
-  pointer-events: none;
-}
 
-.story-drag-active .empty-column-drop-zone {
-  opacity: 1;
-  height: var(--story-height);
-  pointer-events: auto;
-}
-
-.story-drag-active .empty-column-drop-zone.drag-over {
-  border-color: #28a745;
-  background-color: rgba(40, 167, 69, 0.1);
-}
 
 .release-header {
   grid-column: 1 / -1;
@@ -429,6 +405,9 @@ textarea.inline-edit-input {
 .empty-column-drop-zone {
   height: 46px; /* Reduced from var(--story-height) 80px to match empty-story-placeholder */
   border-color: transparent;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.2s ease;
 }
 
 .empty-column-drop-zone span {
@@ -441,6 +420,13 @@ textarea.inline-edit-input {
 
 .story-map-grid-container:has(.story-card.dragging) .empty-column-drop-zone {
   border-color: #ccc;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.story-map-grid-container:has(.story-card.dragging) .empty-column-drop-zone.drag-over {
+  border-color: #28a745;
+  background-color: rgba(40, 167, 69, 0.1);
 }
 
 .story-map-grid-container:has(.story-card.dragging)
