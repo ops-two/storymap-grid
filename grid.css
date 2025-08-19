@@ -103,6 +103,19 @@
   /* The height attribute will be applied inline via JavaScript */
 }
 
+/* Tech-Req story cards - blue styling */
+.story-card.tech {
+  border: 1px solid #007bff !important;
+  border-left: 5px solid #007bff !important;
+}
+
+.story-card.tech:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  border: 1px solid #007bff !important;
+  border-left: 5px solid #007bff !important;
+  font-weight: 500 !important;
+}
+
 /* Story card text styling - completely separate from other cards */
 .story-card .card-title-text {
   display: block;
