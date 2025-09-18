@@ -168,6 +168,8 @@ window.StoryMapStoryDragDrop = {
 
       // --- THIS IS THE CRITICAL RESTORATION ---
       // This is your proven Optimistic UI Update and Event Dispatch logic.
+      // --- THIS IS THE CRITICAL RESTORATION ---
+      // This is your proven Optimistic UI Update and Event Dispatch logic.
       window.StoryMapDataStore.updateEntityOrder(
         "story",
         draggedId,
@@ -181,10 +183,22 @@ window.StoryMapStoryDragDrop = {
         const story = window.StoryMapDataStore.getEntity("story", draggedId);
         if (story) story.releaseId = payload.newReleaseId;
       }
+
+      // --- SCROLL MANAGER INTEGRATION ---
+      if (window.StoryMapScrollManager) {
+        window.StoryMapScrollManager.beforeRefresh(draggedId);
+      }
+
       const mainCanvas = $(this.container).closest('[id^="bubble-r-box"]');
       if (window.StoryMapRenderer && mainCanvas.length) {
         window.StoryMapRenderer.render(mainCanvas);
+
+        if (window.StoryMapScrollManager) {
+          window.StoryMapScrollManager.afterRefresh();
+        }
       }
+      // --- END OF INTEGRATION ---
+
       document.dispatchEvent(
         new CustomEvent("storymap:update", { detail: payload })
       );

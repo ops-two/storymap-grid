@@ -123,17 +123,28 @@ window.StoryMapJourneyDragDrop = {
       }
 
       // --- OPTIMISTIC UI UPDATE & BUBBLE DISPATCH (Tailored for Journeys) ---
+      // --- OPTIMISTIC UI UPDATE & BUBBLE DISPATCH (Tailored for Journeys) ---
       window.StoryMapDataStore.updateEntityOrder(
         "journey",
         draggedId,
         newOrderValue
       );
+
+      // --- SCROLL MANAGER INTEGRATION ---
+      // Call the Scroll Manager before and after the re-render.
+      if (window.StoryMapScrollManager) {
+        // Pass the ID of the moved item for a better UX (scrolls to the item).
+        window.StoryMapScrollManager.beforeRefresh(draggedId);
+      }
+
       const mainCanvas = $(this.container).closest('[id^="bubble-r-box"]');
       if (window.StoryMapRenderer && mainCanvas.length) {
         window.StoryMapRenderer.render(mainCanvas);
-      }
 
-      // This correctly gets the rich payload for the 'update' event.
+        if (window.StoryMapScrollManager) {
+          window.StoryMapScrollManager.afterRefresh();
+        }
+      }
       const fullJourneyData = window.StoryMapDataStore.getEntityForUpdate(
         "journey",
         draggedId
