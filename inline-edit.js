@@ -10,6 +10,11 @@ window.StoryMapInlineEdit = {
     this.container = container;
     this.isInitialized = true;
     this.setupEditHandlers();
+    
+    // Initialize scroll position manager
+    if (window.StoryMapScrollManager) {
+      window.StoryMapScrollManager.init(container);
+    }
   },
 
   setupEditHandlers() {
@@ -134,6 +139,11 @@ window.StoryMapInlineEdit = {
       input.disabled = true;
       input.style.opacity = "0.6";
 
+      // Save scroll position before DOM refresh
+      if (window.StoryMapScrollManager) {
+        window.StoryMapScrollManager.beforeRefresh(entityId);
+      }
+
       window.StoryMapDataStore.updateEntityName(entityType, entityId, newValue);
       const fullEntityData = window.StoryMapDataStore.getEntityForUpdate(
         entityType,
@@ -158,6 +168,11 @@ window.StoryMapInlineEdit = {
       const mainCanvas = $(this.container).closest('[id^="bubble-r-box"]');
       if (window.StoryMapRenderer && mainCanvas.length) {
         window.StoryMapRenderer.render(mainCanvas);
+        
+        // Restore scroll position after DOM refresh
+        if (window.StoryMapScrollManager) {
+          window.StoryMapScrollManager.afterRefresh();
+        }
       }
       card.classList.remove("is-editing"); // Remove class to show icon again
       this.activeEdit = null;

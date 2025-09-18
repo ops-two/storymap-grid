@@ -286,14 +286,14 @@ window.StoryMapRenderer = {
       if (release.targetDate) {
         // Format the date nicely (e.g., "Dec 5, 2002")
         const targetDate = new Date(release.targetDate);
-        const formattedDate = targetDate.toLocaleDateString('en-US', {
-          month: 'short',
-          day: 'numeric',
-          year: 'numeric'
+        const formattedDate = targetDate.toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
         });
         releaseHeaderText = `${release.name} | ${formattedDate}`;
       }
-      
+
       // We render the header UNCONDITIONALLY.
       html += `<div class="release-header" data-id="${release.id}">${releaseHeaderText}</div>`;
 
@@ -363,7 +363,31 @@ window.StoryMapRenderer = {
     });
     // --- 4d. CLOSE HTML TAGS ---
     html += `</div></div>`;
+
+    // --- FIX FOR SCROLL POSITION PRESERVATION ---
+    // 1. Find the scrollable container BEFORE re-rendering.
+    const scrollContainer = containerElement.find(".story-map-container");
+    let scrollTop = 0;
+    let scrollLeft = 0;
+
+    // 2. If it exists, save its current scroll position.
+    if (scrollContainer.length > 0) {
+      scrollTop = scrollContainer.scrollTop();
+      scrollLeft = scrollContainer.scrollLeft();
+    }
+
+    // 3. Perform the full re-render, which destroys the old container.
     containerElement.html(html);
+
+    // 4. After re-rendering, find the NEW scrollable container and restore the position.
+    if (scrollTop > 0 || scrollLeft > 0) {
+      const newScrollContainer = containerElement.find(".story-map-container");
+      if (newScrollContainer.length > 0) {
+        newScrollContainer.scrollTop(scrollTop);
+        newScrollContainer.scrollLeft(scrollLeft);
+      }
+    }
+    // --- END OF FIX ---
 
     // --- 5. INITIALIZE INTERACTION MODULES ---
     if (window.StoryMapInlineEdit)
