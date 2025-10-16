@@ -1,0 +1,156 @@
+function(instance, properties, context) {
+    // 1. Gatekeeper: Ensure the renderer script is loaded.
+    if (typeof window.StoryMapRenderer === 'undefined') {
+        instance.canvas.html('<div>Grid renderer script not loaded.</div>');
+        return;
+    }
+    
+    // 2. Initialize the Event Bridge. It doesn't depend on rendered elements.
+    if (window.StoryMapEventBridge) {
+        window.StoryMapEventBridge.init(instance);
+    }
+ 
+    // 3. Check for essential data.
+    if (!properties.project) {
+        instance.canvas.html('<div style="padding:20px;">No project selected</div>');
+        return;
+    }
+
+    try {
+
+        // 5. Load all raw data from Bubble (Your existing code here is perfect).
+        const projectName = properties.project.get('name_text');
+        const journeyCount = properties.journeys ? properties.journeys.length() : 0;
+        const featureCount = properties.features ? properties.features.length() : 0;
+        const storyCount = properties.stories ? properties.stories.length() : 0;
+        const releaseCount = properties.releases ? properties.releases.length() : 0;
+        
+        const allJourneys = journeyCount > 0 ? properties.journeys.get(0, journeyCount) : [];
+        const allFeatures = featureCount > 0 ? properties.features.get(0, featureCount) : [];
+        const allStories = storyCount > 0 ? properties.stories.get(0, storyCount) : [];
+        const allReleases = releaseCount > 0 ? properties.releases.get(0, releaseCount) : [];
+        
+        allJourneys.forEach(j => {
+            j.get('name_text');
+            j.get('_id');
+            j.get('order_index_number');
+        });
+        allFeatures.forEach(f => {
+            f.get('name_text');
+            f.get('_id');
+            f.get('order_index_number');
+            f.get('journey_custom_journey');
+        });
+        allStories.forEach(s => {
+            s.get('title_text');
+            s.get('_id');
+            s.get('order_index_number');
+            s.get('type_option_storytype');
+            s.get('feature_custom_feature3');
+            s.get('release_custom_release');
+        });
+        allReleases.forEach(r => {
+            r.get('name_text');
+            r.get('_id');
+            r.get('target_date_date');
+        });
+        
+        // (Optional but helpful) Keep your debugging logs for now.
+        console.log("--- Raw Data From Bubble ---");
+        console.table(allJourneys.map(j => ({ _id: j.get('_id'), name_text: j.get('name_text'), order: j.get('order_index_number') })));
+        
+        // 6. Pass the raw data to the Data Store for transformation.
+        if (window.StoryMapDataStore) {
+            window.StoryMapDataStore.init({
+                projectId: properties.project.get('_id'),
+                projectName,
+                rawJourneys: allJourneys,
+                rawFeatures: allFeatures,
+                rawStories: allStories,
+                rawReleases: allReleases,
+            });
+        }
+        
+        // 7. Smart Update Logic - Check if we should skip full re-render
+        let shouldSkipRender = false;
+        
+        // Check for skipRerender flags in various state properties
+        const pendingUpdate = properties.pending_update;
+        const pendingAdd = properties.pending_add;
+        const pendingReorder = properties.pending_reorder;
+        
+        if (pendingUpdate) {
+            try {
+                const updateData = JSON.parse(pendingUpdate);
+                if (updateData.skipRerender) {
+                    shouldSkipRender = true;
+                    console.log('Skipping re-render for update:', updateData.entityType, updateData.entityId);
+                }
+            } catch (e) { /* ignore parse errors */ }
+        }
+        
+        if (pendingAdd) {
+            try {
+                const addData = JSON.parse(pendingAdd);
+                if (addData.skipRerender) {
+                    shouldSkipRender = true;
+                    console.log('Skipping re-render for add:', addData.addType);
+                }
+            } catch (e) { /* ignore parse errors */ }
+        }
+        
+        if (pendingReorder) {
+            try {
+                const reorderData = JSON.parse(pendingReorder);
+                if (reorderData.skipRerender) {
+                    shouldSkipRender = true;
+                    console.log('Skipping re-render for reorder:', reorderData.entityType);
+                }
+            } catch (e) { /* ignore parse errors */ }
+        }
+        
+        // Detect structural changes that require full re-render
+        const currentCounts = {
+            journeys: journeyCount,
+            features: featureCount,
+            stories: storyCount,
+            releases: releaseCount
+        };
+        
+        // Store previous counts for comparison
+        if (!window.StoryMapPreviousCounts) {
+            window.StoryMapPreviousCounts = currentCounts;
+            shouldSkipRender = false; // First load always renders
+        } else {
+            const prev = window.StoryMapPreviousCounts;
+            const structuralChange = (
+                prev.journeys !== currentCounts.journeys ||
+                prev.features !== currentCounts.features ||
+                prev.releases !== currentCounts.releases
+            );
+            
+            if (structuralChange) {
+                shouldSkipRender = false; // Force re-render for structural changes
+                console.log('Structural change detected, forcing full re-render');
+            }
+            
+            window.StoryMapPreviousCounts = currentCounts;
+        }
+        
+        // Call the renderer only if we shouldn't skip
+        if (!shouldSkipRender) {
+            window.StoryMapRenderer.render(instance.canvas);
+        } else {
+            console.log('Skipped full re-render - using selective updates');
+        }   
+
+    } catch (err) {
+        // 8. Handle errors.
+        if (err.message === 'not ready') {
+            instance.canvas.html('<div class="story-map-container">Loading...</div>');
+            throw err;
+        }
+        console.error('Story map error:', err);
+        instance.canvas.html(`<div class="story-map-container">Error: ${err.message}</div>`);
+    }
+}

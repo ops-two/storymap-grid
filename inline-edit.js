@@ -10,7 +10,7 @@ window.StoryMapInlineEdit = {
     this.container = container;
     this.isInitialized = true;
     this.setupEditHandlers();
-    
+
     // Initialize scroll position manager
     if (window.StoryMapScrollManager) {
       window.StoryMapScrollManager.init(container);
@@ -132,24 +132,34 @@ window.StoryMapInlineEdit = {
 
   saveEdit() {
     if (!this.activeEdit) return;
-    const { input, entityType, entityId, originalText, card, fieldName } =
-      this.activeEdit;
+    const { input, entityType, entityId, originalText, card } = this.activeEdit;
     const newValue = input.value.trim();
     if (newValue !== originalText && newValue !== "") {
       input.disabled = true;
       input.style.opacity = "0.6";
 
-      // Save scroll position before DOM refresh
+      // 1. Update the local data store first
+      window.StoryMapDataStore.updateEntityName(entityType, entityId, newValue);
+
+      // 2. Use the consistent re-render pattern with scroll management
       if (window.StoryMapScrollManager) {
         window.StoryMapScrollManager.beforeRefresh(entityId);
       }
 
-      window.StoryMapDataStore.updateEntityName(entityType, entityId, newValue);
+      const mainCanvas = $(this.container).closest('[id^="bubble-r-box"]');
+      if (window.StoryMapRenderer && mainCanvas.length) {
+        window.StoryMapRenderer.render(mainCanvas);
+
+        if (window.StoryMapScrollManager) {
+          window.StoryMapScrollManager.afterRefresh();
+        }
+      }
+
+      // 3. Prepare data and dispatch the event for Bubble
       const fullEntityData = window.StoryMapDataStore.getEntityForUpdate(
         entityType,
         entityId
       );
-      if (fullEntityData) fullEntityData.name_text = newValue;
 
       document.dispatchEvent(
         new CustomEvent("storymap:update", {
@@ -164,17 +174,6 @@ window.StoryMapInlineEdit = {
         })
       );
 
-      // We will now re-render to ensure the UI is perfectly in sync.
-      const mainCanvas = $(this.container).closest('[id^="bubble-r-box"]');
-      if (window.StoryMapRenderer && mainCanvas.length) {
-        window.StoryMapRenderer.render(mainCanvas);
-        
-        // Restore scroll position after DOM refresh
-        if (window.StoryMapScrollManager) {
-          window.StoryMapScrollManager.afterRefresh();
-        }
-      }
-      card.classList.remove("is-editing"); // Remove class to show icon again
       this.activeEdit = null;
     } else {
       this.cancelEdit();

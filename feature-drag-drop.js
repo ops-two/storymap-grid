@@ -152,6 +152,7 @@ window.StoryMapFeatureDragDrop = {
         };
       }
 
+      // 1. Update the local data store for an optimistic UI update.
       window.StoryMapDataStore.updateEntityOrder(
         "feature",
         draggedId,
@@ -164,11 +165,22 @@ window.StoryMapFeatureDragDrop = {
         );
         if (feature) feature.journeyId = payload.newParentId;
       }
+
+      // 2. Use the consistent re-render pattern with scroll management.
+      if (window.StoryMapScrollManager) {
+        window.StoryMapScrollManager.beforeRefresh(draggedId);
+      }
+
       const mainCanvas = $(this.container).closest('[id^="bubble-r-box"]');
       if (window.StoryMapRenderer && mainCanvas.length) {
         window.StoryMapRenderer.render(mainCanvas);
+
+        if (window.StoryMapScrollManager) {
+          window.StoryMapScrollManager.afterRefresh();
+        }
       }
 
+      // 3. Dispatch the event for Bubble to save the changes.
       document.dispatchEvent(
         new CustomEvent("storymap:update", { detail: payload })
       );
