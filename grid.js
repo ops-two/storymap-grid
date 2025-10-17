@@ -32,7 +32,15 @@ window.StoryMapRenderer = {
   },
 
   render: function (containerElement) {
-    // --- 0. DEFINE ICON SVG FOR ALL SECTIONS ---
+    // --- 0. FIND OR CREATE THE ACTUAL RENDER TARGET ---
+    // Don't replace the main container - render INTO it
+    let renderTarget = containerElement.find('.storymap-grid-container');
+    if (renderTarget.length === 0) {
+      // Fallback: if no inner container, use the passed container directly
+      renderTarget = containerElement;
+    }
+    
+    // --- 0b. DEFINE ICON SVG FOR ALL SECTIONS ---
     const iconSvg = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 2V8H20" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 13H8" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 17H8" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 9H8" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
     // --- 1. PULL CLEAN DATA FROM THE DATA STORE ---
@@ -62,9 +70,9 @@ window.StoryMapRenderer = {
     document.documentElement.style.setProperty("--total-columns", totalColumns);
 
     // --- 4. HTML GENERATION ---
+    // Don't create outer container - initialize.txt already created it
     let html = `
-        <div class="story-map-container">
-            <div class="story-map-grid-container">
+        <div class="story-map-grid-container">
     `;
     if (journeys.length === 0) {
       // If there are no journeys, render the special placeholder.
@@ -361,19 +369,20 @@ window.StoryMapRenderer = {
         html += `</div>`;
       });
     });
-    html += `</div></div>`;
+    html += `</div>`;
 
-    containerElement.html(html);
+    // Use renderTarget instead of containerElement to preserve outer container
+    renderTarget.html(html);
 
     if (window.StoryMapInlineEdit)
-      window.StoryMapInlineEdit.init(containerElement[0]);
+      window.StoryMapInlineEdit.init(renderTarget[0]);
     if (window.StoryMapJourneyDragDrop)
-      window.StoryMapJourneyDragDrop.init(containerElement[0]);
+      window.StoryMapJourneyDragDrop.init(renderTarget[0]);
     if (window.StoryMapFeatureDragDrop)
-      window.StoryMapFeatureDragDrop.init(containerElement[0]);
+      window.StoryMapFeatureDragDrop.init(renderTarget[0]);
     if (window.StoryMapStoryDragDrop)
-      window.StoryMapStoryDragDrop.init(containerElement[0]);
+      window.StoryMapStoryDragDrop.init(renderTarget[0]);
     if (window.StoryMapAddItemHandler)
-      window.StoryMapAddItemHandler.init(containerElement[0]);
+      window.StoryMapAddItemHandler.init(renderTarget[0]);
   },
 };

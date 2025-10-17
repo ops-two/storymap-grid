@@ -10,7 +10,7 @@ window.StoryMapScrollManager = {
    * Initialize the scroll manager with the appropriate container
    */
   init(container) {
-    // Find the scrollable container - could be the story-map-container or a parent Bubble container
+    // Find the scrollable container - could be the storymap-grid-container or a parent Bubble container
     this.scrollContainer = this.findScrollContainer(container);
     console.log('ScrollManager initialized with container:', this.scrollContainer);
   },
@@ -21,8 +21,8 @@ window.StoryMapScrollManager = {
   findScrollContainer(startElement) {
     let element = startElement;
     
-    // First try to find .story-map-container
-    const storyMapContainer = element.querySelector('.story-map-container');
+    // First try to find .storymap-grid-container
+    const storyMapContainer = element.querySelector('.storymap-grid-container');
     if (storyMapContainer) {
       return storyMapContainer;
     }
