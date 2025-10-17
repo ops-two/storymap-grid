@@ -1,80 +1,131 @@
-// The definitive journey-drag-drop.js with correct UX and Visual Feedback
+// Enhanced Journey Drag & Drop with better drop zone detection
 
 window.StoryMapJourneyDragDrop = {
   draggedCard: null,
   isProcessing: false,
+  dropIndicator: null,
 
-  // We are restoring the original, reliable init and setup functions.
   init: function (container) {
     this.container = container;
     this.cleanup();
+    this.createDropIndicator();
     this.setupJourneyDragging();
   },
 
   cleanup: function () {
     if (!this.container) return;
-    // This direct cleanup is more reliable than cloning.
     const journeyCards = this.container.querySelectorAll(".journey-card");
     journeyCards.forEach((card) => {
       card.draggable = false;
-      // A clean way to remove specific listeners if needed, but for now we re-render.
     });
+  },
+
+  createDropIndicator: function() {
+    if (!this.dropIndicator) {
+      this.dropIndicator = document.createElement('div');
+      this.dropIndicator.className = 'drop-indicator-journey';
+      this.dropIndicator.style.cssText = `
+        position: absolute;
+        width: 3px;
+        height: 50px;
+        background: #28a745;
+        border-radius: 2px;
+        pointer-events: none;
+        display: none;
+        z-index: 1000;
+        box-shadow: 0 0 8px rgba(40,167,69,0.5);
+      `;
+      document.body.appendChild(this.dropIndicator);
+    }
   },
 
   setupJourneyDragging: function () {
     const journeyCards = this.container.querySelectorAll(".journey-card");
+    
     journeyCards.forEach((card) => {
       if (card.dataset.dragSetup === "true") return;
       card.dataset.dragSetup = "true";
       card.draggable = true;
 
-      // --- ALL ORIGINAL EVENT LISTENERS ARE RESTORED FOR PERFECT UX ---
-
-      // Drag Start: Set the dragged card and a visual class.
       card.addEventListener("dragstart", (e) => {
         this.draggedCard = card;
-        // Use a short timeout to prevent visual glitches as the drag starts.
         setTimeout(() => card.classList.add("dragging"), 0);
         e.dataTransfer.effectAllowed = "move";
       });
 
-      // Drag End: Clean up all visual styles.
       card.addEventListener("dragend", (e) => {
         card.classList.remove("dragging");
-        // Failsafe cleanup: remove the drag-over class from ALL cards.
+        this.hideDropIndicator();
         document
-          .querySelectorAll(".journey-card.drag-over")
-          .forEach((c) => c.classList.remove("drag-over"));
+          .querySelectorAll(".journey-card.drag-over-left, .journey-card.drag-over-right")
+          .forEach((c) => c.classList.remove("drag-over-left", "drag-over-right"));
       });
 
-      // Drag Over: THIS IS THE KEY FIX for the dotted line.
+      // Enhanced dragover with position detection
       card.addEventListener("dragover", (e) => {
-        if (this.draggedCard && card !== this.draggedCard) {
-          e.preventDefault(); // This is essential to allow a drop.
-          card.classList.add("drag-over"); // Apply the dotted border style.
+        if (!this.draggedCard || card === this.draggedCard) return;
+        
+        e.preventDefault();
+        
+        // Get mouse position relative to card
+        const rect = card.getBoundingClientRect();
+        const mouseX = e.clientX;
+        const cardCenterX = rect.left + rect.width / 2;
+        
+        // Determine if hovering left or right side
+        const isLeftSide = mouseX < cardCenterX;
+        
+        // Show visual feedback
+        card.classList.remove("drag-over-left", "drag-over-right");
+        card.classList.add(isLeftSide ? "drag-over-left" : "drag-over-right");
+        
+        // Position drop indicator
+        this.showDropIndicator(rect, isLeftSide);
+        
+        // Store drop position
+        card.dataset.dropSide = isLeftSide ? "left" : "right";
+      });
+
+      card.addEventListener("dragleave", (e) => {
+        const rect = card.getBoundingClientRect();
+        if (
+          e.clientX < rect.left || 
+          e.clientX > rect.right ||
+          e.clientY < rect.top || 
+          e.clientY > rect.bottom
+        ) {
+          card.classList.remove("drag-over-left", "drag-over-right");
+          this.hideDropIndicator();
         }
       });
 
-      // Drag Leave: THIS IS THE KEY FIX for removing the dotted line.
-      card.addEventListener("dragleave", (e) => {
-        card.classList.remove("drag-over");
-      });
-
-      // Drop: Finalize the action.
       card.addEventListener("drop", (e) => {
         e.preventDefault();
-        card.classList.remove("drag-over"); // Clean up the target card's style.
+        card.classList.remove("drag-over-left", "drag-over-right");
+        this.hideDropIndicator();
+        
         if (this.draggedCard && card !== this.draggedCard) {
-          this.handleDrop(card);
+          const dropSide = card.dataset.dropSide || "right";
+          this.handleDrop(card, dropSide);
         }
       });
     });
   },
 
-  // In journey-drag-drop.js, replace ONLY the handleDrop function
+  showDropIndicator: function(rect, isLeft) {
+    const indicator = this.dropIndicator;
+    indicator.style.display = 'block';
+    indicator.style.left = (isLeft ? rect.left - 6 : rect.right + 3) + 'px';
+    indicator.style.top = (rect.top + (rect.height - 50) / 2) + 'px';
+  },
 
-  handleDrop: function (targetCard) {
-    // Failsafes to prevent errors.
+  hideDropIndicator: function() {
+    if (this.dropIndicator) {
+      this.dropIndicator.style.display = 'none';
+    }
+  },
+
+  handleDrop: function (targetCard, dropSide) {
     if (this.isProcessing || !this.draggedCard) return;
 
     try {
@@ -82,9 +133,12 @@ window.StoryMapJourneyDragDrop = {
 
       const draggedId = this.draggedCard.dataset.id;
       const targetId = targetCard.dataset.id;
-      if (!draggedId || draggedId === targetId) return;
+      
+      if (!draggedId || draggedId === targetId) {
+        this.isProcessing = false;
+        return;
+      }
 
-      // --- THE PROVEN "DIRECTION-AWARE" LOGIC FROM YOUR WORKING FEATURE MODULE ---
       const sortedList = window.StoryMapDataStore.getEntitiesArray("journey");
       const draggedItem = sortedList.find((item) => item.id === draggedId);
       const targetIndex = sortedList.findIndex((item) => item.id === targetId);
@@ -96,11 +150,10 @@ window.StoryMapJourneyDragDrop = {
 
       let newOrderValue;
       const targetItem = sortedList[targetIndex];
-      const draggedIndex = sortedList.findIndex(
-        (item) => item.id === draggedId
-      );
 
-      if (draggedIndex > targetIndex) {
+      // Enhanced positioning logic based on drop side
+      if (dropSide === "left") {
+        // Insert before target
         if (targetIndex === 0) {
           newOrderValue = targetItem.order / 2;
         } else {
@@ -108,6 +161,7 @@ window.StoryMapJourneyDragDrop = {
           newOrderValue = (prevItem.order + targetItem.order) / 2;
         }
       } else {
+        // Insert after target
         const nextItem = sortedList[targetIndex + 1];
         if (nextItem) {
           newOrderValue = (targetItem.order + nextItem.order) / 2;
@@ -119,21 +173,14 @@ window.StoryMapJourneyDragDrop = {
       if (newOrderValue === draggedItem.order) {
         this.isProcessing = false;
         this.draggedCard = null;
-        return; // No change needed
+        return;
       }
 
-      // --- OPTIMISTIC UI UPDATE & BUBBLE DISPATCH (Tailored for Journeys) ---
-      // --- OPTIMISTIC UI UPDATE & BUBBLE DISPATCH (Tailored for Journeys) ---
-      window.StoryMapDataStore.updateEntityOrder(
-        "journey",
-        draggedId,
-        newOrderValue
-      );
+      // Update data store
+      window.StoryMapDataStore.updateEntityOrder("journey", draggedId, newOrderValue);
 
-      // --- SCROLL MANAGER INTEGRATION ---
-      // Call the Scroll Manager before and after the re-render.
+      // Re-render with scroll management
       if (window.StoryMapScrollManager) {
-        // Pass the ID of the moved item for a better UX (scrolls to the item).
         window.StoryMapScrollManager.beforeRefresh(draggedId);
       }
 
@@ -145,13 +192,14 @@ window.StoryMapJourneyDragDrop = {
           window.StoryMapScrollManager.afterRefresh();
         }
       }
+
       const fullJourneyData = window.StoryMapDataStore.getEntityForUpdate(
         "journey",
         draggedId
       );
       if (fullJourneyData) fullJourneyData.order_index = newOrderValue;
 
-      // This correctly dispatches to the "storymap:update" event.
+      // Dispatch to Bubble
       document.dispatchEvent(
         new CustomEvent("storymap:update", {
           detail: {

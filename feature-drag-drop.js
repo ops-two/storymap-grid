@@ -1,67 +1,153 @@
-// The definitive, complete, and final feature-drag-drop.js file.
+// Enhanced Feature Drag & Drop with better drop zone detection
 
 window.StoryMapFeatureDragDrop = {
   draggedCard: null,
   isProcessing: false,
+  dropIndicator: null,
 
   init: function (container) {
     this.container = container;
+    this.createDropIndicator();
     this.setupFeatureDragging();
+  },
+
+  createDropIndicator: function() {
+    // Create a visual indicator for drop position
+    if (!this.dropIndicator) {
+      this.dropIndicator = document.createElement('div');
+      this.dropIndicator.className = 'drop-indicator';
+      this.dropIndicator.style.cssText = `
+        position: absolute;
+        width: 3px;
+        height: 60px;
+        background: #007bff;
+        border-radius: 2px;
+        pointer-events: none;
+        display: none;
+        z-index: 1000;
+        box-shadow: 0 0 8px rgba(0,123,255,0.5);
+      `;
+      document.body.appendChild(this.dropIndicator);
+    }
   },
 
   setupFeatureDragging: function () {
     const featureCards = this.container.querySelectorAll(".feature-card");
+    
     featureCards.forEach((card) => {
       card.draggable = true;
+      
       card.addEventListener("dragstart", (e) => {
         this.draggedCard = card;
         setTimeout(() => card.classList.add("dragging"), 0);
+        e.dataTransfer.effectAllowed = "move";
       });
+
       card.addEventListener("dragend", (e) => {
         card.classList.remove("dragging");
+        this.hideDropIndicator();
         this.container
-          .querySelectorAll(".drag-over")
-          .forEach((c) => c.classList.remove("drag-over"));
+          .querySelectorAll(".drag-over-left, .drag-over-right")
+          .forEach((c) => c.classList.remove("drag-over-left", "drag-over-right"));
       });
-    });
-    const dropTargets = this.container.querySelectorAll(
-      ".feature-card, .empty-feature-drop-zone .add-item-button-static"
-    );
-    dropTargets.forEach((target) => {
-      target.addEventListener("dragover", (e) => {
-        if (this.draggedCard && this.draggedCard !== target) {
-          e.preventDefault();
-          (
-            target.closest(".empty-feature-placeholder") || target
-          ).classList.add("drag-over");
+
+      // Enhanced dragover with position detection
+      card.addEventListener("dragover", (e) => {
+        if (!this.draggedCard || this.draggedCard === card) return;
+        
+        e.preventDefault();
+        
+        // Get mouse position relative to card
+        const rect = card.getBoundingClientRect();
+        const mouseX = e.clientX;
+        const cardCenterX = rect.left + rect.width / 2;
+        
+        // Determine if hovering left or right side
+        const isLeftSide = mouseX < cardCenterX;
+        
+        // Show visual feedback
+        card.classList.remove("drag-over-left", "drag-over-right");
+        card.classList.add(isLeftSide ? "drag-over-left" : "drag-over-right");
+        
+        // Position drop indicator
+        this.showDropIndicator(rect, isLeftSide);
+        
+        // Store drop position for handleDrop
+        card.dataset.dropSide = isLeftSide ? "left" : "right";
+      });
+
+      card.addEventListener("dragleave", (e) => {
+        // Only clear if actually leaving the card
+        const rect = card.getBoundingClientRect();
+        if (
+          e.clientX < rect.left || 
+          e.clientX > rect.right ||
+          e.clientY < rect.top || 
+          e.clientY > rect.bottom
+        ) {
+          card.classList.remove("drag-over-left", "drag-over-right");
+          this.hideDropIndicator();
         }
       });
-      target.addEventListener("dragleave", (e) => {
-        (
-          target.closest(".empty-feature-placeholder") || target
-        ).classList.remove("drag-over");
-      });
-      target.addEventListener("drop", (e) => {
+
+      card.addEventListener("drop", (e) => {
         e.preventDefault();
-        (
-          target.closest(".empty-feature-placeholder") || target
-        ).classList.remove("drag-over");
+        card.classList.remove("drag-over-left", "drag-over-right");
+        this.hideDropIndicator();
+        
         if (this.draggedCard) {
-          this.handleDrop(target);
+          const dropSide = card.dataset.dropSide || "right";
+          this.handleDrop(card, dropSide);
+        }
+      });
+    });
+
+    // Handle empty zone drops
+    const emptyDropZones = this.container.querySelectorAll(".empty-feature-drop-zone .add-item-button-static");
+    emptyDropZones.forEach((zone) => {
+      zone.addEventListener("dragover", (e) => {
+        if (this.draggedCard) {
+          e.preventDefault();
+          zone.closest(".empty-feature-placeholder").classList.add("drag-over");
+        }
+      });
+
+      zone.addEventListener("dragleave", (e) => {
+        zone.closest(".empty-feature-placeholder").classList.remove("drag-over");
+      });
+
+      zone.addEventListener("drop", (e) => {
+        e.preventDefault();
+        zone.closest(".empty-feature-placeholder").classList.remove("drag-over");
+        if (this.draggedCard) {
+          this.handleDrop(zone, null);
         }
       });
     });
   },
 
-  handleDrop: function (target) {
+  showDropIndicator: function(rect, isLeft) {
+    const indicator = this.dropIndicator;
+    indicator.style.display = 'block';
+    indicator.style.left = (isLeft ? rect.left - 6 : rect.right + 3) + 'px';
+    indicator.style.top = (rect.top + (rect.height - 60) / 2) + 'px';
+  },
+
+  hideDropIndicator: function() {
+    if (this.dropIndicator) {
+      this.dropIndicator.style.display = 'none';
+    }
+  },
+
+  handleDrop: function (target, dropSide) {
     if (this.isProcessing || !this.draggedCard) return;
+    
     try {
       this.isProcessing = true;
       const draggedId = this.draggedCard.dataset.id;
-      const isStaticButton = target.classList.contains(
-        "add-item-button-static"
-      );
+      const isStaticButton = target.classList.contains("add-item-button-static");
       const targetId = isStaticButton ? null : target.dataset.id;
+      
       if (!draggedId || draggedId === targetId) {
         this.isProcessing = false;
         return;
@@ -77,6 +163,7 @@ window.StoryMapFeatureDragDrop = {
         const targetFeature = allFeatures.find((f) => f.id === targetId);
         targetJourneyId = targetFeature ? targetFeature.journeyId : null;
       }
+      
       if (!targetJourneyId) {
         this.isProcessing = false;
         return;
@@ -86,19 +173,17 @@ window.StoryMapFeatureDragDrop = {
       let payload;
 
       if (draggedFeature.journeyId === targetJourneyId) {
-        // --- THIS IS YOUR PROVEN, WORKING RE-INDEXING LOGIC ---
+        // Same journey - reorder with position awareness
         const targetFeature = allFeatures.find((f) => f.id === targetId);
         const sortedList = allFeatures.filter(
           (f) => f.journeyId === draggedFeature.journeyId
         );
-        const draggedIndex = sortedList.findIndex(
-          (item) => item.id === draggedId
-        );
-        const targetIndex = sortedList.findIndex(
-          (item) => item.id === targetId
-        );
+        const draggedIndex = sortedList.findIndex((item) => item.id === draggedId);
+        const targetIndex = sortedList.findIndex((item) => item.id === targetId);
 
-        if (draggedIndex > targetIndex) {
+        // Enhanced positioning logic
+        if (dropSide === "left") {
+          // Insert before target
           if (targetIndex === 0) {
             newOrderValue = targetFeature.order / 2;
           } else {
@@ -106,6 +191,7 @@ window.StoryMapFeatureDragDrop = {
             newOrderValue = (prevItem.order + targetFeature.order) / 2;
           }
         } else {
+          // Insert after target
           const nextItem = sortedList[targetIndex + 1];
           if (nextItem) {
             newOrderValue = (targetFeature.order + nextItem.order) / 2;
@@ -119,6 +205,7 @@ window.StoryMapFeatureDragDrop = {
           draggedId
         );
         if (fullFeatureData) fullFeatureData.order_index = newOrderValue;
+        
         payload = {
           entityType: "feature",
           entityId: draggedId,
@@ -128,12 +215,11 @@ window.StoryMapFeatureDragDrop = {
           allData: fullFeatureData,
         };
       } else {
-        // This is your proven, working re-parenting logic.
+        // Different journey - move to end
         const featuresInNewJourney = allFeatures.filter(
           (f) => f.journeyId === targetJourneyId
         );
-        const lastFeature =
-          featuresInNewJourney[featuresInNewJourney.length - 1];
+        const lastFeature = featuresInNewJourney[featuresInNewJourney.length - 1];
         newOrderValue = lastFeature ? lastFeature.order + 10 : 10;
 
         const fullFeatureData = window.StoryMapDataStore.getEntityForUpdate(
@@ -141,6 +227,7 @@ window.StoryMapFeatureDragDrop = {
           draggedId
         );
         if (fullFeatureData) fullFeatureData.order_index = newOrderValue;
+        
         payload = {
           entityType: "feature",
           entityId: draggedId,
@@ -152,21 +239,14 @@ window.StoryMapFeatureDragDrop = {
         };
       }
 
-      // 1. Update the local data store for an optimistic UI update.
-      window.StoryMapDataStore.updateEntityOrder(
-        "feature",
-        draggedId,
-        newOrderValue
-      );
+      // Update data store
+      window.StoryMapDataStore.updateEntityOrder("feature", draggedId, newOrderValue);
       if (payload.newParentId) {
-        const feature = window.StoryMapDataStore.getEntity(
-          "feature",
-          draggedId
-        );
+        const feature = window.StoryMapDataStore.getEntity("feature", draggedId);
         if (feature) feature.journeyId = payload.newParentId;
       }
 
-      // 2. Use the consistent re-render pattern with scroll management.
+      // Re-render with scroll management
       if (window.StoryMapScrollManager) {
         window.StoryMapScrollManager.beforeRefresh(draggedId);
       }
@@ -180,7 +260,7 @@ window.StoryMapFeatureDragDrop = {
         }
       }
 
-      // 3. Dispatch the event for Bubble to save the changes.
+      // Dispatch to Bubble
       document.dispatchEvent(
         new CustomEvent("storymap:update", { detail: payload })
       );

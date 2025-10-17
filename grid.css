@@ -552,3 +552,51 @@ textarea.inline-edit-input:focus-visible {
   outline: none !important;
   box-shadow: none !important;
 }
+
+/* ========== Enhanced Drag & Drop Visual Feedback ========== */
+
+/* Left side drop indicator */
+.journey-card.drag-over-left,
+.feature-card.drag-over-left {
+  border-left: 3px solid #28a745 !important;
+  padding-left: 5px !important;
+  transition: all 0.15s ease;
+}
+
+/* Right side drop indicator */
+.journey-card.drag-over-right,
+.feature-card.drag-over-right {
+  border-right: 3px solid #28a745 !important;
+  padding-right: 5px !important;
+  transition: all 0.15s ease;
+}
+
+/* Enhanced hover zone - make cards more responsive */
+.journey-card,
+.feature-card {
+  transition: transform 0.15s ease, border 0.15s ease;
+}
+
+/* Make dragging card slightly transparent */
+.journey-card.dragging,
+.feature-card.dragging {
+  opacity: 0.5;
+  transform: scale(0.95);
+}
+
+/* Pulse effect for better feedback */
+.journey-card.drag-over-left,
+.journey-card.drag-over-right,
+.feature-card.drag-over-left,
+.feature-card.drag-over-right {
+  animation: pulse-glow 0.6s ease-in-out infinite alternate;
+}
+
+@keyframes pulse-glow {
+  from {
+    box-shadow: 0 0 5px rgba(40, 167, 69, 0.3);
+  }
+  to {
+    box-shadow: 0 0 15px rgba(40, 167, 69, 0.6);
+  }
+}
