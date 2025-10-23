@@ -577,6 +577,67 @@ window.StoryMapRenderer = {
       // Update total columns CSS variable
       gridContainer.style.setProperty('--total-columns', totalColumns);
       
+      // CRITICAL: Physically reorder DOM elements to maintain grid structure
+      // CSS Grid needs elements in proper row order: journeys, features, stories
+      console.log('📦 Reordering DOM elements to maintain grid structure...');
+      
+      // Get all elements by type
+      const allChildren = Array.from(gridContainer.children);
+      const journeyElements = allJourneys; // Already sorted
+      const featureElements = [];
+      const emptyZones = [];
+      const storyColumns = [];
+      const releaseHeaders = [];
+      const otherElements = [];
+      
+      // Categorize all elements
+      allChildren.forEach(child => {
+        if (child.classList.contains('journey-card')) {
+          // Already in journeyElements
+        } else if (child.classList.contains('feature-card')) {
+          featureElements.push(child);
+        } else if (child.classList.contains('empty-feature-drop-zone')) {
+          emptyZones.push(child);
+        } else if (child.classList.contains('feature-column')) {
+          storyColumns.push(child);
+        } else if (child.classList.contains('release-header')) {
+          releaseHeaders.push(child);
+        } else {
+          otherElements.push(child);
+        }
+      });
+      
+      // Sort features and empty zones by their column position
+      const sortByColumn = (a, b) => {
+        const colA = parseInt(a.style.gridColumn) || 0;
+        const colB = parseInt(b.style.gridColumn) || 0;
+        return colA - colB;
+      };
+      
+      featureElements.sort(sortByColumn);
+      emptyZones.sort(sortByColumn);
+      storyColumns.sort(sortByColumn);
+      
+      // Use DocumentFragment for better performance
+      const fragment = document.createDocumentFragment();
+      
+      // Add elements in proper grid row order:
+      // 1. All journeys (row 1)
+      journeyElements.forEach(el => fragment.appendChild(el));
+      
+      // 2. All features and empty zones (row 2)
+      [...featureElements, ...emptyZones].sort(sortByColumn).forEach(el => fragment.appendChild(el));
+      
+      // 3. Release headers and story columns (rows 3+)
+      releaseHeaders.forEach(el => fragment.appendChild(el));
+      storyColumns.forEach(el => fragment.appendChild(el));
+      
+      // 4. Any other elements
+      otherElements.forEach(el => fragment.appendChild(el));
+      
+      // Apply all changes at once
+      gridContainer.appendChild(fragment);
+      
       console.log(`🔄 Grid positions recalculated: ${allJourneys.length} journeys, ${totalColumns} total columns`);
     }
     // For features and stories, the logic would be different (column-based)
