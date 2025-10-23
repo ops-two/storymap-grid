@@ -132,30 +132,60 @@ window.StoryMapInlineEdit = {
 
   saveEdit() {
     if (!this.activeEdit) return;
-    const { input, entityType, entityId, originalText, card } = this.activeEdit;
+    const { input, entityType, entityId, originalText, textElement, card } = this.activeEdit;
     const newValue = input.value.trim();
+    
     if (newValue !== originalText && newValue !== "") {
-      input.disabled = true;
-      input.style.opacity = "0.6";
-
-      // 1. Update the local data store first
+      // 1. Update the local data store first (optimistic)
       window.StoryMapDataStore.updateEntityName(entityType, entityId, newValue);
 
-      // 2. Use the consistent re-render pattern with scroll management
-      if (window.StoryMapScrollManager) {
-        window.StoryMapScrollManager.beforeRefresh(entityId);
-      }
-
-      const mainCanvas = $(this.container).closest('[id^="bubble-r-box"]');
-      if (window.StoryMapRenderer && mainCanvas.length) {
-        window.StoryMapRenderer.render(mainCanvas);
-
-        if (window.StoryMapScrollManager) {
-          window.StoryMapScrollManager.afterRefresh();
+      // 2. Try optimistic DOM update first (instant feedback)
+      let optimisticUpdateSuccess = false;
+      if (window.StoryMapRenderer && window.StoryMapRenderer.updateSingleElement) {
+        optimisticUpdateSuccess = window.StoryMapRenderer.updateSingleElement(
+          entityType, 
+          entityId, 
+          { name: newValue }
+        );
+        
+        if (optimisticUpdateSuccess) {
+          // Mark the optimistic update timestamp
+          window.StoryMapRenderer.markOptimisticUpdate();
+          
+          // Clean up the edit UI immediately
+          textElement.style.display = "";
+          input.remove();
+          card.classList.remove("is-editing");
+          this.activeEdit = null;
+          
+          console.log('⚡ Instant edit applied - no re-render needed');
         }
       }
 
-      // 3. Prepare data and dispatch the event for Bubble
+      // 3. Fallback: If optimistic update failed, use full re-render with scroll preservation
+      if (!optimisticUpdateSuccess) {
+        console.log('⚠️ Optimistic update failed, falling back to full re-render');
+        
+        input.disabled = true;
+        input.style.opacity = "0.6";
+        
+        if (window.StoryMapScrollManager) {
+          window.StoryMapScrollManager.beforeRefresh(entityId);
+        }
+
+        const mainCanvas = $(this.container).closest('[id^="bubble-r-box"]');
+        if (window.StoryMapRenderer && mainCanvas.length) {
+          window.StoryMapRenderer.render(mainCanvas);
+
+          if (window.StoryMapScrollManager) {
+            window.StoryMapScrollManager.afterRefresh();
+          }
+        }
+        
+        this.activeEdit = null;
+      }
+
+      // 4. Prepare data and dispatch the event for Bubble (happens in background)
       const fullEntityData = window.StoryMapDataStore.getEntityForUpdate(
         entityType,
         entityId
@@ -170,11 +200,12 @@ window.StoryMapInlineEdit = {
             newValue,
             oldValue: originalText,
             allData: fullEntityData,
+            // NEW: Add flags for optimistic update
+            optimisticUpdate: optimisticUpdateSuccess,
+            revertData: { name: originalText }  // For error recovery
           },
         })
       );
-
-      this.activeEdit = null;
     } else {
       this.cancelEdit();
     }

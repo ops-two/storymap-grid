@@ -385,4 +385,78 @@ window.StoryMapRenderer = {
     if (window.StoryMapAddItemHandler)
       window.StoryMapAddItemHandler.init(renderTarget[0]);
   },
+
+  // ============================================
+  // OPTIMISTIC UPDATE SYSTEM
+  // Updates single elements without full re-render
+  // ============================================
+
+  /**
+   * Updates a single element's text and/or order in the DOM instantly
+   * @param {string} entityType - 'journey', 'feature', 'story', 'release'
+   * @param {string} entityId - The entity's unique ID
+   * @param {object} changes - Object with properties to update: { name, order }
+   * @returns {boolean} - True if update successful, false if element not found
+   */
+  updateSingleElement: function(entityType, entityId, changes) {
+    // Find the element in the DOM
+    const element = document.querySelector(`[data-id="${entityId}"][data-type="${entityType}"]`);
+    
+    if (!element) {
+      console.warn(`Element not found for optimistic update: ${entityType} ${entityId}`);
+      return false;
+    }
+    
+    // Update text content if name changed
+    if (changes.name !== undefined) {
+      const textElement = element.querySelector('.card-title-text');
+      if (textElement) {
+        textElement.textContent = changes.name;
+      }
+    }
+    
+    // Update order attribute if order changed
+    if (changes.order !== undefined) {
+      element.dataset.order = changes.order;
+    }
+    
+    // For story cards, recalculate and update height
+    if (entityType === 'story' && changes.name !== undefined) {
+      const newHeight = this.calculateStoryHeight(changes.name);
+      element.style.height = newHeight + 'px';
+    }
+    
+    console.log(`✅ Optimistic update applied: ${entityType} ${entityId}`);
+    return true;
+  },
+
+  /**
+   * Reverts an optimistic update (called when Bubble returns an error)
+   * @param {string} entityType - 'journey', 'feature', 'story', 'release'
+   * @param {string} entityId - The entity's unique ID
+   * @param {object} originalData - Original values to restore: { name, order }
+   */
+  revertUpdate: function(entityType, entityId, originalData) {
+    console.error(`❌ Reverting failed update: ${entityType} ${entityId}`);
+    
+    // Restore original data in the data store
+    if (originalData.name !== undefined) {
+      window.StoryMapDataStore.updateEntityName(entityType, entityId, originalData.name);
+    }
+    if (originalData.order !== undefined) {
+      window.StoryMapDataStore.updateEntityOrder(entityType, entityId, originalData.order);
+    }
+    
+    // Update the DOM to reflect original values
+    this.updateSingleElement(entityType, entityId, originalData);
+  },
+
+  /**
+   * Marks that an optimistic update just occurred
+   * Used to prevent unnecessary re-renders from update.txt
+   */
+  markOptimisticUpdate: function() {
+    window.lastOptimisticUpdate = Date.now();
+    console.log('⚡ Optimistic update marked at', new Date().toLocaleTimeString());
+  }
 };
