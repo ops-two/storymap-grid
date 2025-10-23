@@ -168,10 +168,11 @@ function(instance, properties, context) {
             });
         }
         
-        // Check if an optimistic update just happened (within last 1 second)
+        // Check if an optimistic update just happened (within last 3 seconds)
         // If so, skip the re-render since the DOM is already updated
+        // Extended to 3 seconds to account for Bubble workflow execution time
         if (window.lastOptimisticUpdate && 
-            (Date.now() - window.lastOptimisticUpdate) < 1000) {
+            (Date.now() - window.lastOptimisticUpdate) < 3000) {
             console.log('UPDATE: Skipping re-render - optimistic update already applied');
             return;
         }

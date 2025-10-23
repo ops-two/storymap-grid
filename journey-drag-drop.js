@@ -59,6 +59,14 @@ window.StoryMapJourneyDragDrop = {
         document
           .querySelectorAll(".journey-card.drag-over-left, .journey-card.drag-over-right")
           .forEach((c) => c.classList.remove("drag-over-left", "drag-over-right"));
+        
+        // Execute pending drop after drag animation completes
+        if (this.pendingDrop) {
+          setTimeout(() => {
+            this.executeDrop(this.pendingDrop.targetCard, this.pendingDrop.dropSide);
+            this.pendingDrop = null;
+          }, 50); // Small delay to ensure drag visual is gone
+        }
       });
 
       // Enhanced dragover with position detection
@@ -106,7 +114,8 @@ window.StoryMapJourneyDragDrop = {
         
         if (this.draggedCard && card !== this.draggedCard) {
           const dropSide = card.dataset.dropSide || "right";
-          this.handleDrop(card, dropSide);
+          // Queue the drop to execute after dragend
+          this.pendingDrop = { targetCard: card, dropSide: dropSide };
         }
       });
     });
@@ -125,7 +134,7 @@ window.StoryMapJourneyDragDrop = {
     }
   },
 
-  handleDrop: function (targetCard, dropSide) {
+  executeDrop: function (targetCard, dropSide) {
     if (this.isProcessing || !this.draggedCard) return;
 
     try {
