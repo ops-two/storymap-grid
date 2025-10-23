@@ -176,30 +176,51 @@ window.StoryMapJourneyDragDrop = {
         return;
       }
 
-      // Update data store
+      // Update data store (optimistic)
       window.StoryMapDataStore.updateEntityOrder("journey", draggedId, newOrderValue);
 
-      // Re-render with scroll management
-      if (window.StoryMapScrollManager) {
-        window.StoryMapScrollManager.beforeRefresh(draggedId);
-      }
-
-      const mainCanvas = $(this.container).closest('[id^="bubble-r-box"]');
-      if (window.StoryMapRenderer && mainCanvas.length) {
-        window.StoryMapRenderer.render(mainCanvas);
-
-        if (window.StoryMapScrollManager) {
-          window.StoryMapScrollManager.afterRefresh();
+      // Try optimistic DOM update first (instant feedback)
+      let optimisticUpdateSuccess = false;
+      if (window.StoryMapRenderer && window.StoryMapRenderer.updateSingleElement) {
+        optimisticUpdateSuccess = window.StoryMapRenderer.updateSingleElement(
+          "journey",
+          draggedId,
+          { order: newOrderValue }
+        );
+        
+        if (optimisticUpdateSuccess) {
+          // Mark the optimistic update to prevent unnecessary re-render
+          window.StoryMapRenderer.markOptimisticUpdate();
+          console.log('⚡ Journey drag applied instantly - no re-render needed');
         }
       }
 
+      // Fallback: If optimistic update failed, use full re-render with scroll preservation
+      if (!optimisticUpdateSuccess) {
+        console.log('⚠️ Journey optimistic update failed, falling back to full re-render');
+        
+        if (window.StoryMapScrollManager) {
+          window.StoryMapScrollManager.beforeRefresh(draggedId);
+        }
+
+        const mainCanvas = $(this.container).closest('[id^="bubble-r-box"]');
+        if (window.StoryMapRenderer && mainCanvas.length) {
+          window.StoryMapRenderer.render(mainCanvas);
+
+          if (window.StoryMapScrollManager) {
+            window.StoryMapScrollManager.afterRefresh();
+          }
+        }
+      }
+
+      // Prepare full journey data for Bubble
       const fullJourneyData = window.StoryMapDataStore.getEntityForUpdate(
         "journey",
         draggedId
       );
       if (fullJourneyData) fullJourneyData.order_index = newOrderValue;
 
-      // Dispatch to Bubble
+      // Dispatch to Bubble (happens in background)
       document.dispatchEvent(
         new CustomEvent("storymap:update", {
           detail: {
@@ -209,6 +230,9 @@ window.StoryMapJourneyDragDrop = {
             newValue: newOrderValue,
             oldValue: draggedItem.order,
             allData: fullJourneyData,
+            // NEW: Add flags for optimistic update
+            optimisticUpdate: optimisticUpdateSuccess,
+            revertData: { order: draggedItem.order }  // For error recovery
           },
         })
       );
