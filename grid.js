@@ -474,14 +474,14 @@ window.StoryMapRenderer = {
   reorderElementInDOM: function(element, entityType, newOrder) {
     // For journeys: Recalculate grid-column positions based on new order
     if (entityType === 'journey') {
-      console.log('🔍 Recalculating journey grid positions');
+      console.log('🔍 Recalculating journey grid positions using displayItems logic');
       const gridContainer = element.closest('.story-map-grid-container');
       if (!gridContainer) {
         console.error('❌ Grid container not found! Cannot reorder.');
         return;
       }
 
-      // Get all journey cards sorted by their new order values
+      // Get all journeys sorted by their new order values
       const allJourneys = Array.from(gridContainer.querySelectorAll('[data-type="journey"]'));
       allJourneys.sort((a, b) => {
         const orderA = parseFloat(a.dataset.order) || 0;
@@ -489,37 +489,95 @@ window.StoryMapRenderer = {
         return orderA - orderB;
       });
       
-      // Recalculate grid-column positions for journeys AND their features
-      let currentCol = 1;
-      allJourneys.forEach((journey, index) => {
-        const journeyId = journey.dataset.id;
+      // Get all features
+      const allFeatures = Array.from(gridContainer.querySelectorAll('[data-type="feature"]'));
+      
+      // Build displayItems array like the initial render does
+      const displayItems = [];
+      
+      allJourneys.forEach(journeyElement => {
+        const journeyId = journeyElement.dataset.id;
+        const journeyFeatures = allFeatures.filter(f => f.dataset.journeyId === journeyId);
         
-        // Get all features under this journey
-        const featuresInJourney = Array.from(gridContainer.querySelectorAll(`[data-journey-id="${journeyId}"][data-type="feature"]`));
-        const span = Math.max(1, featuresInJourney.length);
-        
-        // Update journey's grid-column
-        journey.style.gridColumn = `${currentCol} / span ${span}`;
-        console.log(`📍 Journey → grid-column: ${currentCol} / span ${span}`);
-        
-        // Update each feature's grid-column position
-        featuresInJourney.forEach((feature, featureIndex) => {
-          const featureCol = currentCol + featureIndex;
-          feature.style.gridColumn = featureCol;
-          
-          // Also update all feature-columns (story containers) for this feature
-          const featureId = feature.dataset.id;
-          const featureColumns = gridContainer.querySelectorAll(`[data-feature-id="${featureId}"].feature-column`);
-          featureColumns.forEach(col => {
-            col.style.gridColumn = featureCol;
+        if (journeyFeatures.length > 0) {
+          // Journey has features - add them to displayItems
+          // Sort features by their order within the journey
+          journeyFeatures.sort((a, b) => {
+            const orderA = parseFloat(a.dataset.order) || 0;
+            const orderB = parseFloat(b.dataset.order) || 0;
+            return orderA - orderB;
           });
-        });
-        
-        // Move to next column position
-        currentCol += span;
+          
+          journeyFeatures.forEach(feature => {
+            displayItems.push({
+              type: 'feature',
+              element: feature,
+              journeyId: journeyId,
+              featureId: feature.dataset.id
+            });
+          });
+        } else {
+          // Journey has no features - add placeholder
+          displayItems.push({
+            type: 'placeholder',
+            journeyId: journeyId,
+            element: null
+          });
+        }
       });
       
-      console.log(`🔄 Grid positions recalculated for ${allJourneys.length} journeys + their features`);
+      console.log(`📊 Built displayItems with ${displayItems.length} items`);
+      
+      // Now calculate positions based on displayItems
+      const totalColumns = displayItems.length;
+      
+      // Update each journey's position
+      allJourneys.forEach(journeyElement => {
+        const journeyId = journeyElement.dataset.id;
+        
+        // Find all items for this journey in displayItems
+        const journeyItems = displayItems
+          .map((item, index) => ({ item, index }))
+          .filter(({ item }) => item.journeyId === journeyId);
+        
+        if (journeyItems.length === 0) return;
+        
+        // Calculate start column and span
+        const indices = journeyItems.map(({ index }) => index);
+        const startCol = Math.min(...indices) + 1; // +1 because CSS grid is 1-indexed
+        const span = journeyItems.length;
+        
+        // Update journey's grid-column
+        journeyElement.style.gridColumn = `${startCol} / span ${span}`;
+        console.log(`📍 Journey ${journeyId.slice(-6)} → col ${startCol}, span ${span}`);
+        
+        // Update features and feature columns
+        journeyItems.forEach(({ item, index }) => {
+          const colPosition = index + 1; // CSS grid is 1-indexed
+          
+          if (item.type === 'feature' && item.element) {
+            // Update feature's grid-column
+            item.element.style.gridColumn = colPosition;
+            
+            // Update all story containers for this feature
+            const featureColumns = gridContainer.querySelectorAll(`[data-feature-id="${item.featureId}"].feature-column`);
+            featureColumns.forEach(col => {
+              col.style.gridColumn = colPosition;
+            });
+          } else if (item.type === 'placeholder') {
+            // Update empty feature drop zone if it exists
+            const emptyZone = gridContainer.querySelector(`.empty-feature-drop-zone[data-journey-id="${journeyId}"]`);
+            if (emptyZone) {
+              emptyZone.style.gridColumn = colPosition;
+            }
+          }
+        });
+      });
+      
+      // Update total columns CSS variable
+      gridContainer.style.setProperty('--total-columns', totalColumns);
+      
+      console.log(`🔄 Grid positions recalculated: ${allJourneys.length} journeys, ${totalColumns} total columns`);
     }
     // For features and stories, the logic would be different (column-based)
     // We'll add those when implementing their optimistic updates
