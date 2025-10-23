@@ -489,26 +489,37 @@ window.StoryMapRenderer = {
         return orderA - orderB;
       });
       
-      // Recalculate grid-column positions
+      // Recalculate grid-column positions for journeys AND their features
       let currentCol = 1;
       allJourneys.forEach((journey, index) => {
-        const nextJourney = allJourneys[index + 1];
-        
-        // Calculate span based on features under this journey
         const journeyId = journey.dataset.id;
-        const featuresInJourney = gridContainer.querySelectorAll(`[data-journey-id="${journeyId}"][data-type="feature"]`);
+        
+        // Get all features under this journey
+        const featuresInJourney = Array.from(gridContainer.querySelectorAll(`[data-journey-id="${journeyId}"][data-type="feature"]`));
         const span = Math.max(1, featuresInJourney.length);
         
-        // Update grid-column inline style
+        // Update journey's grid-column
         journey.style.gridColumn = `${currentCol} / span ${span}`;
+        console.log(`📍 Journey → grid-column: ${currentCol} / span ${span}`);
+        
+        // Update each feature's grid-column position
+        featuresInJourney.forEach((feature, featureIndex) => {
+          const featureCol = currentCol + featureIndex;
+          feature.style.gridColumn = featureCol;
+          
+          // Also update all feature-columns (story containers) for this feature
+          const featureId = feature.dataset.id;
+          const featureColumns = gridContainer.querySelectorAll(`[data-feature-id="${featureId}"].feature-column`);
+          featureColumns.forEach(col => {
+            col.style.gridColumn = featureCol;
+          });
+        });
         
         // Move to next column position
         currentCol += span;
-        
-        console.log(`📍 Journey ${journeyId} → grid-column: ${currentCol - span} / span ${span}`);
       });
       
-      console.log(`🔄 Grid positions recalculated for ${allJourneys.length} journeys`);
+      console.log(`🔄 Grid positions recalculated for ${allJourneys.length} journeys + their features`);
     }
     // For features and stories, the logic would be different (column-based)
     // We'll add those when implementing their optimistic updates
