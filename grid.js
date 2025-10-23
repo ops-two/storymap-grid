@@ -418,6 +418,10 @@ window.StoryMapRenderer = {
     // Update order attribute if order changed
     if (changes.order !== undefined) {
       element.dataset.order = changes.order;
+      
+      // CRITICAL: Reorder the DOM element to match the new order
+      // CSS Grid displays elements in DOM order, not by data attributes!
+      this.reorderElementInDOM(element, entityType, changes.order);
     }
     
     // For story cards, recalculate and update height
@@ -458,5 +462,48 @@ window.StoryMapRenderer = {
   markOptimisticUpdate: function() {
     window.lastOptimisticUpdate = Date.now();
     console.log('⚡ Optimistic update marked at', new Date().toLocaleTimeString());
+  },
+
+  /**
+   * Reorders a DOM element to match its new order value
+   * This is critical for visual updates - CSS Grid uses DOM order!
+   * @param {HTMLElement} element - The element to reorder
+   * @param {string} entityType - 'journey', 'feature', 'story'
+   * @param {number} newOrder - The new order value
+   */
+  reorderElementInDOM: function(element, entityType, newOrder) {
+    // For journeys: Find the grid container and reorder all journeys
+    if (entityType === 'journey') {
+      const gridContainer = element.closest('.story-map-grid-container');
+      if (!gridContainer) return;
+
+      // Get all journey cards
+      const allJourneys = Array.from(gridContainer.querySelectorAll('[data-type="journey"]'));
+      
+      // Sort by order attribute
+      allJourneys.sort((a, b) => {
+        const orderA = parseFloat(a.dataset.order) || 0;
+        const orderB = parseFloat(b.dataset.order) || 0;
+        return orderA - orderB;
+      });
+      
+      // Find the first non-journey element (feature or release header)
+      const firstNonJourney = Array.from(gridContainer.children)
+        .find(child => child.dataset.type !== 'journey');
+      
+      // Reorder journeys in DOM by inserting them before the first non-journey element
+      // This preserves all event listeners (no innerHTML manipulation!)
+      allJourneys.forEach(journey => {
+        if (firstNonJourney) {
+          gridContainer.insertBefore(journey, firstNonJourney);
+        } else {
+          gridContainer.appendChild(journey);
+        }
+      });
+      
+      console.log(`🔄 DOM reordered: ${allJourneys.length} journeys repositioned instantly`);
+    }
+    // For features and stories, the logic would be different (column-based)
+    // We'll add those when implementing their optimistic updates
   }
 };
