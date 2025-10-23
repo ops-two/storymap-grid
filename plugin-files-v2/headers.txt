@@ -4,19 +4,19 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
 <!-- Plugin styles -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/ops-two/storymap-grid@9006884/grid.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/ops-two/storymap-grid@e2b8245/grid.min.css">
 
 <!-- Plugin core modules -->
-<script src="https://cdn.jsdelivr.net/gh/ops-two/storymap-grid@9006884/data-store.min.js"></script>
-<script src="https://cdn.jsdelivr.net/gh/ops-two/storymap-grid@9006884/event-bridge.min.js"></script>
-<script src="https://cdn.jsdelivr.net/gh/ops-two/storymap-grid@9006884/grid.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/ops-two/storymap-grid@e2b8245/data-store.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/ops-two/storymap-grid@e2b8245/event-bridge.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/ops-two/storymap-grid@e2b8245/grid.min.js"></script>
 
 <!-- User interaction modules -->
-<script src="https://cdn.jsdelivr.net/gh/ops-two/storymap-grid@9006884/inline-edit.min.js"></script>
-<script src="https://cdn.jsdelivr.net/gh/ops-two/storymap-grid@9006884/add-item-handler.min.js"></script>
-<script src="https://cdn.jsdelivr.net/gh/ops-two/storymap-grid@9006884/scroll-position-manager.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/ops-two/storymap-grid@e2b8245/inline-edit.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/ops-two/storymap-grid@e2b8245/add-item-handler.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/ops-two/storymap-grid@e2b8245/scroll-position-manager.min.js"></script>
 
 <!-- Drag & drop modules -->
-<script src="https://cdn.jsdelivr.net/gh/ops-two/storymap-grid@9006884/journey-drag-drop.min.js"></script>
-<script src="https://cdn.jsdelivr.net/gh/ops-two/storymap-grid@9006884/feature-drag-drop.min.js"></script>
-<script src="https://cdn.jsdelivr.net/gh/ops-two/storymap-grid@9006884/story-drag-drop.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/ops-two/storymap-grid@e2b8245/journey-drag-drop.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/ops-two/storymap-grid@e2b8245/feature-drag-drop.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/ops-two/storymap-grid@e2b8245/story-drag-drop.min.js"></script>

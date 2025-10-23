@@ -472,36 +472,43 @@ window.StoryMapRenderer = {
    * @param {number} newOrder - The new order value
    */
   reorderElementInDOM: function(element, entityType, newOrder) {
-    // For journeys: Find the grid container and reorder all journeys
+    // For journeys: Recalculate grid-column positions based on new order
     if (entityType === 'journey') {
+      console.log('🔍 Recalculating journey grid positions');
       const gridContainer = element.closest('.story-map-grid-container');
-      if (!gridContainer) return;
+      if (!gridContainer) {
+        console.error('❌ Grid container not found! Cannot reorder.');
+        return;
+      }
 
-      // Get all journey cards
+      // Get all journey cards sorted by their new order values
       const allJourneys = Array.from(gridContainer.querySelectorAll('[data-type="journey"]'));
-      
-      // Sort by order attribute
       allJourneys.sort((a, b) => {
         const orderA = parseFloat(a.dataset.order) || 0;
         const orderB = parseFloat(b.dataset.order) || 0;
         return orderA - orderB;
       });
       
-      // Find the first non-journey element (feature or release header)
-      const firstNonJourney = Array.from(gridContainer.children)
-        .find(child => child.dataset.type !== 'journey');
-      
-      // Reorder journeys in DOM by inserting them before the first non-journey element
-      // This preserves all event listeners (no innerHTML manipulation!)
-      allJourneys.forEach(journey => {
-        if (firstNonJourney) {
-          gridContainer.insertBefore(journey, firstNonJourney);
-        } else {
-          gridContainer.appendChild(journey);
-        }
+      // Recalculate grid-column positions
+      let currentCol = 1;
+      allJourneys.forEach((journey, index) => {
+        const nextJourney = allJourneys[index + 1];
+        
+        // Calculate span based on features under this journey
+        const journeyId = journey.dataset.id;
+        const featuresInJourney = gridContainer.querySelectorAll(`[data-journey-id="${journeyId}"][data-type="feature"]`);
+        const span = Math.max(1, featuresInJourney.length);
+        
+        // Update grid-column inline style
+        journey.style.gridColumn = `${currentCol} / span ${span}`;
+        
+        // Move to next column position
+        currentCol += span;
+        
+        console.log(`📍 Journey ${journeyId} → grid-column: ${currentCol - span} / span ${span}`);
       });
       
-      console.log(`🔄 DOM reordered: ${allJourneys.length} journeys repositioned instantly`);
+      console.log(`🔄 Grid positions recalculated for ${allJourneys.length} journeys`);
     }
     // For features and stories, the logic would be different (column-based)
     // We'll add those when implementing their optimistic updates
