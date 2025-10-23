@@ -197,7 +197,7 @@ window.StoryMapRenderer = {
           feature.id
         }" data-type="feature" data-order="${
           feature.order
-        }" style="grid-column: ${index + 1};" tabindex="-1">
+        }" data-journey-id="${feature.journeyId}" style="grid-column: ${index + 1};" tabindex="-1">
                     <div class="add-item-button before" data-add-type="feature" data-journey-id="${
                       feature.journeyId
                     }" data-before-order="${beforeOrder}" data-after-order="${

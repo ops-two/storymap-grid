@@ -1,0 +1,184 @@
+function(instance, properties, context) {
+    // Find the container - BACKWARD COMPATIBLE VERSION
+    // Supports both new and old class names during migration
+    var containerElement = instance.canvas.find('.storymap-grid-container[data-plugin-type="storymap-grid"]');
+    
+    // Fallback to old class name if new one not found (for gradual migration)
+    if (containerElement.length === 0) {
+        containerElement = instance.canvas.find('.story-map-container[data-plugin-id]');
+        console.log('UPDATE: Using legacy container class (story-map-container)');
+    }
+    
+    if (containerElement.length === 0) {
+        instance.canvas.html('<div style="padding:20px; color: red;">Story Map Grid container not found. Initialize function may have failed.</div>');
+        return;
+    }
+    
+    // Get data from DOM attributes
+    var pluginId = containerElement.attr('data-plugin-id');
+    var isInitialized = containerElement.attr('data-initialized') === 'true';
+    
+    if (!isInitialized) {
+        containerElement.html('<div style="padding:20px; color: red;">Container not properly initialized</div>');
+        return;
+    }
+    
+    // Check if required scripts are loaded
+    if (typeof window.StoryMapDataStore === 'undefined') {
+        containerElement.html('<div style="padding:20px; border: 2px solid #ff4444; border-radius: 8px; background: #fff5f5; color: #cc0000;">Data Store script not loaded<br>Check plugin headers for data-store.js</div>');
+        return;
+    }
+    
+    if (typeof window.StoryMapRenderer === 'undefined') {
+        containerElement.html('<div style="padding:20px; border: 2px solid #ff4444; border-radius: 8px; background: #fff5f5; color: #cc0000;">Grid renderer script not loaded<br>Check plugin headers for grid.js</div>');
+        return;
+    }
+    
+    // Initialize Event Bridges
+    if (window.StoryMapEventBridge) {
+        window.StoryMapEventBridge.init(instance);
+    }
+    if (window.StoryMapScrollManager) {
+        window.StoryMapScrollManager.init(containerElement[0]);
+    }
+    
+    // Show success if all scripts loaded but no project selected
+    if (!properties.project) {
+        containerElement.html('<div style="padding:20px; background: #e8f5e8; border: 2px solid #4caf50; border-radius: 8px; color: #2e7d32;"><h3>Story Map Grid Ready</h3><p>All scripts loaded successfully!</p><p><strong>Next step:</strong> Select a project in the element properties</p><p>Plugin ID: ' + pluginId + '</p></div>');
+        return;
+    }
+    
+    try {
+        // Extract project data
+        var projectId = properties.project.get('_id');
+        var projectName = properties.project.get('name_text') || 'Untitled Project';
+        var journeyCount = properties.journeys ? properties.journeys.length() : 0;
+        var featureCount = properties.features ? properties.features.length() : 0;
+        var storyCount = properties.stories ? properties.stories.length() : 0;
+        var releaseCount = properties.releases ? properties.releases.length() : 0;
+        
+        var allJourneys = journeyCount > 0 ? properties.journeys.get(0, journeyCount) : [];
+        var allFeatures = featureCount > 0 ? properties.features.get(0, featureCount) : [];
+        var allStories = storyCount > 0 ? properties.stories.get(0, storyCount) : [];
+        var allReleases = releaseCount > 0 ? properties.releases.get(0, releaseCount) : [];
+        
+        // Pre-fetch all necessary fields for each item
+        allJourneys.forEach(function(j) {
+            j.get('name_text');
+            j.get('_id');
+            j.get('order_index_number');
+        });
+        
+        allFeatures.forEach(function(f) {
+            f.get('name_text');
+            f.get('_id');
+            f.get('order_index_number');
+            f.get('journey_custom_journey');
+        });
+        
+        allStories.forEach(function(s) {
+            s.get('title_text');
+            s.get('_id');
+            s.get('order_index_number');
+            s.get('type_option_storytype');
+            s.get('feature_custom_feature3');
+            s.get('release_custom_release');
+        });
+        
+        allReleases.forEach(function(r) {
+            r.get('name_text');
+            r.get('_id');
+            r.get('target_date_date');
+        });
+        
+        // Store project ID in container
+        containerElement.attr('data-project-id', projectId);
+        
+        // Create content hash to detect changes
+        var contentHash = '';
+        try {
+            var journeyNames = allJourneys.map(function(j) { return j.get('name_text') || ''; }).join('|');
+            var featureNames = allFeatures.map(function(f) { return f.get('name_text') || ''; }).join('|');
+            var storyTitles = allStories.map(function(s) { return s.get('title_text') || ''; }).join('|');
+            
+            // Enhanced order detection for drag-drop operations
+            var journeyOrder = allJourneys.map(function(j) {
+                var id = j.get('_id');
+                var orderIndex = j.get('order_index_number') || 0;
+                return id + ':' + orderIndex;
+            }).sort().join(',');
+            
+            var featureOrder = allFeatures.map(function(f) {
+                var id = f.get('_id');
+                var orderIndex = f.get('order_index_number') || 0;
+                return id + ':' + orderIndex;
+            }).sort().join(',');
+            
+            var storyOrder = allStories.map(function(s) {
+                var id = s.get('_id');
+                var orderIndex = s.get('order_index_number') || 0;
+                return id + ':' + orderIndex;
+            }).sort().join(',');
+            
+            var releaseNames = allReleases.map(function(r) { return r.get('name_text') || ''; }).join('|');
+            
+            // Add timestamp component to detect recent updates (drag-drop)
+            var timestamp = Date.now();
+            var timeDiff = timestamp - (window.lastStoryMapUpdateTime || 0);
+            window.lastStoryMapUpdateTime = timestamp;
+            
+            // If less than 2 seconds since last update, likely a drag-drop reorder
+            var isRecentUpdate = timeDiff < 2000;
+            var updateMarker = isRecentUpdate ? ':RECENT:' + timestamp : '';
+            
+            contentHash = journeyNames + '::' + featureNames + '::' + storyTitles + '::' + 
+                         journeyOrder + '::' + featureOrder + '::' + storyOrder + '::' + 
+                         releaseNames + updateMarker;
+        } catch (e) {
+            contentHash = Date.now().toString();
+        }
+        
+        var currentDataHash = JSON.stringify({
+            journeys: journeyCount,
+            features: featureCount,
+            stories: storyCount,
+            releases: releaseCount,
+            projectId: projectId,
+            contentHash: contentHash
+        });
+        
+        var lastDataHash = containerElement.attr('data-last-hash');
+        if (currentDataHash === lastDataHash) {
+            console.log('UPDATE: Data unchanged, skipping render');
+            return;
+        }
+        
+        containerElement.attr('data-last-hash', currentDataHash);
+        console.log('UPDATE: Data changed, triggering render');
+        
+        // Pass the now-guaranteed-to-be-loaded raw data to the Data Store
+        if (window.StoryMapDataStore) {
+            window.StoryMapDataStore.init({
+                projectId: projectId,
+                projectName: projectName,
+                rawJourneys: allJourneys,
+                rawFeatures: allFeatures,
+                rawStories: allStories,
+                rawReleases: allReleases
+            });
+        }
+        
+        // Render the story map
+        window.StoryMapRenderer.render(instance.canvas);
+        
+    } catch (err) {
+        // Handle Bubble's specific async data loading error
+        if (err.message === 'not ready') {
+            containerElement.html('<div style="padding:20px; text-align:center; color: #666;">Loading Story Map...</div>');
+            throw err;
+        }
+        
+        console.error('Story map error:', err);
+        containerElement.html('<div style="padding:20px; border: 2px solid #ff4444; border-radius: 8px; background: #fff5f5; color: #cc0000;">ERROR<br>' + err.message + '<br><small>Check console for details</small></div>');
+    }
+}

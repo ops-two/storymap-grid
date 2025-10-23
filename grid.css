@@ -10,11 +10,35 @@
   /* --total-columns will be injected by JS */
 }
 
+/* ============================================
+   PERFORMANCE OPTIMIZATIONS
+   ============================================ */
+
+/* Disable all transitions and animations during drag operations
+   to prevent lag when dragging over multiple elements */
+.story-drag-active *,
+.story-map-grid-container:has(.dragging) * {
+  transition: none !important;
+  animation: none !important;
+}
+
+/* Force GPU acceleration for dragging cards by creating 
+   a separate GPU layer with translateZ */
+.card.dragging {
+  transform: translateZ(0) scale(0.95);
+  will-change: transform;
+}
+
+/* End Performance Optimizations */
+/* ============================================ */
+
 .storymap-grid-container {
   padding: 20px;
   font-family: Arial, sans-serif;
   height: 100%;
   overflow: auto;
+  /* Performance: Isolate layout calculations to prevent full page reflows */
+  contain: layout style;
 }
 
 .story-map-info {
@@ -46,6 +70,8 @@
   color: #212529;
   position: relative;
   text-align: left;
+  /* Performance: Browser can optimize each card's layout independently */
+  contain: layout;
 }
 
 /* Separate hover rules for different card types to prevent conflicts */
@@ -555,19 +581,27 @@ textarea.inline-edit-input:focus-visible {
 
 /* ========== Enhanced Drag & Drop Visual Feedback ========== */
 
-/* Left side drop indicator */
-.journey-card.drag-over-left,
-.feature-card.drag-over-left {
+/* Left side drop indicator (same journey reorder) */
+.journey-card.drag-over-left:not(.dragging),
+.feature-card.drag-over-left:not(.dragging) {
   border-left: 3px solid #28a745 !important;
   padding-left: 5px !important;
   transition: all 0.15s ease;
 }
 
-/* Right side drop indicator */
-.journey-card.drag-over-right,
-.feature-card.drag-over-right {
+/* Right side drop indicator (same journey reorder) */
+.journey-card.drag-over-right:not(.dragging),
+.feature-card.drag-over-right:not(.dragging) {
   border-right: 3px solid #28a745 !important;
   padding-right: 5px !important;
+  transition: all 0.15s ease;
+}
+
+/* Move to different journey indicator */
+.feature-card.drag-over-move:not(.dragging) {
+  border: 2px solid #007bff !important;
+  background-color: rgba(0, 123, 255, 0.05) !important;
+  transform: scale(1.02);
   transition: all 0.15s ease;
 }
 
@@ -581,14 +615,15 @@ textarea.inline-edit-input:focus-visible {
 .journey-card.dragging,
 .feature-card.dragging {
   opacity: 0.5;
-  transform: scale(0.95);
+  /* Transform moved to .card.dragging for GPU optimization */
 }
 
 /* Pulse effect for better feedback */
-.journey-card.drag-over-left,
-.journey-card.drag-over-right,
-.feature-card.drag-over-left,
-.feature-card.drag-over-right {
+.journey-card.drag-over-left:not(.dragging),
+.journey-card.drag-over-right:not(.dragging),
+.feature-card.drag-over-left:not(.dragging),
+.feature-card.drag-over-right:not(.dragging),
+.feature-card.drag-over-move:not(.dragging) {
   animation: pulse-glow 0.6s ease-in-out infinite alternate;
 }
 

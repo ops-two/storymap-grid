@@ -47,8 +47,8 @@ window.StoryMapFeatureDragDrop = {
         card.classList.remove("dragging");
         this.hideDropIndicator();
         this.container
-          .querySelectorAll(".drag-over-left, .drag-over-right")
-          .forEach((c) => c.classList.remove("drag-over-left", "drag-over-right"));
+          .querySelectorAll(".drag-over-left, .drag-over-right, .drag-over-move")
+          .forEach((c) => c.classList.remove("drag-over-left", "drag-over-right", "drag-over-move"));
       });
 
       // Enhanced dragover with position detection
@@ -57,23 +57,30 @@ window.StoryMapFeatureDragDrop = {
         
         e.preventDefault();
         
-        // Get mouse position relative to card
-        const rect = card.getBoundingClientRect();
-        const mouseX = e.clientX;
-        const cardCenterX = rect.left + rect.width / 2;
+        // Check if same journey or different
+        const draggedJourneyId = this.draggedCard.closest('[data-journey-id]')?.dataset.journeyId;
+        const targetJourneyId = card.closest('[data-journey-id]')?.dataset.journeyId;
+        const isSameJourney = draggedJourneyId === targetJourneyId;
         
-        // Determine if hovering left or right side
-        const isLeftSide = mouseX < cardCenterX;
+        // Clear previous feedback
+        card.classList.remove("drag-over-left", "drag-over-right", "drag-over-move");
         
-        // Show visual feedback
-        card.classList.remove("drag-over-left", "drag-over-right");
-        card.classList.add(isLeftSide ? "drag-over-left" : "drag-over-right");
-        
-        // Position drop indicator
-        this.showDropIndicator(rect, isLeftSide);
-        
-        // Store drop position for handleDrop
-        card.dataset.dropSide = isLeftSide ? "left" : "right";
+        if (isSameJourney) {
+          // Same journey - show left/right positioning
+          const rect = card.getBoundingClientRect();
+          const mouseX = e.clientX;
+          const cardCenterX = rect.left + rect.width / 2;
+          const isLeftSide = mouseX < cardCenterX;
+          
+          card.classList.add(isLeftSide ? "drag-over-left" : "drag-over-right");
+          this.showDropIndicator(rect, isLeftSide);
+          card.dataset.dropSide = isLeftSide ? "left" : "right";
+        } else {
+          // Different journey - just show general hover, will move to end of target journey
+          card.classList.add("drag-over-move");
+          this.hideDropIndicator();
+          card.dataset.dropSide = "move-journey";
+        }
       });
 
       card.addEventListener("dragleave", (e) => {
@@ -85,14 +92,14 @@ window.StoryMapFeatureDragDrop = {
           e.clientY < rect.top || 
           e.clientY > rect.bottom
         ) {
-          card.classList.remove("drag-over-left", "drag-over-right");
+          card.classList.remove("drag-over-left", "drag-over-right", "drag-over-move");
           this.hideDropIndicator();
         }
       });
 
       card.addEventListener("drop", (e) => {
         e.preventDefault();
-        card.classList.remove("drag-over-left", "drag-over-right");
+        card.classList.remove("drag-over-left", "drag-over-right", "drag-over-move");
         this.hideDropIndicator();
         
         if (this.draggedCard) {
@@ -172,7 +179,7 @@ window.StoryMapFeatureDragDrop = {
       let newOrderValue;
       let payload;
 
-      if (draggedFeature.journeyId === targetJourneyId) {
+      if (draggedFeature.journeyId === targetJourneyId && dropSide !== "move-journey") {
         // Same journey - reorder with position awareness
         const targetFeature = allFeatures.find((f) => f.id === targetId);
         const sortedList = allFeatures.filter(

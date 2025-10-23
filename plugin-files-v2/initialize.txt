@@ -1,0 +1,30 @@
+function(instance, context) {
+    console.log('=== INITIALIZE: Story Map Grid Starting ===');
+    
+    var uniqueId = 'storymap_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    
+    instance.canvas.empty();
+    console.log('INITIALIZE: Canvas cleared');
+
+    var containerHtml = '<div class="storymap-grid-container" ' +
+        'id="story-map-' + uniqueId + '" ' +
+        'data-plugin-id="' + uniqueId + '" ' +
+        'data-plugin-type="storymap-grid" ' +
+        'data-initialized="true" ' +
+        'data-last-load="' + new Date().toISOString() + '" ' +
+        'style="width: 100%; height: 100%; overflow: auto; padding: 20px; text-align: center; color: #666; background: #f8f9fa; border-radius: 8px;">' +
+        'Waiting for project data...</div>';
+    
+    instance.canvas.append(containerHtml);
+    console.log('INITIALIZE: Container created with ID: story-map-' + uniqueId);
+    
+    instance.data = {
+        id: uniqueId,
+        isInitialized: true,
+        lastLoadTime: new Date(),
+        currentProjectId: null
+    };
+
+    console.log('INITIALIZE: Plugin initialized successfully. Data stored in DOM attributes.');
+    console.log('INITIALIZE: Update function will be called next.');
+}
